@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { OTP_EXPIRY_MINUTES, OTP_LENGTH } from "@/lib/constants";
+import { OTP_EXPIRY_MINUTES, OTP_LENGTH, SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
+import { findRecentSpinBlocker } from "@/lib/spin-limits";
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString().slice(0, OTP_LENGTH);
@@ -66,37 +67,16 @@ export async function POST(request: Request) {
       request.headers.get("user-agent") ?? "",
     );
 
-    const cooldownDate = new Date();
-    cooldownDate.setDate(cooldownDate.getDate() - 30);
-
-    const { data: recentSpin } = await supabase
-      .from("spins")
-      .select("id")
-      .eq("merchant_id", merchantId)
-      .eq("phone_number", phoneNumber)
-      .gte("created_at", cooldownDate.toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    if (recentSpin) {
+    const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
+    if (blocker === "phone") {
       return NextResponse.json(
-        { error: "Ce numéro a déjà participé récemment (1 spin / 30 jours)" },
+        { error: `Ce numéro a déjà participé (${SPIN_COOLDOWN_DAYS} jours)` },
         { status: 429 },
       );
     }
-
-    const { data: recentFingerprint } = await supabase
-      .from("spins")
-      .select("id")
-      .eq("merchant_id", merchantId)
-      .eq("device_fingerprint", fingerprint)
-      .gte("created_at", cooldownDate.toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    if (recentFingerprint) {
+    if (blocker === "device") {
       return NextResponse.json(
-        { error: "Cet appareil a déjà participé récemment" },
+        { error: `Cet appareil a déjà participé (${SPIN_COOLDOWN_DAYS} jours)` },
         { status: 429 },
       );
     }
@@ -122,7 +102,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       smsSent,
-      // When SMS is off, return code so the flow still works (v1 / test)
       devCode: smsSent ? undefined : code,
     });
   } catch (err) {

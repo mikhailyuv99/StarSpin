@@ -166,7 +166,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
             <div className="space-y-4">
               <div>
                 <h2 className="text-base font-semibold text-zinc-900">Vérification téléphone</h2>
-                <p className="mt-1 text-sm text-zinc-500">Un numéro · un spin / 30 jours</p>
+                <p className="mt-1 text-sm text-zinc-500">Vérification par SMS</p>
               </div>
               {!phoneVerified ? (
                 <>

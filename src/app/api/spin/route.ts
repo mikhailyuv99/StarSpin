@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
+import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
 import type { Prize } from "@/lib/types";
 
@@ -39,29 +41,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Téléphone non vérifié" }, { status: 403 });
     }
 
-    const cooldownDate = new Date();
-    cooldownDate.setDate(cooldownDate.getDate() - 30);
-
-    const { data: existingByPhone } = await supabase
-      .from("spins")
-      .select("id")
-      .eq("merchant_id", merchantId)
-      .eq("phone_number", phoneNumber)
-      .gte("created_at", cooldownDate.toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    const { data: existingByFingerprint } = await supabase
-      .from("spins")
-      .select("id")
-      .eq("merchant_id", merchantId)
-      .eq("device_fingerprint", fingerprint)
-      .gte("created_at", cooldownDate.toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    if (existingByPhone || existingByFingerprint) {
-      return NextResponse.json({ error: "Participation déjà enregistrée" }, { status: 429 });
+    const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
+    if (blocker) {
+      return NextResponse.json(
+        {
+          error:
+            blocker === "phone"
+              ? `Participation déjà enregistrée pour ce numéro (${SPIN_COOLDOWN_DAYS}j)`
+              : `Participation déjà enregistrée pour cet appareil (${SPIN_COOLDOWN_DAYS}j)`,
+        },
+        { status: 429 },
+      );
     }
 
     const { data: prizes } = await supabase
