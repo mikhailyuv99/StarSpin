@@ -59,7 +59,7 @@ Authorization: Bearer <CRON_SECRET>
 | Route | Description |
 |-------|-------------|
 | `/` | Landing |
-| `/r/[slug]` | Page publique client (flow complet) |
+| `/{slug}` | Page publique client (flow complet) |
 | `/login` | Auth commerçant |
 | `/setup` | Création commerce (première connexion) |
 | `/dashboard/*` | Dashboard commerçant |

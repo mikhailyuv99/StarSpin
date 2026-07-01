@@ -23,8 +23,8 @@ export default async function DashboardPage() {
 
       <div className={ui.card}>
         <p className={ui.statLabel}>Page publique</p>
-        <Link href={`/r/${merchant.slug}`} className={`mt-2 inline-block font-mono text-sm ${ui.link}`}>
-          /r/{merchant.slug}
+        <Link href={`/${merchant.slug}`} className={`mt-2 inline-block font-mono text-sm ${ui.link}`}>
+          /{merchant.slug}
         </Link>
         <p className="mt-4 text-sm text-muted">
           Abonnement ·{" "}

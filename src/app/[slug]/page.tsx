@@ -1,24 +1,36 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { RESERVED_SLUGS } from "@/lib/app-url";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import type { Merchant, Prize } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 export default async function PublicMerchantPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const supabase = await createClient();
+  const { slug: rawSlug } = await params;
+  const slug = rawSlug.trim().toLowerCase();
 
-  const { data: merchant } = await supabase
+  if (RESERVED_SLUGS.has(slug)) notFound();
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    notFound();
+  }
+
+  const { data: merchant, error } = await supabase
     .from("merchants")
     .select("*")
     .eq("slug", slug)
     .in("subscription_status", ["active", "trial"])
     .maybeSingle();
 
-  if (!merchant) notFound();
+  if (error || !merchant) notFound();
 
   const { data: prizes } = await supabase
     .from("prizes")

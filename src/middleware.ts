@@ -5,8 +5,7 @@ export async function middleware(request: NextRequest) {
   return updateSession(request);
 }
 
+/** Only auth-related routes — public merchant pages live at /{slug} without middleware. */
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/setup", "/login", "/auth/:path*"],
 };

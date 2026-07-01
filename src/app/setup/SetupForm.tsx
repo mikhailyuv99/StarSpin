@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { RESERVED_SLUGS } from "@/lib/app-url";
 
 export function SetupForm() {
   const router = useRouter();
@@ -33,6 +34,12 @@ export function SetupForm() {
       .replace(/[^a-z0-9-]/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
+
+    if (RESERVED_SLUGS.has(cleanSlug)) {
+      setError("Ce nom d'URL est réservé. Choisissez-en un autre.");
+      setLoading(false);
+      return;
+    }
 
     const { error: insertError } = await supabase.from("merchants").insert({
       name,
@@ -94,7 +101,7 @@ export function SetupForm() {
       <div>
         <label className={ui.label}>URL publique</label>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-muted">/r/</span>
+          <span className="font-mono text-sm text-muted">/</span>
           <input
             value={slug}
             onChange={(e) => setSlug(e.target.value)}

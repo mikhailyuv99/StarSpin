@@ -33,7 +33,7 @@ export function AdminMerchantsTable({ merchants }: { merchants: Merchant[] }) {
             <tr key={m.id}>
               <td className={ui.td}>{m.name}</td>
               <td className={ui.td}>
-                <a href={`/r/${m.slug}`} className={ui.link} target="_blank" rel="noreferrer">
+                <a href={`/${m.slug}`} className={ui.link} target="_blank" rel="noreferrer">
                   {m.slug}
                 </a>
               </td>

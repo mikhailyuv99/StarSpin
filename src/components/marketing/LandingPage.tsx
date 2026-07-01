@@ -95,7 +95,7 @@ function Hero() {
               <span className="h-2 w-2 rounded-sm bg-zinc-600" />
               <span className="h-2 w-2 rounded-sm bg-zinc-600" />
             </div>
-            <span className="font-mono text-[11px] text-zinc-500">session / r / cafe-bienvenue</span>
+            <span className="font-mono text-[11px] text-zinc-500">session / cafe-bienvenue</span>
           </div>
           <div className="border-b border-zinc-800 p-5">
             <div className="flex items-center gap-4">
