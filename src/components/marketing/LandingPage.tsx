@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { StarspinLogo } from "@/components/StarspinLogo";
+import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
+import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { marketingImages } from "@/lib/marketing-images";
 import "./cadeo-styles.css";
 
@@ -35,21 +36,6 @@ function Nav() {
   );
 }
 
-function TrustBar() {
-  const { t } = useI18n();
-  return (
-    <div className="cadeo-trust">
-      <span>{t("marketing.trustedBy")}</span>
-      <span className="cadeo-trust-rating">
-        Google <span className="cadeo-trust-stars">★★★★★</span> 4.9
-      </span>
-      <span className="cadeo-trust-rating">
-        Trustpilot <span className="cadeo-trust-stars">★★★★★</span> 4.8
-      </span>
-    </div>
-  );
-}
-
 function HeroWheelPhone() {
   return (
     <div className="cadeo-hero-phone" aria-hidden>
@@ -57,14 +43,8 @@ function HeroWheelPhone() {
         <div className="cadeo-hero-phone-notch" />
         <div className="cadeo-hero-phone-screen">
           <p className="cadeo-hero-phone-label">Scan · Review · Spin</p>
-          <div
-            className="cadeo-hero-phone-wheel"
-            style={{
-              background:
-                "conic-gradient(from -30deg, #f5e08e 0deg 72deg, #9b7fe8 72deg 144deg, #f48fb1 144deg 216deg, #a8e6cf 216deg 288deg, #b8cfe8 288deg 360deg)",
-            }}
-          >
-            <div className="cadeo-hero-phone-wheel-hub" />
+          <div className="cadeo-hero-phone-wheel-wrap">
+            <MarketingSpinWheel size={76} animate />
           </div>
           <div className="cadeo-hero-phone-cta">SPIN!</div>
         </div>
@@ -77,7 +57,7 @@ function Hero() {
   const { t } = useI18n();
   const badges = [
     { cls: "cadeo-stat-badge--white", icon: "G", text: "+351 Google reviews" },
-    { cls: "cadeo-stat-badge--mint", icon: "★", text: "+251 TripAdvisor" },
+    { cls: "cadeo-stat-badge--mint", icon: "T", text: "+251 TripAdvisor" },
     { cls: "cadeo-stat-badge--yellow", icon: "♪", text: "+150 TikTok" },
     { cls: "cadeo-stat-badge--pink", icon: "◎", text: "+251 Instagram" },
   ];
@@ -105,10 +85,6 @@ function Hero() {
             <a href="#pricing" className="cadeo-btn cadeo-btn-outline cadeo-btn-lg">
               {t("marketing.heroDemo")}
             </a>
-          </div>
-          <div className="cadeo-hero-mini-trust">
-            <span className="cadeo-hero-mini-trust-stars">★★★★★</span>
-            <span>{t("marketing.heroProof")}</span>
           </div>
         </div>
 
@@ -146,22 +122,28 @@ function Hero() {
 function Pillars() {
   const { t } = useI18n();
   const items = [
-    { cls: "cadeo-pillar--purple", icon: "⭐", text: t("marketing.pillar1") },
-    { cls: "cadeo-pillar--pink", icon: "🤝", text: t("marketing.pillar2") },
-    { cls: "cadeo-pillar--blue", icon: "👤", text: t("marketing.pillar3") },
-    { cls: "cadeo-pillar--yellow", icon: "🎁", text: t("marketing.pillar4") },
+    { cls: "cadeo-pillar--purple", num: "01", img: marketingImages.pillarCuriosity, text: t("marketing.pillar1") },
+    { cls: "cadeo-pillar--pink", num: "02", img: marketingImages.pillarConnection, text: t("marketing.pillar2") },
+    { cls: "cadeo-pillar--blue", num: "03", img: marketingImages.pillarData, text: t("marketing.pillar3") },
+    { cls: "cadeo-pillar--yellow", num: "04", img: marketingImages.pillarLoyalty, text: t("marketing.pillar4") },
   ];
 
   return (
-    <section className="cadeo-section">
+    <section className="cadeo-section cadeo-pillars-section">
       <div className="cadeo-section-inner">
-        <h2 className="cadeo-h2 text-center">{t("marketing.pillarsTitle")}</h2>
+        <div className="cadeo-section-head">
+          <p className="cadeo-section-eyebrow">{t("marketing.pillarsEyebrow")}</p>
+          <h2 className="cadeo-h2 text-center">{t("marketing.pillarsTitle")}</h2>
+        </div>
         <div className="cadeo-pillars-grid">
           {items.map((item) => (
-            <div key={item.text} className={`cadeo-pillar ${item.cls}`}>
-              <div className="cadeo-pillar-icon">{item.icon}</div>
+            <article key={item.text} className={`cadeo-pillar ${item.cls}`}>
+              <span className="cadeo-pillar-num">{item.num}</span>
+              <div className="cadeo-pillar-photo">
+                <Image src={item.img} alt="" width={280} height={140} className="h-full w-full object-cover" />
+              </div>
               <p className="cadeo-pillar-text">{item.text}</p>
-            </div>
+            </article>
           ))}
         </div>
         <div className="cadeo-pillars-cta">
@@ -178,23 +160,29 @@ function WheelFlyer() {
   return (
     <div className="cadeo-flyer-wrap">
       <div className="cadeo-card cadeo-flyer">
-        <div className="cadeo-flyer-logo">LOGO</div>
-        <div
-          className="cadeo-flyer-wheel"
-          style={{
-            background:
-              "conic-gradient(from 0deg, #fff 0deg 60deg, #0a0a0a 60deg 120deg, #fff 120deg 180deg, #0a0a0a 180deg 240deg, #fff 240deg 300deg, #0a0a0a 300deg 360deg)",
-          }}
-        >
+        <div className="cadeo-flyer-brand">
+          <StarspinMark size={22} />
+          <span className="cadeo-flyer-brand-name">STARSPIN</span>
+        </div>
+        <div className="cadeo-flyer-photo">
+          <Image src={marketingImages.flyerVenue} alt="" width={280} height={110} className="h-full w-full object-cover" />
+        </div>
+        <div className="cadeo-flyer-wheel-wrap">
+          <MarketingSpinWheel size={168} />
           <div className="cadeo-flyer-qr">
-            <div style={{ fontSize: "1.5rem" }}>▦</div>
-            Scan to play
+            <MarketingQrIcon size={22} />
+            <span>Scan to play</span>
           </div>
         </div>
         <div className="cadeo-flyer-steps">
-          {["📱 SCAN", "🎰 SPIN", "🎁 WIN"].map((s) => (
-            <div key={s} className="cadeo-flyer-step">
-              {s}
+          {[
+            { n: "1", label: "Scan" },
+            { n: "2", label: "Spin" },
+            { n: "3", label: "Win" },
+          ].map((step) => (
+            <div key={step.label} className="cadeo-flyer-step">
+              <span className="cadeo-flyer-step-num">{step.n}</span>
+              <span>{step.label}</span>
             </div>
           ))}
         </div>
@@ -207,26 +195,37 @@ function PhoneScene() {
   const { t } = useI18n();
   return (
     <div className="cadeo-phone-scene">
-      <div className="cadeo-phone">
-        <div className="cadeo-phone-screen relative flex flex-col">
-          <div className="cadeo-phone-notch" />
-          <p className="text-center text-[0.55rem] font-extrabold uppercase leading-tight mt-4 px-1">
-            Play our game &amp; win a prize!
-          </p>
-          <div className="mt-auto mb-8 px-2">
-            <div className="h-16 rounded-full border-2 border-black bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300" />
-            <button type="button" className="mt-2 w-full rounded-full border-2 border-black bg-purple-500 py-1 text-[0.55rem] font-extrabold text-white">
-              PLAY!
-            </button>
+      <div className="cadeo-phone-scene-inner">
+        <div className="cadeo-phone">
+          <div className="cadeo-phone-screen">
+            <div className="cadeo-phone-screen-bg">
+              <Image src={marketingImages.phoneGame} alt="" fill sizes="170px" className="object-cover" />
+            </div>
+            <div className="cadeo-phone-notch" />
+            <div className="cadeo-phone-screen-content">
+              <p className="cadeo-phone-title">Play &amp; win a prize!</p>
+              <div className="cadeo-phone-wheel-slot">
+                <MarketingSpinWheel size={88} animate />
+              </div>
+              <button type="button" className="cadeo-phone-play-btn">
+                PLAY!
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="cadeo-review-card">
-        <h4>{t("marketing.visit1Action")}</h4>
-        <p className="cadeo-review-step">1. Leave a Google review</p>
-        <p className="cadeo-review-step">2. Come back to this page</p>
-        <p className="cadeo-review-step">3. Spin the wheel</p>
-        <div className="cadeo-review-btn">Rate on Google ★ 4.9</div>
+        <div className="cadeo-review-card">
+          <span className="cadeo-review-badge">Step 1</span>
+          <h4>{t("marketing.visit1Action")}</h4>
+          <ol className="cadeo-review-steps">
+            <li>Leave a Google review</li>
+            <li>Come back to this page</li>
+            <li>Spin the wheel</li>
+          </ol>
+          <div className="cadeo-review-btn">
+            <span className="cadeo-review-btn-icon">G</span>
+            Rate on Google
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -242,17 +241,19 @@ function VisitsFlow() {
   ];
 
   return (
-    <div className="cadeo-visits">
-      {visits.map((v) => (
-        <div key={v.label} className="cadeo-visit-card">
-          <p className="cadeo-visit-label">{v.label}</p>
-          <span className={`cadeo-visit-pill ${v.pill}`}>
-            <span className="font-black">{v.icon}</span>
-            {v.action}
-          </span>
-          <span className="cadeo-visit-arrow" aria-hidden>↷</span>
-        </div>
-      ))}
+    <div className="cadeo-visits-block">
+      <div className="cadeo-visits">
+        {visits.map((v, i) => (
+          <div key={v.label} className="cadeo-visit-card">
+            <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
+            <p className="cadeo-visit-label">{v.label}</p>
+            <span className={`cadeo-visit-pill ${v.pill}`}>
+              <span className="cadeo-visit-pill-icon">{v.icon}</span>
+              {v.action}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -265,13 +266,15 @@ function DataScene() {
       <div className="cadeo-poll-card cadeo-poll-card--3">Your opinion matters</div>
       <div className="cadeo-win-phone">
         <div className="cadeo-win-screen">
-          <p className="cadeo-win-title">YOU WON! 🎉<br />1 FREE DRINK</p>
-          <div className="cadeo-form-field">First name</div>
-          <div className="cadeo-form-field">Last name</div>
-          <div className="cadeo-form-field">Email</div>
-          <div className="cadeo-form-field">Phone</div>
-          <div className="mt-2 rounded-lg border-2 border-black bg-yellow-200 py-1 text-center text-[0.55rem] font-extrabold">
-            Claim my prize
+          <div className="cadeo-win-screen-bg">
+            <Image src={marketingImages.crmScene} alt="" fill sizes="175px" className="object-cover opacity-25" />
+          </div>
+          <div className="cadeo-win-screen-content">
+            <p className="cadeo-win-title">YOU WON!<br />1 FREE DRINK</p>
+            <div className="cadeo-form-field">First name</div>
+            <div className="cadeo-form-field">Email</div>
+            <div className="cadeo-form-field">Phone</div>
+            <div className="cadeo-win-claim">Claim my prize</div>
           </div>
         </div>
       </div>
@@ -280,7 +283,6 @@ function DataScene() {
 }
 
 function GiftScene() {
-  const { t } = useI18n();
   const tags = [
     { cls: "cadeo-gift-tag--purple", text: "Redeem on next visit" },
     { cls: "cadeo-gift-tag--white", text: "Valid 1 month" },
@@ -295,8 +297,8 @@ function GiftScene() {
           {tag.text}
         </div>
       ))}
-      <div className="cadeo-gift-box" title={t("marketing.prizeTitle")}>
-        🎁
+      <div className="cadeo-gift-box">
+        <Image src={marketingImages.giftRewards} alt="" fill sizes="220px" className="object-cover" />
       </div>
     </div>
   );
@@ -312,7 +314,7 @@ function Features() {
           <div className="cadeo-feature-visual">
             <WheelFlyer />
           </div>
-          <div>
+          <div className="cadeo-feature-copy">
             <p className="cadeo-feature-label">{t("marketing.scanSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.scanTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.scanBody")}</p>
@@ -323,14 +325,14 @@ function Features() {
           <div className="cadeo-feature-visual">
             <PhoneScene />
           </div>
-          <div>
+          <div className="cadeo-feature-copy">
             <p className="cadeo-feature-label">{t("marketing.funSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.funTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.funBody")}</p>
           </div>
         </div>
 
-        <div className="text-center" style={{ marginBottom: "2rem" }}>
+        <div className="cadeo-visits-intro">
           <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
           <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
           <VisitsFlow />
@@ -357,7 +359,7 @@ function Features() {
           <div className="cadeo-feature-visual">
             <DataScene />
           </div>
-          <div>
+          <div className="cadeo-feature-copy">
             <p className="cadeo-feature-label">CRM</p>
             <h3 className="cadeo-feature-title">{t("marketing.dataTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.dataBody")}</p>
@@ -368,8 +370,8 @@ function Features() {
           <div className="cadeo-feature-visual">
             <GiftScene />
           </div>
-          <div>
-            <p className="cadeo-feature-label">🎁</p>
+          <div className="cadeo-feature-copy">
+            <p className="cadeo-feature-label">{t("marketing.prizeSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.prizeTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.prizeBody")}</p>
           </div>
@@ -387,20 +389,20 @@ function Features() {
 function Advantages() {
   const { t } = useI18n();
   const items = [
-    { icon: "👥", text: t("marketing.adv1") },
-    { icon: "📚", text: t("marketing.adv2") },
-    { icon: "🎯", text: t("marketing.adv3") },
-    { icon: "💬", text: t("marketing.adv4") },
+    { num: "01", text: t("marketing.adv1") },
+    { num: "02", text: t("marketing.adv2") },
+    { num: "03", text: t("marketing.adv3") },
+    { num: "04", text: t("marketing.adv4") },
   ];
 
   return (
-    <section className="cadeo-section" style={{ paddingTop: 0 }}>
+    <section className="cadeo-section cadeo-section--tight-top">
       <div className="cadeo-section-inner">
         <h2 className="cadeo-h2 text-center">{t("marketing.advantagesTitle")}</h2>
         <div className="cadeo-adv-grid">
           {items.map((item) => (
             <div key={item.text} className="cadeo-adv-item">
-              <span className="cadeo-adv-icon">{item.icon}</span>
+              <span className="cadeo-adv-num">{item.num}</span>
               <span>{item.text}</span>
             </div>
           ))}
@@ -576,7 +578,6 @@ export function LandingPage() {
   return (
     <div className="cadeo-page">
       <Nav />
-      <TrustBar />
       <main>
         <Hero />
         <Pillars />

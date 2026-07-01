@@ -463,27 +463,14 @@
   opacity: 0.7;
 }
 
-.cadeo-hero-phone-wheel {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto;
-  border-radius: 50%;
-  border: var(--c-border);
-  animation: starspin-orbit 6s linear infinite;
+.cadeo-hero-phone-wheel-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0.15rem auto 0;
 }
 
-.cadeo-hero-phone-wheel-hub {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: var(--c-border);
-  background: #fff;
-  box-shadow: 2px 2px 0 0 var(--c-black);
+.cadeo-hero-phone-wheel-wrap .marketing-wheel {
+  display: block;
 }
 
 .cadeo-hero-phone-cta {
@@ -585,10 +572,34 @@
 }
 
 /* ── Pillars ── */
+.cadeo-pillars-section {
+  background: linear-gradient(180deg, transparent 0%, rgb(216 204 245 / 0.22) 50%, transparent 100%);
+}
+
+.cadeo-section-head {
+  max-width: 42rem;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.cadeo-section-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  border: var(--c-border);
+  border-radius: 999px;
+  box-shadow: var(--c-shadow);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .cadeo-pillars-grid {
   display: grid;
-  gap: 0.85rem;
-  margin-top: 2rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 @media (min-width: 640px) {
@@ -605,17 +616,23 @@
 }
 
 .cadeo-pillar {
+  position: relative;
   border: var(--c-border);
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
-  padding: 1.25rem 1rem;
-  text-align: center;
+  padding: 0.85rem 0.85rem 1.1rem;
+  text-align: left;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 0.75rem;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cadeo-pillar:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--c-shadow-lg);
 }
 
 .cadeo-pillar--purple { background: var(--c-lavender-dark); }
@@ -623,14 +640,26 @@
 .cadeo-pillar--blue { background: var(--c-blue); }
 .cadeo-pillar--yellow { background: var(--c-yellow); }
 
-.cadeo-pillar-icon {
-  font-size: 2.25rem;
-  line-height: 1;
+.cadeo-pillar-num {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 900;
+  opacity: 0.55;
+  letter-spacing: 0.08em;
+}
+
+.cadeo-pillar-photo {
+  height: 5.5rem;
+  border: var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: 3px 3px 0 0 var(--c-black);
+  overflow: hidden;
+  background: #fff;
 }
 
 .cadeo-pillar-text {
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 800;
   line-height: 1.35;
 }
 
@@ -707,67 +736,101 @@
 /* Flyer */
 .cadeo-flyer-wrap {
   position: relative;
-  padding: 1.5rem 0.5rem 2rem;
+  padding: 1rem 0.5rem 1.5rem;
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   margin: 0 auto;
 }
 
 .cadeo-flyer {
-  padding: 1.25rem;
+  padding: 1rem;
   width: 100%;
 }
 
-.cadeo-flyer-logo {
+.cadeo-flyer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.cadeo-flyer-brand-name {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.cadeo-flyer-photo {
+  height: 4.5rem;
   border: var(--c-border);
   border-radius: var(--c-radius);
-  padding: 1.25rem;
-  text-align: center;
-  font-weight: 800;
-  font-size: 0.75rem;
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+  box-shadow: 3px 3px 0 0 var(--c-black);
+}
+
+.cadeo-flyer-wheel-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
   margin-bottom: 0.85rem;
 }
 
-.cadeo-flyer-wheel {
-  position: relative;
-  width: min(180px, 70%);
-  height: min(180px, 70vw);
-  margin: 0 auto 0.85rem;
-  border-radius: 50%;
-  border: var(--c-border);
-  overflow: hidden;
+.cadeo-flyer-wheel-wrap .marketing-wheel {
+  display: block;
 }
 
 .cadeo-flyer-qr {
   position: absolute;
-  bottom: 0;
+  bottom: -0.35rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   background: #fff;
   border: var(--c-border);
-  border-radius: var(--c-radius) var(--c-radius) 0 0;
-  padding: 0.4rem;
-  text-align: center;
-  font-size: 0.5rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.52rem;
   font-weight: 800;
+  box-shadow: var(--c-shadow);
+  white-space: nowrap;
 }
 
 .cadeo-flyer-steps {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.2rem;
-  font-size: 0.48rem;
-  font-weight: 800;
-  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
 }
 
 .cadeo-flyer-step {
-  flex: 1;
-  padding: 0.35rem 0.15rem;
-  border: 2px solid var(--c-black);
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.25rem;
+  border: var(--c-border);
+  border-radius: 10px;
   background: var(--c-cream);
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.cadeo-flyer-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--c-black);
+  background: var(--c-yellow);
+  font-size: 0.5rem;
 }
 
 .cadeo-flyer-annot {
@@ -815,15 +878,6 @@
   gap: 1rem;
 }
 
-@media (min-width: 480px) {
-  .cadeo-phone-scene-inner {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-}
-
 .cadeo-phone {
   width: 170px;
   flex-shrink: 0;
@@ -837,13 +891,57 @@
 
 .cadeo-phone-screen {
   border-radius: 20px;
-  background: linear-gradient(180deg, #fff 0%, #f0e6ff 100%);
+  background: #fff;
   aspect-ratio: 9 / 16;
-  padding: 1.25rem 0.6rem 0.6rem;
   overflow: hidden;
   position: relative;
+}
+
+.cadeo-phone-screen-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cadeo-phone-screen-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 1.35rem 0.5rem 0.75rem;
+}
+
+.cadeo-phone-title {
+  font-size: 0.55rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.65);
+}
+
+.cadeo-phone-wheel-slot {
+  margin: auto 0 0.45rem;
+  padding: 0.35rem;
+  background: rgb(255 255 255 / 0.92);
+  border: var(--c-border);
+  border-radius: 50%;
+  box-shadow: var(--c-shadow);
+}
+
+.cadeo-phone-play-btn {
+  width: 100%;
+  padding: 0.35rem;
+  border: 2px solid var(--c-black);
+  border-radius: 999px;
+  background: var(--c-purple-deep);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 .cadeo-phone-notch {
@@ -855,83 +953,163 @@
   height: 12px;
   background: var(--c-black);
   border-radius: 99px;
+  z-index: 2;
 }
 
 .cadeo-review-card {
   width: 100%;
-  max-width: 170px;
+  max-width: 178px;
   border: var(--c-border);
   border-radius: var(--c-radius);
-  box-shadow: var(--c-shadow);
+  box-shadow: var(--c-shadow-lg);
   background: #fff;
-  padding: 0.75rem;
-  transform: rotate(3deg);
+  padding: 0.85rem 0.75rem;
+  transform: rotate(4deg);
   flex-shrink: 0;
 }
 
-@media (min-width: 480px) {
-  .cadeo-review-card {
-    margin-top: 1.5rem;
-  }
+.cadeo-review-badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  background: var(--c-yellow);
+  border: 2px solid var(--c-black);
+  border-radius: 6px;
+  font-size: 0.48rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .cadeo-review-card h4 {
-  font-size: 0.65rem;
-  font-weight: 800;
+  font-size: 0.62rem;
+  font-weight: 900;
   text-transform: uppercase;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
   line-height: 1.25;
 }
 
-.cadeo-review-step {
-  font-size: 0.58rem;
+.cadeo-review-steps {
+  margin: 0 0 0.5rem;
+  padding-left: 1rem;
+  font-size: 0.55rem;
   font-weight: 600;
-  margin-bottom: 0.2rem;
-  line-height: 1.3;
+  line-height: 1.45;
+}
+
+.cadeo-review-steps li {
+  margin-bottom: 0.15rem;
 }
 
 .cadeo-review-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   width: 100%;
-  margin-top: 0.4rem;
-  padding: 0.35rem;
+  padding: 0.4rem;
   background: var(--c-salmon);
   border: 2px solid var(--c-black);
-  border-radius: 8px;
-  font-size: 0.55rem;
-  font-weight: 800;
-  text-align: center;
+  border-radius: 999px;
+  font-size: 0.52rem;
+  font-weight: 900;
+}
+
+.cadeo-review-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--c-black);
+  background: #fff;
+  font-size: 0.48rem;
+  font-weight: 900;
+}
+
+@media (min-width: 480px) {
+  .cadeo-phone-scene-inner {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.65rem;
+  }
+
+  .cadeo-review-card {
+    margin-bottom: 1.25rem;
+  }
 }
 
 /* Visits */
-.cadeo-visits-block {
-  margin: 2.5rem 0 3rem;
+.cadeo-visits-intro {
+  margin-bottom: clamp(3rem, 8vw, 4.5rem);
   text-align: center;
 }
 
+.cadeo-visits-block {
+  margin-top: 1.75rem;
+}
+
 .cadeo-visits {
-  position: relative;
-  max-width: 400px;
-  margin: 1.5rem auto 0;
-  padding: 0 0.5rem;
+  display: grid;
+  gap: 0.85rem;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .cadeo-visits {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cadeo-visits {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+  }
 }
 
 .cadeo-visit-card {
+  position: relative;
   border: var(--c-border);
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
   background: #fff;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
+  padding: 1.1rem 1rem 1.15rem;
   text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cadeo-visit-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--c-shadow-lg);
+}
+
+.cadeo-visit-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin-bottom: 0.55rem;
+  border: var(--c-border);
+  border-radius: 50%;
+  background: var(--c-yellow);
+  font-size: 0.62rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 .cadeo-visit-label {
-  font-size: 0.7rem;
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 900;
   text-transform: uppercase;
-  opacity: 0.55;
-  margin-bottom: 0.6rem;
+  letter-spacing: 0.04em;
+  opacity: 0.5;
+  margin-bottom: 0.65rem;
 }
 
 .cadeo-visit-pill {
@@ -939,14 +1117,28 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.55rem 1rem;
+  padding: 0.55rem 0.85rem;
   border: var(--c-border);
   border-radius: 999px;
-  font-size: clamp(0.75rem, 2vw, 0.85rem);
-  font-weight: 700;
+  font-size: clamp(0.68rem, 1.8vw, 0.78rem);
+  font-weight: 800;
   box-shadow: 3px 3px 0 0 var(--c-black);
   max-width: 100%;
-  text-align: left;
+  line-height: 1.25;
+}
+
+.cadeo-visit-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  border: 2px solid var(--c-black);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.55rem;
+  font-weight: 900;
 }
 
 .cadeo-visit-pill--google { background: var(--c-lavender-dark); }
@@ -1021,10 +1213,34 @@
 }
 
 .cadeo-win-screen {
+  position: relative;
   border-radius: 17px;
   background: #fff;
   padding: 0.85rem 0.65rem;
   font-size: 0.6rem;
+  overflow: hidden;
+}
+
+.cadeo-win-screen-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cadeo-win-screen-content {
+  position: relative;
+  z-index: 1;
+}
+
+.cadeo-win-claim {
+  margin-top: 0.35rem;
+  border-radius: 8px;
+  border: 2px solid var(--c-black);
+  background: var(--c-yellow);
+  padding: 0.35rem;
+  text-align: center;
+  font-size: 0.52rem;
+  font-weight: 900;
 }
 
 .cadeo-win-title {
@@ -1087,10 +1303,15 @@
 }
 
 .cadeo-gift-box {
-  font-size: clamp(4rem, 15vw, 6rem);
-  filter: drop-shadow(4px 4px 0 var(--c-black));
   position: relative;
   z-index: 1;
+  width: 9.5rem;
+  height: 9.5rem;
+  border: var(--c-border);
+  border-radius: var(--c-radius-lg);
+  box-shadow: var(--c-shadow-lg);
+  overflow: hidden;
+  background: #fff;
 }
 
 .cadeo-gift-tag {
@@ -1140,20 +1361,37 @@
 .cadeo-adv-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: 0.85rem;
   border: var(--c-border);
-  border-radius: var(--c-radius);
+  border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
   background: #fff;
   padding: 1rem 1.1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.cadeo-adv-icon {
-  font-size: 1.35rem;
+.cadeo-adv-item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--c-shadow-lg);
+}
+
+.cadeo-adv-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
+  border: var(--c-border);
+  border-radius: 10px;
+  background: var(--c-lavender);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 /* Pricing */
@@ -1596,6 +1834,32 @@
     left: auto;
     right: 1.25rem;
     margin: 0;
+  }
+}
+
+/* Marketing spin wheel (SVG mockups) */
+.marketing-wheel {
+  display: block;
+  flex-shrink: 0;
+}
+
+.marketing-wheel__disc {
+  transform-origin: 50px 50px;
+}
+
+.marketing-wheel--spin .marketing-wheel__disc {
+  animation: marketing-wheel-spin 5s linear infinite;
+}
+
+@keyframes marketing-wheel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-wheel--spin .marketing-wheel__disc {
+    animation: none;
   }
 }
 
