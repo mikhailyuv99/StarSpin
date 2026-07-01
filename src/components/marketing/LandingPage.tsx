@@ -27,8 +27,8 @@ function Nav() {
           <a href="#testimonials">{t("marketing.testimonialsTitle")}</a>
           <a href="#faq">{t("marketing.navFaq")}</a>
         </div>
-        <div className="flex items-center gap-2">
-          <LocaleSwitcher variant="light" />
+        <div className="cadeo-nav-actions">
+          <LocaleSwitcher variant="brutal" />
           <Link href="/login" className="cadeo-btn cadeo-btn-yellow !hidden sm:!inline-flex">
             {t("marketing.footerDemo")}
           </Link>
@@ -81,12 +81,14 @@ function Hero() {
           <div className="cadeo-hero-glow" />
           <div className="cadeo-hero-photo">
             <div className="cadeo-hero-photo-inner">🍔</div>
-            {badges.map((b) => (
-              <div key={b.text} className={`cadeo-stat-badge ${b.cls}`}>
-                <span className="font-black">{b.icon}</span>
-                <span>{b.text}</span>
-              </div>
-            ))}
+            <div className="cadeo-hero-badges sm:contents">
+              {badges.map((b) => (
+                <div key={b.text} className={`cadeo-stat-badge ${b.cls}`}>
+                  <span className="font-black">{b.icon}</span>
+                  <span>{b.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -127,27 +129,29 @@ function Pillars() {
 
 function WheelFlyer() {
   return (
-    <div className="cadeo-card cadeo-flyer">
-      <div className="cadeo-flyer-logo">
-        LOGO
-        <span className="cadeo-annot" style={{ top: "-18px", right: "-60px" }}>
-          → YOUR LOGO
-        </span>
-      </div>
-      <div className="cadeo-flyer-wheel" style={{ background: "conic-gradient(from 0deg, #fff 0deg 60deg, #0a0a0a 60deg 120deg, #fff 120deg 180deg, #0a0a0a 180deg 240deg, #fff 240deg 300deg, #0a0a0a 300deg 360deg)" }}>
-        <div className="cadeo-flyer-qr">
-          <div style={{ fontSize: "1.5rem" }}>▦</div>
-          Scan to play
+    <div className="cadeo-flyer-wrap">
+      <div className="cadeo-card cadeo-flyer">
+        <div className="cadeo-flyer-logo">LOGO</div>
+        <div
+          className="cadeo-flyer-wheel"
+          style={{
+            background:
+              "conic-gradient(from 0deg, #fff 0deg 60deg, #0a0a0a 60deg 120deg, #fff 120deg 180deg, #0a0a0a 180deg 240deg, #fff 240deg 300deg, #0a0a0a 300deg 360deg)",
+          }}
+        >
+          <div className="cadeo-flyer-qr">
+            <div style={{ fontSize: "1.5rem" }}>▦</div>
+            Scan to play
+          </div>
+        </div>
+        <div className="cadeo-flyer-steps">
+          {["📱 SCAN", "🎰 SPIN", "🎁 WIN"].map((s) => (
+            <div key={s} className="cadeo-flyer-step">
+              {s}
+            </div>
+          ))}
         </div>
       </div>
-      <div className="cadeo-flyer-steps">
-        {["📱 SCAN", "🎰 SPIN", "🎁 WIN"].map((s) => (
-          <div key={s} className="cadeo-flyer-step">{s}</div>
-        ))}
-      </div>
-      <span className="cadeo-annot" style={{ bottom: "-20px", left: "50%", transform: "translateX(-50%)" }}>
-        YOUR STYLE ↓
-      </span>
     </div>
   );
 }

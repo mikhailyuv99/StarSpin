@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { ui } from "@/components/ui/styles";
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -57,102 +58,80 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const inputClass =
-    "w-full rounded-sm border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-zinc-400 focus:border-ink focus:ring-1 focus:ring-ink";
-
   return (
-    <div className="flex min-h-screen bg-surface">
-      <div className="marketing-grid hidden flex-1 border-r border-zinc-800 bg-ink p-12 lg:flex lg:flex-col lg:justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-white text-[11px] font-bold text-ink">
-            RF
-          </span>
-          <span className="text-[15px] font-semibold text-white">{t("common.brand")}</span>
+    <div className="brutal-page flex min-h-screen flex-col lg:flex-row">
+      <div className="marketing-grid hidden flex-1 flex-col justify-between border-r-[2.5px] border-black bg-[var(--c-lavender)] p-10 lg:flex">
+        <Link href="/" className="brutal-logo text-2xl">
+          {t("common.brand").toUpperCase().replace(/\s/g, "")}
         </Link>
-        <div>
-          <p className="section-label text-zinc-400">{t("login.merchantSpace")}</p>
-          <p className="mt-4 max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white">
+        <div className="brutal-card-lg max-w-md p-8">
+          <p className="section-label text-muted">{t("login.merchantSpace")}</p>
+          <p className="mt-4 font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-snug">
             {t("login.tagline")}
           </p>
         </div>
-        <p className="font-mono text-xs text-zinc-500">{t("login.location")}</p>
+        <p className="font-mono text-xs font-semibold text-muted">{t("login.location")}</p>
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-5 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center justify-between lg:hidden">
-            <Link href="/" className="text-[15px] font-semibold text-ink">
-              {t("login.back")}
+      <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
+        <div className="w-full max-w-md">
+          <div className="mb-6 flex items-center justify-between lg:hidden">
+            <Link href="/" className="brutal-logo brutal-logo-dark !text-lg">
+              {t("common.brand").toUpperCase().replace(/\s/g, "")}
             </Link>
-            <LocaleSwitcher variant="light" />
+            <LocaleSwitcher variant="brutal" />
           </div>
-          <div className="mb-6 hidden lg:flex lg:justify-end">
-            <LocaleSwitcher variant="light" />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            {isSignup ? t("login.signupTitle") : t("login.signinTitle")}
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            {isSignup ? t("login.signupSubtitle") : t("login.signinSubtitle")}
-          </p>
-
-          {error && (
-            <p className="mt-6 rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p className="mt-6 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-              {message}
-            </p>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-                {t("common.email")}
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={inputClass}
-              />
+          <div className="brutal-card-lg p-6 sm:p-8">
+            <div className="mb-6 hidden lg:flex lg:justify-end">
+              <LocaleSwitcher variant="brutal" />
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-                {t("common.password")}
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className={inputClass}
-              />
-            </div>
+            <h1 className={ui.h1}>{isSignup ? t("login.signupTitle") : t("login.signinTitle")}</h1>
+            <p className={`mt-2 ${ui.muted}`}>
+              {isSignup ? t("login.signupSubtitle") : t("login.signinSubtitle")}
+            </p>
+
+            {error && <p className={`mt-6 ${ui.alertError}`}>{error}</p>}
+            {message && <p className={`mt-6 ${ui.alertSuccess}`}>{message}</p>}
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+              <div>
+                <label className={ui.label}>{t("common.email")}</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className={ui.input}
+                />
+              </div>
+              <div>
+                <label className={ui.label}>{t("common.password")}</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className={ui.input}
+                />
+              </div>
+              <button type="submit" disabled={loading} className={`w-full ${ui.btnYellow}`}>
+                {loading
+                  ? t("common.loading")
+                  : isSignup
+                    ? t("login.createAccount")
+                    : t("login.signIn")}
+              </button>
+            </form>
+
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-sm bg-ink py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
+              type="button"
+              onClick={() => setIsSignup(!isSignup)}
+              className="brutal-btn-ghost mt-6 w-full text-center text-sm"
             >
-              {loading
-                ? t("common.loading")
-                : isSignup
-                  ? t("login.createAccount")
-                  : t("login.signIn")}
+              {isSignup ? t("login.toggleSignup") : t("login.toggleSignin")}
             </button>
-          </form>
-
-          <button
-            type="button"
-            onClick={() => setIsSignup(!isSignup)}
-            className="mt-6 w-full text-center text-sm text-muted hover:text-ink"
-          >
-            {isSignup ? t("login.toggleSignup") : t("login.toggleSignin")}
-          </button>
+          </div>
         </div>
       </div>
     </div>

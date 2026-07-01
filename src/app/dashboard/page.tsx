@@ -34,10 +34,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {links.map((item) => (
-          <Link key={item.href} href={item.href} className="bg-white p-6 hover:bg-surface">
-            <h2 className="text-[15px] font-semibold text-ink">{item.title}</h2>
+          <Link key={item.href} href={item.href} className={ui.cardGrid}>
+            <h2 className="text-[15px] font-extrabold text-ink">{item.title}</h2>
             <p className="mt-1 text-sm text-muted">{item.desc}</p>
           </Link>
         ))}

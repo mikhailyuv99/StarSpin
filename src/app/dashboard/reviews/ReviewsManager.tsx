@@ -26,9 +26,9 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
   }
 
   return (
-    <div className="divide-y divide-border border border-border">
+    <div className="overflow-hidden rounded-[14px] border-2 border-black">
       {spins.map((spin) => (
-        <div key={spin.id} className="bg-white p-5">
+        <div key={spin.id} className="border-b-2 border-black/10 bg-white p-5 last:border-b-0">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="font-mono text-sm text-ink">{spin.phone_number}</p>

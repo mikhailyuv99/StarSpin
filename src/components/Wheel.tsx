@@ -21,6 +21,8 @@ interface WheelProps {
   hideSpinButton?: boolean;
 }
 
+const FALLBACK_SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#b8cfe8", "#a8e6cf", "#f4a89a"];
+
 export function Wheel({
   prizes,
   primaryColor,
@@ -37,7 +39,7 @@ export function Wheel({
   const spunRef = useRef<string | undefined>(undefined);
   const slices = prizeSliceAngles(prizes);
 
-  const colors = [primaryColor, secondaryColor, "#3f3f46", "#52525b", "#71717a", "#a1a1aa"];
+  const colors = [primaryColor, secondaryColor, ...FALLBACK_SLICE_COLORS];
 
   useEffect(() => {
     const update = () => {
@@ -76,30 +78,27 @@ export function Wheel({
   }, [targetPrizeId, spinning, spin]);
 
   if (slices.length === 0) {
-    return <p className="text-center text-sm text-zinc-500">{t("public.wheelEmpty")}</p>;
+    return <p className="text-center text-sm font-semibold text-muted">{t("public.wheelEmpty")}</p>;
   }
 
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
-  const r = wheelSize / 2 - 6;
+  const r = wheelSize / 2 - 8;
   const hubSize = Math.round(wheelSize * 0.2);
   const fontSize = slices.length > 8 ? 8 : slices.length > 5 ? 9 : 11;
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
       <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
-        <div
-          className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 drop-shadow-md"
-          aria-hidden
-        >
+        <div className="absolute -top-2 left-1/2 z-20 -translate-x-1/2" aria-hidden>
           <svg width="28" height="24" viewBox="0 0 28 24" fill="none">
-            <path d="M14 24L2 4h24L14 24z" fill="#18181b" />
-            <path d="M14 21L5 7h18L14 21z" fill="#fff" />
+            <path d="M14 24L2 4h24L14 24z" fill="#0a0a0a" />
+            <path d="M14 21L5 7h18L14 21z" fill="#f5e08e" />
           </svg>
         </div>
 
         <div
-          className="rounded-full border-[3px] border-white/90 shadow-2xl transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
+          className="rounded-full border-[3px] border-black shadow-[6px_6px_0_0_#0a0a0a] transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
           style={{
             width: wheelSize,
             height: wheelSize,
@@ -112,17 +111,18 @@ export function Wheel({
             viewBox={`0 0 ${wheelSize} ${wheelSize}`}
             className="block"
           >
-            <circle cx={cx} cy={cy} r={r + 3} fill="#18181b" />
+            <circle cx={cx} cy={cy} r={r + 4} fill="#0a0a0a" />
             {slices.map((slice, i) => {
               const mid = (slice.start + slice.end) / 2;
               const textPos = polarToCartesian(cx, cy, r * 0.62, mid);
+              const fill = colors[i % colors.length];
               return (
                 <g key={slice.prize.id}>
                   <path
                     d={describeSlice(cx, cy, r, slice.start, slice.end)}
-                    fill={colors[i % colors.length]}
-                    stroke="#fff"
-                    strokeWidth={1.5}
+                    fill={fill}
+                    stroke="#0a0a0a"
+                    strokeWidth={2}
                   />
                   <text
                     x={textPos.x}
@@ -130,23 +130,22 @@ export function Wheel({
                     transform={`rotate(${mid}, ${textPos.x}, ${textPos.y})`}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="#fff"
+                    fill="#0a0a0a"
                     fontSize={fontSize}
-                    fontWeight={700}
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}
+                    fontWeight={800}
                   >
                     {truncateLabel(slice.prize.label)}
                   </text>
                 </g>
               );
             })}
-            <circle cx={cx} cy={cy} r={hubSize / 2 + 2} fill="#fff" stroke="#e4e4e7" strokeWidth={2} />
+            <circle cx={cx} cy={cy} r={hubSize / 2 + 2} fill="#fff" stroke="#0a0a0a" strokeWidth={2.5} />
           </svg>
         </div>
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div
-            className="flex items-center justify-center rounded-full border-2 border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-wider text-zinc-800 shadow-sm"
+            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[10px] font-extrabold uppercase tracking-wider text-black shadow-[2px_2px_0_0_#0a0a0a]"
             style={{ width: hubSize, height: hubSize }}
           >
             {t("public.wheelGo")}
@@ -159,8 +158,8 @@ export function Wheel({
           type="button"
           onClick={spin}
           disabled={spinning}
-          className="public-touch-target w-full max-w-xs rounded-sm px-6 font-semibold text-white disabled:opacity-40"
-          style={{ backgroundColor: primaryColor }}
+          className="public-btn public-touch-target max-w-xs"
+          style={{ backgroundColor: primaryColor, color: "#fff" }}
         >
           {spinning ? t("public.wheelSpinning") : t("public.wheelSpin")}
         </button>

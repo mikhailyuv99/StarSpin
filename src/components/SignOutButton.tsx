@@ -16,11 +16,7 @@ export function SignOutButton() {
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleSignOut}
-      className="text-[13px] font-medium text-muted hover:text-ink"
-    >
+    <button type="button" onClick={handleSignOut} className="brutal-btn brutal-btn-white text-xs !px-3 !py-2">
       {t("common.signOut")}
     </button>
   );

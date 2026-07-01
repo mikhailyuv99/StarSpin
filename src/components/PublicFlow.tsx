@@ -62,15 +62,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const activePrizes = prizeSliceAngles(prizes);
   const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
 
-  const bgStyle = {
-    background: `linear-gradient(165deg, ${merchant.primary_color} 0%, ${merchant.secondary_color} 55%, #09090b 100%)`,
-  };
-
-  const btnPrimaryClass =
-    "public-touch-target w-full rounded-sm font-bold text-white shadow-lg disabled:opacity-40 active:scale-[0.98] transition-transform";
-
-  const btnOutlineClass =
-    "public-touch-target w-full rounded-sm border-2 border-zinc-200 bg-white font-semibold text-zinc-900 active:bg-zinc-50 active:scale-[0.98] transition-transform";
+  const btnStyle = { backgroundColor: accent, color: "#fff" };
 
   useEffect(() => {
     if (step === "result" && wonPrize) fireConfetti(accent);
@@ -195,21 +187,22 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   ].filter((l) => l.url);
 
   return (
-    <div className="public-flow w-full" style={bgStyle}>
+    <div className="public-flow w-full">
       <div className="mx-auto flex w-full max-w-lg flex-col">
         <div className="mb-2 flex justify-end px-1">
-          <LocaleSwitcher variant="dark" />
+          <LocaleSwitcher variant="brutal" />
         </div>
         <MerchantHeader merchant={merchant} />
 
         <div className="mb-4 px-1">
-          <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/80">
+          <div className="mb-2 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-muted">
             <span>{t("public.progress")}</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-white/20">
+          <div className="public-progress-track">
             <motion.div
-              className="h-full rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]"
+              className="public-progress-fill"
+              style={{ backgroundColor: accent }}
               initial={false}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -219,12 +212,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
         <StepIndicator current={step} accent={accent} />
 
-        <div className="overflow-hidden rounded-sm border border-white/30 bg-white shadow-2xl">
+        <div className="public-card">
           {error && (
-            <div
-              className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm leading-snug text-red-800"
-              role="alert"
-            >
+            <div className="brutal-alert-error rounded-none border-x-0 border-t-0" role="alert">
               {error}
             </div>
           )}
@@ -245,8 +235,10 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🎯
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.phoneTitle")}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{t("public.phoneSubtitle")}</p>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
+                      {t("public.phoneTitle")}
+                    </h2>
+                    <p className="mt-1 text-sm font-medium text-muted">{t("public.phoneSubtitle")}</p>
                   </div>
 
                   <input
@@ -265,8 +257,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       type="button"
                       onClick={sendOtp}
                       disabled={loading || phone.length < 8}
-                      className={btnPrimaryClass}
-                      style={{ backgroundColor: accent }}
+                      className="public-btn public-touch-target"
+                      style={btnStyle}
                     >
                       {loading ? t("public.sending") : t("public.sendCode")}
                     </button>
@@ -283,14 +275,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         className="public-input text-center font-mono text-2xl tracking-[0.35em]"
                       />
                       {otpHint && (
-                        <p className="text-center text-sm font-medium text-emerald-700">{otpHint}</p>
+                        <p className="text-center text-sm font-semibold text-muted">{otpHint}</p>
                       )}
                       <button
                         type="button"
                         onClick={verifyOtp}
                         disabled={loading || otp.length < 4}
-                        className={btnPrimaryClass}
-                        style={{ backgroundColor: accent }}
+                        className="public-btn public-touch-target"
+                        style={btnStyle}
                       >
                         {loading ? t("public.verifying") : t("public.verifyContinue")}
                       </button>
@@ -298,7 +290,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         type="button"
                         onClick={sendOtp}
                         disabled={loading}
-                        className="w-full text-center text-sm font-medium text-zinc-500 underline-offset-2 hover:underline"
+                        className="brutal-btn-ghost w-full text-center text-sm"
                       >
                         {t("public.resendCode")}
                       </button>
@@ -321,8 +313,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       ⭐
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.socialTitle")}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{t("public.socialSubtitle")}</p>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.socialTitle")}</h2>
+                    <p className="mt-1 text-sm font-medium text-muted">{t("public.socialSubtitle")}</p>
                   </div>
 
                   <div className="space-y-2.5">
@@ -331,14 +323,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         key={link.key}
                         type="button"
                         onClick={() => handleSocialClick(link.url!)}
-                        className={`${btnOutlineClass} flex items-center justify-center gap-2 text-left`}
+                      className={`public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2 text-left`}
                       >
                         <span className="text-xl">{link.emoji}</span>
                         {link.label}
                       </button>
                     ))}
                     {socialLinks.length === 0 && (
-                      <p className="text-center text-sm text-zinc-500">{t("public.noSocial")}</p>
+                      <p className="text-center text-sm font-medium text-muted">{t("public.noSocial")}</p>
                     )}
                   </div>
 
@@ -346,8 +338,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     type="button"
                     onClick={() => setStep("review")}
                     disabled={!followedSocial && socialLinks.length > 0}
-                    className={btnPrimaryClass}
-                    style={{ backgroundColor: accent }}
+                    className="public-btn public-touch-target"
+                    style={btnStyle}
                   >
                     {t("public.missionDone")}
                   </button>
@@ -368,8 +360,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🏆
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.reviewTitle")}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{t("public.reviewSubtitle")}</p>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.reviewTitle")}</h2>
+                    <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
                   </div>
 
                   {merchant.google_review_link && (
@@ -377,8 +369,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       href={merchant.google_review_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${btnPrimaryClass} flex items-center justify-center gap-2`}
-                      style={{ backgroundColor: "#18181b" }}
+                      className="public-btn public-touch-target flex items-center justify-center gap-2"
+                      style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
                     >
                       {t("public.openGoogle")}
                     </a>
@@ -399,11 +391,11 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={loading}
-                    className={btnOutlineClass}
+                    className="public-btn public-btn-outline public-touch-target"
                   >
                     {loading ? t("public.uploadAnalyzing") : t("public.uploadScreenshot")}
                   </button>
-                  <p className="text-center text-xs text-zinc-500">{t("public.reviewHint")}</p>
+                  <p className="text-center text-xs font-medium text-muted">{t("public.reviewHint")}</p>
                 </motion.div>
               )}
 
@@ -421,8 +413,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🎰
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.wheelTitle")}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{t("public.wheelSubtitle")}</p>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.wheelTitle")}</h2>
+                    <p className="mt-1 text-sm font-medium text-muted">{t("public.wheelSubtitle")}</p>
                   </div>
 
                   {activePrizes.length > 0 && (
@@ -430,7 +422,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       {activePrizes.map(({ prize }) => (
                         <span
                           key={prize.id}
-                          className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold text-zinc-700"
+                          className="public-prize-chip"
                         >
                           {prize.label}
                         </span>
@@ -454,8 +446,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       type="button"
                       onClick={handleWheelSpin}
                       disabled={loading}
-                      className={`${btnPrimaryClass} text-lg`}
-                      style={{ backgroundColor: accent }}
+                      className="public-btn public-touch-target text-lg"
+                      style={btnStyle}
                     >
                       {loading ? t("public.spinPreparing") : t("public.spinButton")}
                     </button>
@@ -479,19 +471,19 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   >
                     🎉
                   </motion.p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">{t("public.youWon")}</p>
-                  <p className="text-balance text-2xl font-bold leading-tight text-zinc-900 sm:text-3xl">
+                  <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{t("public.youWon")}</p>
+                  <p className="text-balance font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-tight text-ink sm:text-3xl">
                     {wonPrize.label}
                   </p>
-                  <div className="rounded-sm border-2 border-dashed border-zinc-300 bg-gradient-to-b from-zinc-50 to-white px-4 py-6">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                  <div className="brutal-card border-dashed bg-[var(--c-cream)] px-4 py-6">
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
                       {t("public.checkoutCode")}
                     </p>
-                    <p className="mt-3 font-mono text-4xl font-bold tracking-wider text-zinc-900">
+                    <p className="mt-3 font-mono text-4xl font-extrabold tracking-wider text-ink">
                       {spinId?.slice(0, 8).toUpperCase()}
                     </p>
                   </div>
-                  <p className="text-sm leading-relaxed text-zinc-600">{t("public.showScreen")}</p>
+                  <p className="text-sm font-medium leading-relaxed text-muted">{t("public.showScreen")}</p>
                 </motion.div>
               )}
             </AnimatePresence>

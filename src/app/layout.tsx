@@ -51,7 +51,7 @@ export default async function RootLayout({
       lang={locale}
       className={`${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans">
+      <body className="min-h-full font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
         <I18nProvider locale={locale} messages={messages}>
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </I18nProvider>

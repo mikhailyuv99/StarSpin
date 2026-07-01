@@ -21,7 +21,7 @@ export function AdminMerchantsTable({ merchants }: { merchants: Merchant[] }) {
   };
 
   return (
-    <div className="overflow-x-auto border border-border">
+    <div className="brutal-card overflow-x-auto">
       <table className={ui.table}>
         <thead>
           <tr>

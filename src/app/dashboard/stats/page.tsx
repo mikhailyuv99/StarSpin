@@ -61,9 +61,9 @@ export default async function StatsPage() {
       {reviewHistory && reviewHistory.length > 0 && (
         <div className={ui.card}>
           <h2 className={ui.h2}>{t("dashboard.reviewHistory")}</h2>
-          <div className="mt-4 divide-y divide-border border border-border">
+          <div className="mt-4 overflow-hidden rounded-[14px] border-2 border-black">
             {reviewHistory.map((row) => (
-              <div key={row.id} className="flex justify-between bg-white px-4 py-2.5 font-mono text-xs">
+              <div key={row.id} className="flex justify-between border-b-2 border-black/10 bg-white px-4 py-2.5 font-mono text-xs last:border-b-0">
                 <span className="text-muted">
                   {new Date(row.checked_at).toLocaleDateString(intl)}
                 </span>
@@ -76,9 +76,9 @@ export default async function StatsPage() {
 
       <div className={ui.card}>
         <h2 className={ui.h2}>{t("dashboard.recentSpins")}</h2>
-        <div className="mt-4 divide-y divide-border border border-border">
+        <div className="mt-4 overflow-hidden rounded-[14px] border-2 border-black">
           {(recentSpins ?? []).map((spin, i) => (
-            <div key={i} className="flex justify-between bg-white px-4 py-2.5 text-sm">
+            <div key={i} className="flex justify-between border-b-2 border-black/10 bg-white px-4 py-2.5 text-sm last:border-b-0">
               <span className="font-mono text-xs text-muted">
                 {new Date(spin.created_at).toLocaleString(intl)}
               </span>

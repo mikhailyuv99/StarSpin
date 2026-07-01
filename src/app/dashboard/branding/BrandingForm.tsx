@@ -103,7 +103,7 @@ export function BrandingForm({
             type="color"
             value={form.primary_color}
             onChange={(e) => update("primary_color", e.target.value)}
-            className="h-10 w-full cursor-pointer rounded-sm border border-border bg-white p-1"
+            className="h-10 w-full cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
           />
         </div>
         <div>
@@ -112,7 +112,7 @@ export function BrandingForm({
             type="color"
             value={form.secondary_color}
             onChange={(e) => update("secondary_color", e.target.value)}
-            className="h-10 w-full cursor-pointer rounded-sm border border-border bg-white p-1"
+            className="h-10 w-full cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
           />
         </div>
       </div>
@@ -132,7 +132,7 @@ export function BrandingForm({
           <img
             src={form.logo_url}
             alt="Logo"
-            className="mt-3 h-14 w-14 rounded-sm border border-border object-cover"
+            className="mt-3 h-14 w-14 rounded-[14px] border-2 border-black object-cover shadow-[3px_3px_0_0_#0a0a0a]"
           />
         )}
       </div>

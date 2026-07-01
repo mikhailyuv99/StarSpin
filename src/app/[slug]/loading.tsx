@@ -1,20 +1,22 @@
 export default function PublicMerchantLoading() {
   return (
-    <div className="public-flow w-full bg-zinc-900">
+    <div className="public-flow w-full">
       <div className="mx-auto flex w-full max-w-lg animate-pulse flex-col gap-5">
-        <div className="flex items-center gap-3 px-1">
-          <div className="h-12 w-12 rounded-sm bg-white/20" />
-          <div className="space-y-2">
-            <div className="h-4 w-32 rounded-sm bg-white/25" />
-            <div className="h-3 w-20 rounded-sm bg-white/15" />
-          </div>
+        <div className="flex items-center justify-end px-1">
+          <div className="h-8 w-24 rounded-[10px] border-2 border-black bg-white" />
         </div>
-        <div className="h-2 rounded-full bg-white/15" />
-        <div className="rounded-sm border border-white/20 bg-white p-6">
-          <div className="mx-auto h-6 w-40 rounded-sm bg-zinc-200" />
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 rounded-[14px] border-2 border-black bg-white" />
+          <div className="mx-auto mt-3 h-5 w-40 rounded bg-white border-2 border-black" />
+        </div>
+        <div className="public-progress-track">
+          <div className="public-progress-fill w-1/3" />
+        </div>
+        <div className="public-card p-6">
+          <div className="mx-auto h-6 w-40 rounded border-2 border-black bg-[var(--c-cream)]" />
           <div className="mt-6 space-y-3">
-            <div className="h-12 w-full rounded-sm bg-zinc-100" />
-            <div className="h-12 w-full rounded-sm bg-zinc-200" />
+            <div className="h-12 w-full rounded-[14px] border-2 border-black bg-white" />
+            <div className="h-12 w-full rounded-[14px] border-2 border-black bg-[var(--c-yellow)]" />
           </div>
         </div>
       </div>

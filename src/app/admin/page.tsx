@@ -30,14 +30,14 @@ export default async function AdminPage() {
 
   return (
     <div className={ui.page}>
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5 sm:px-8">
-          <h1 className="text-sm font-semibold text-ink">{t("admin.title")}</h1>
-          <Link href="/dashboard" className="text-[13px] font-medium text-muted hover:text-ink">
+      <div className="brutal-nav-wrap">
+        <header className="brutal-nav">
+          <h1 className="text-sm font-extrabold uppercase">{t("admin.title")}</h1>
+          <Link href="/dashboard" className="brutal-btn brutal-btn-yellow text-sm">
             {t("common.dashboard")}
           </Link>
-        </div>
-      </header>
+        </header>
+      </div>
       <main className={`${ui.shell} space-y-8`}>
         <div>
           <h2 className={ui.h1}>{t("admin.merchantsTitle")}</h2>

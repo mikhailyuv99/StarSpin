@@ -123,9 +123,9 @@ export function PrizesManager({
         {prizes.length === 0 ? (
           <p className={`mt-4 ${ui.muted}`}>{t("dashboard.noPrizes")}</p>
         ) : (
-          <div className="mt-5 divide-y divide-border border border-border">
+          <div className="mt-5 overflow-hidden rounded-[14px] border-2 border-black">
             {prizes.map((prize) => (
-              <div key={prize.id} className="bg-white px-4 py-4">
+              <div key={prize.id} className="border-b-2 border-black/10 bg-white px-4 py-4 last:border-b-0">
                 {editingId === prize.id ? (
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-3">
