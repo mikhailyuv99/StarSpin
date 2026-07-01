@@ -6,7 +6,9 @@
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+  # SUPABASE_URL and publishable key are public (needed in browser bundle)
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY"
 
 # Cron: daily review count sync (configure in Netlify UI with CRON_SECRET header)
-# Schedule: 0 2 * * *  ->  GET /.netlify/functions/... or use Netlify scheduled functions
+# Schedule: 0 2 * * *  ->  GET /api/cron/review-counts
