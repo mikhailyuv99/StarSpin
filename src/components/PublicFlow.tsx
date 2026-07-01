@@ -29,6 +29,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [spinId, setSpinId] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
+  const [otpHint, setOtpHint] = useState<string | null>(null);
 
   const accent = merchant.primary_color;
 
@@ -50,7 +51,12 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
-      if (data.devCode) setOtp(data.devCode);
+      if (data.devCode) {
+        setOtp(data.devCode);
+        setOtpHint(`Code de test (SMS non activé) : ${data.devCode}`);
+      } else {
+        setOtpHint("Code envoyé par SMS.");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -191,10 +197,15 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     type="button"
                     onClick={verifyOtp}
                     disabled={loading || !otp}
-                    className="w-full rounded-sm border border-zinc-900 bg-white py-2.5 text-sm font-semibold text-zinc-900 disabled:opacity-40"
+                    className="w-full rounded-sm border border-zinc-900 bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:border-zinc-300 disabled:bg-zinc-300 disabled:text-zinc-500"
                   >
                     Vérifier
                   </button>
+                  {otpHint && (
+                    <p className="rounded-sm border border-zinc-200 bg-zinc-50 px-3 py-2 text-center font-mono text-sm text-zinc-800">
+                      {otpHint}
+                    </p>
+                  )}
                 </>
               ) : (
                 <button

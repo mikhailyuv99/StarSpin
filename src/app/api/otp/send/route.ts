@@ -8,29 +8,37 @@ function generateOtp(): string {
 }
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/\s+/g, "").replace(/^0/, "+84");
+  const cleaned = phone.replace(/\s+/g, "");
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("0")) return `+84${cleaned.slice(1)}`;
+  return `+84${cleaned}`;
 }
 
-async function sendSms(phone: string, code: string): Promise<void> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
+function isSmsConfigured(): boolean {
+  return Boolean(
+    process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_PHONE_NUMBER,
+  );
+}
 
-  if (!accountSid || !authToken || !from) {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[DEV OTP] ${phone}: ${code}`);
-      return;
-    }
-    throw new Error("SMS provider not configured");
+async function sendSms(phone: string, code: string): Promise<boolean> {
+  if (!isSmsConfigured()) {
+    console.log(`[OTP sans SMS] ${phone}: ${code}`);
+    return false;
   }
 
   const twilio = await import("twilio");
-  const client = twilio.default(accountSid, authToken);
+  const client = twilio.default(
+    process.env.TWILIO_ACCOUNT_SID!,
+    process.env.TWILIO_AUTH_TOKEN!,
+  );
   await client.messages.create({
     body: `Votre code Roue Fidélité: ${code}. Valide ${OTP_EXPIRY_MINUTES} min.`,
-    from,
+    from: process.env.TWILIO_PHONE_NUMBER!,
     to: phone,
   });
+  return true;
 }
 
 export async function POST(request: Request) {
@@ -97,16 +105,26 @@ export async function POST(request: Request) {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
 
-    await supabase.from("otp_verifications").insert({
+    const { error: insertError } = await supabase.from("otp_verifications").insert({
       merchant_id: merchantId,
       phone_number: phoneNumber,
       code,
       expires_at: expiresAt.toISOString(),
     });
 
-    await sendSms(phoneNumber, code);
+    if (insertError) {
+      console.error("OTP insert error:", insertError);
+      return NextResponse.json({ error: "Erreur enregistrement OTP" }, { status: 500 });
+    }
 
-    return NextResponse.json({ ok: true, devCode: process.env.NODE_ENV === "development" ? code : undefined });
+    const smsSent = await sendSms(phoneNumber, code);
+
+    return NextResponse.json({
+      ok: true,
+      smsSent,
+      // When SMS is off, return code so the flow still works (v1 / test)
+      devCode: smsSent ? undefined : code,
+    });
   } catch (err) {
     console.error("OTP send error:", err);
     return NextResponse.json({ error: "Erreur envoi OTP" }, { status: 500 });
