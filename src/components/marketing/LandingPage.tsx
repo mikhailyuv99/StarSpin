@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
+import { marketingImages } from "@/lib/marketing-images";
 import "./cadeo-styles.css";
 
 function Logo() {
@@ -48,42 +50,92 @@ function TrustBar() {
   );
 }
 
+function HeroWheelPhone() {
+  return (
+    <div className="cadeo-hero-phone" aria-hidden>
+      <div className="cadeo-hero-phone-frame">
+        <div className="cadeo-hero-phone-notch" />
+        <div className="cadeo-hero-phone-screen">
+          <p className="cadeo-hero-phone-label">Scan · Review · Spin</p>
+          <div
+            className="cadeo-hero-phone-wheel"
+            style={{
+              background:
+                "conic-gradient(from -30deg, #f5e08e 0deg 72deg, #9b7fe8 72deg 144deg, #f48fb1 144deg 216deg, #a8e6cf 216deg 288deg, #b8cfe8 288deg 360deg)",
+            }}
+          >
+            <div className="cadeo-hero-phone-wheel-hub" />
+          </div>
+          <div className="cadeo-hero-phone-cta">SPIN!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Hero() {
   const { t } = useI18n();
   const badges = [
-    { cls: "cadeo-stat-badge--white", icon: "G", text: "+ 351 Google reviews" },
-    { cls: "cadeo-stat-badge--mint", icon: "T", text: "+ 251 TripAdvisor reviews" },
-    { cls: "cadeo-stat-badge--yellow", icon: "♪", text: "150 TikTok followers" },
-    { cls: "cadeo-stat-badge--pink", icon: "◎", text: "251 Instagram followers" },
+    { cls: "cadeo-stat-badge--white", icon: "G", text: "+351 Google reviews" },
+    { cls: "cadeo-stat-badge--mint", icon: "★", text: "+251 TripAdvisor" },
+    { cls: "cadeo-stat-badge--yellow", icon: "♪", text: "+150 TikTok" },
+    { cls: "cadeo-stat-badge--pink", icon: "◎", text: "+251 Instagram" },
   ];
 
   return (
     <section className="cadeo-hero">
       <div className="cadeo-hero-inner">
-        <div>
+        <div className="cadeo-hero-copy">
+          <p className="cadeo-hero-eyebrow">
+            <span className="cadeo-hero-eyebrow-star" aria-hidden>
+              ★
+            </span>
+            {t("marketing.heroEyebrow")}
+          </p>
           <h1>
-            {t("marketing.heroTitle")} {t("marketing.heroTitleAccent")}
+            <span className="cadeo-hero-line">{t("marketing.heroTitle")}</span>
+            <span className="cadeo-hero-accent">{t("marketing.heroTitleAccent")}</span>
           </h1>
-          <p className="cadeo-sub">{t("marketing.heroSubtitle")}</p>
-          <p className="cadeo-sub">{t("marketing.heroBody")}</p>
-          <div className="mt-8">
+          <p className="cadeo-hero-lead">{t("marketing.heroSubtitle")}</p>
+          <p className="cadeo-sub cadeo-hero-body">{t("marketing.heroBody")}</p>
+          <div className="cadeo-hero-actions">
             <Link href="/login" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
               ✨ {t("marketing.magicRecipe")}
             </Link>
+            <a href="#pricing" className="cadeo-btn cadeo-btn-outline cadeo-btn-lg">
+              {t("marketing.heroDemo")}
+            </a>
+          </div>
+          <div className="cadeo-hero-mini-trust">
+            <span className="cadeo-hero-mini-trust-stars">★★★★★</span>
+            <span>{t("marketing.heroProof")}</span>
           </div>
         </div>
+
         <div className="cadeo-hero-visual">
           <div className="cadeo-hero-glow" />
-          <div className="cadeo-hero-photo">
-            <div className="cadeo-hero-photo-inner">🍔</div>
-            <div className="cadeo-hero-badges sm:contents">
+          <div className="cadeo-hero-scene">
+            <div className="cadeo-hero-badges">
               {badges.map((b) => (
                 <div key={b.text} className={`cadeo-stat-badge ${b.cls}`}>
-                  <span className="font-black">{b.icon}</span>
+                  <span className="cadeo-stat-badge-icon">{b.icon}</span>
                   <span>{b.text}</span>
                 </div>
               ))}
             </div>
+            <div className="cadeo-hero-photo">
+              <Image
+                src={marketingImages.heroRestaurant}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 88vw, 420px"
+                className="cadeo-hero-photo-img"
+                priority
+              />
+              <div className="cadeo-hero-photo-shade" />
+              <div className="cadeo-hero-photo-tag">QR → Play → Win</div>
+            </div>
+            <HeroWheelPhone />
           </div>
         </div>
       </div>
