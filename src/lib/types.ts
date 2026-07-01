@@ -37,7 +37,7 @@ export interface Spin {
   merchant_id: string;
   prize_id: string;
   device_fingerprint: string;
-  phone_number: string;
+  phone_number: string | null;
   followed_social: boolean;
   review_screenshot_url: string | null;
   review_screenshot_status: ReviewScreenshotStatus;
@@ -56,4 +56,4 @@ export interface ReviewCountHistory {
   checked_at: string;
 }
 
-export type PublicStep = "phone" | "social" | "review" | "wheel" | "claim" | "result";
+export type PublicStep = "social" | "review" | "wheel" | "claim" | "result";

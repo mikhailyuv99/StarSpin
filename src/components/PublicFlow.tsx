@@ -18,7 +18,7 @@ interface PublicFlowProps {
   prizes: Prize[];
 }
 
-const STEP_ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "claim", "result"];
+const STEP_ORDER: PublicStep[] = ["social", "review", "wheel", "claim", "result"];
 
 const stepVariants = {
   enter: { opacity: 0, x: 24 },
@@ -44,10 +44,7 @@ function fireConfetti(accent: string) {
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<PublicStep>("phone");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  const [step, setStep] = useState<PublicStep>("social");
   const [followedSocial, setFollowedSocial] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [reviewStatus, setReviewStatus] = useState<"pending" | "verified" | "rejected">("pending");
@@ -56,13 +53,12 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [spinId, setSpinId] = useState<string | null>(null);
   const [prizeCode, setPrizeCode] = useState<string | null>(null);
-  const [claimSmsSent, setClaimSmsSent] = useState(false);
+  const [claimEmailSent, setClaimEmailSent] = useState(false);
   const [claimFirstName, setClaimFirstName] = useState("");
   const [claimEmail, setClaimEmail] = useState("");
   const [claimPhone, setClaimPhone] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
-  const [otpHint, setOtpHint] = useState<string | null>(null);
 
   const accent = merchant.primary_color;
   const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
@@ -72,52 +68,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   useEffect(() => {
     if (step === "result" && wonPrize) fireConfetti(accent);
   }, [step, wonPrize, accent]);
-
-  const sendOtp = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/otp/send", {
-        method: "POST",
-        headers: localeHeaders(locale),
-        body: JSON.stringify({ merchantId: merchant.id, phone }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? t("public.error"));
-      setOtpSent(true);
-      if (data.devCode) {
-        setOtp(data.devCode);
-        setOtpHint(t("public.otpTestCode", { code: data.devCode }));
-      } else {
-        setOtpHint(t("public.otpSent"));
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("public.error"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/otp/verify", {
-        method: "POST",
-        headers: localeHeaders(locale),
-        body: JSON.stringify({ merchantId: merchant.id, phone, code: otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? t("public.error"));
-      setPhone(data.phoneNumber);
-      setClaimPhone(data.phoneNumber);
-      setStep("social");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("public.error"));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSocialClick = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
@@ -158,7 +108,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
         headers: localeHeaders(locale),
         body: JSON.stringify({
           merchantId: merchant.id,
-          phoneNumber: phone,
           followedSocial,
           reviewScreenshotUrl: screenshotUrl,
           reviewScreenshotStatus: reviewStatus,
@@ -175,16 +124,19 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     } finally {
       setLoading(false);
     }
-  }, [merchant.id, phone, followedSocial, screenshotUrl, reviewStatus, locale, t]);
+  }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, locale, t]);
 
   const onSpinComplete = (prize: Prize) => {
     setWonPrize(prize);
-    setClaimPhone(phone);
     setStep("claim");
   };
 
   const submitClaim = async () => {
     if (!spinId || !wonPrize) return;
+    if (!claimEmail.trim()) {
+      setError(t("public.claimEmailRequired"));
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -195,13 +147,13 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           spinId,
           firstName: claimFirstName,
           email: claimEmail,
-          phoneNumber: claimPhone || phone,
+          phoneNumber: claimPhone.trim() || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setPrizeCode(data.prizeCode);
-      setClaimSmsSent(Boolean(data.smsSent));
+      setClaimEmailSent(Boolean(data.emailSent));
       setStep("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
@@ -255,84 +207,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
           <div className="p-4 sm:p-6">
             <AnimatePresence mode="wait">
-              {step === "phone" && (
-                <motion.div
-                  key="phone"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  <div className="text-center">
-                    <p className="text-3xl" aria-hidden>
-                      🎯
-                    </p>
-                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
-                      {t("public.phoneTitle")}
-                    </h2>
-                    <p className="mt-1 text-sm font-medium text-muted">{t("public.phoneSubtitle")}</p>
-                  </div>
-
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    enterKeyHint="next"
-                    placeholder={t("public.phonePlaceholder")}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="public-input text-center text-lg font-semibold"
-                  />
-
-                  {!otpSent ? (
-                    <button
-                      type="button"
-                      onClick={sendOtp}
-                      disabled={loading || phone.length < 8}
-                      className="public-btn public-touch-target"
-                      style={btnStyle}
-                    >
-                      {loading ? t("public.sending") : t("public.sendCode")}
-                    </button>
-                  ) : (
-                    <>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        enterKeyHint="done"
-                        placeholder={t("public.otpPlaceholder")}
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="public-input text-center font-mono text-2xl tracking-[0.35em]"
-                      />
-                      {otpHint && (
-                        <p className="text-center text-sm font-semibold text-muted">{otpHint}</p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={verifyOtp}
-                        disabled={loading || otp.length < 4}
-                        className="public-btn public-touch-target"
-                        style={btnStyle}
-                      >
-                        {loading ? t("public.verifying") : t("public.verifyContinue")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={sendOtp}
-                        disabled={loading}
-                        className="brutal-btn-ghost w-full text-center text-sm"
-                      >
-                        {t("public.resendCode")}
-                      </button>
-                    </>
-                  )}
-                </motion.div>
-              )}
-
               {step === "social" && (
                 <motion.div
                   key="social"
@@ -508,7 +382,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <input
                     type="email"
                     autoComplete="email"
-                    placeholder={t("public.claimEmail")}
+                    required
+                    placeholder={`${t("public.claimEmail")} *`}
                     value={claimEmail}
                     onChange={(e) => setClaimEmail(e.target.value)}
                     className="public-input font-semibold"
@@ -516,7 +391,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <input
                     type="tel"
                     autoComplete="tel"
-                    placeholder={t("public.claimPhone")}
+                    placeholder={t("public.claimPhoneOptional")}
                     value={claimPhone}
                     onChange={(e) => setClaimPhone(e.target.value)}
                     className="public-input text-center font-semibold"
@@ -525,7 +400,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <button
                     type="button"
                     onClick={submitClaim}
-                    disabled={loading || claimFirstName.trim().length < 2}
+                    disabled={loading || claimFirstName.trim().length < 2 || !claimEmail.trim()}
                     className="public-btn public-touch-target"
                     style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
                   >
@@ -563,8 +438,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     </p>
                   </div>
                   <p className="text-sm font-medium leading-relaxed text-muted">
-                    {claimSmsSent
-                      ? t("public.codeSentSms", { phone: claimPhone || phone })
+                    {claimEmailSent
+                      ? t("public.codeSentEmail", { email: claimEmail })
                       : t("public.codeSentDev")}
                   </p>
                   <p className="text-sm font-medium leading-relaxed text-muted">{t("public.showScreen")}</p>

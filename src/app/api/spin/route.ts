@@ -15,13 +15,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       merchantId,
-      phoneNumber,
       followedSocial,
       reviewScreenshotUrl,
       reviewScreenshotStatus,
     } = body;
 
-    if (!merchantId || !phoneNumber) {
+    if (!merchantId) {
       return NextResponse.json({ error: t("api.missingFields") }, { status: 400 });
     }
 
@@ -31,21 +30,7 @@ export async function POST(request: Request) {
       request.headers.get("user-agent") ?? "",
     );
 
-    const { data: verifiedOtp } = await supabase
-      .from("otp_verifications")
-      .select("id")
-      .eq("merchant_id", merchantId)
-      .eq("phone_number", phoneNumber)
-      .eq("verified", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!verifiedOtp) {
-      return NextResponse.json({ error: t("api.phoneNotVerified") }, { status: 403 });
-    }
-
-    const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
+    const blocker = await findRecentSpinBlocker(supabase, merchantId, null, fingerprint);
     if (blocker) {
       return NextResponse.json(
         {
@@ -77,7 +62,7 @@ export async function POST(request: Request) {
         merchant_id: merchantId,
         prize_id: selected.id,
         device_fingerprint: fingerprint,
-        phone_number: phoneNumber,
+        phone_number: null,
         followed_social: Boolean(followedSocial),
         review_screenshot_url: reviewScreenshotUrl ?? null,
         review_screenshot_status: status,

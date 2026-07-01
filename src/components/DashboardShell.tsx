@@ -46,7 +46,7 @@ export function DashboardShell({
             </p>
             <p className="text-base font-extrabold text-ink">{merchantName}</p>
           </div>
-          <Link href="/" className="brutal-btn brutal-btn-yellow text-sm">
+          <Link href="/dashboard" className="brutal-btn brutal-btn-yellow text-sm">
             {labels.viewSite}
           </Link>
         </div>

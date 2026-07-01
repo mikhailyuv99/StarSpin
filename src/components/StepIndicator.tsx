@@ -3,7 +3,7 @@
 import type { PublicStep } from "@/lib/types";
 import { useTranslations } from "@/i18n/client";
 
-const ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "claim", "result"];
+const ORDER: PublicStep[] = ["social", "review", "wheel", "claim", "result"];
 
 export function StepIndicator({
   current,
@@ -14,7 +14,6 @@ export function StepIndicator({
 }) {
   const t = useTranslations();
   const STEPS: { key: PublicStep; label: string; short: string }[] = [
-    { key: "phone", label: t("public.stepPhone"), short: t("public.stepPhone") },
     { key: "social", label: t("public.stepSocial"), short: t("public.stepSocial") },
     { key: "review", label: t("public.stepReview"), short: t("public.stepReview") },
     { key: "wheel", label: t("public.stepWheel"), short: t("public.stepWheel") },
@@ -36,7 +35,7 @@ export function StepIndicator({
           const active = i === currentIndex;
           const state = done || active ? (active ? "active" : "done") : "idle";
           return (
-            <div key={step.key} className="flex min-w-0 max-w-[3rem] flex-1 flex-col items-center gap-1">
+            <div key={step.key} className="flex min-w-0 max-w-[3.5rem] flex-1 flex-col items-center gap-1">
               <div
                 className={`public-step-pill public-step-pill--${state}`}
                 style={

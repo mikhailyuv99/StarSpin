@@ -10,6 +10,7 @@ import {
   labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
+  shouldShowSliceLabel,
   sliceLabelRadius,
   sliceLabelRotation,
   splitSliceLabel,
@@ -99,7 +100,7 @@ export function Wheel({
         </div>
 
         <div
-          className="rounded-full border-[3px] border-black shadow-[6px_6px_0_0_#0a0a0a] transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
+          className="rounded-full border-[3px] border-black transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
           style={{
             width: wheelSize,
             height: wheelSize,
@@ -112,6 +113,13 @@ export function Wheel({
             viewBox={`0 0 ${wheelSize} ${wheelSize}`}
             className="block"
           >
+            <defs>
+              {slices.map((slice) => (
+                <clipPath key={`clip-${slice.prize.id}`} id={`wheel-clip-${slice.prize.id}`}>
+                  <path d={describeSlice(cx, cy, r - 1, slice.start, slice.end)} />
+                </clipPath>
+              ))}
+            </defs>
             <circle cx={cx} cy={cy} r={r + 4} fill="#0a0a0a" />
             {slices.map((slice, i) => {
               const sliceAngle = slice.end - slice.start;
@@ -121,9 +129,10 @@ export function Wheel({
               const fill = colors[i % colors.length]!;
               const fontSize = labelFontSize(sliceAngle, slices.length);
               const lines = splitSliceLabel(slice.prize.label, sliceAngle);
-              const lineHeight = fontSize * 1.12;
+              const lineHeight = fontSize * 1.1;
               const labelRotation = sliceLabelRotation(mid);
               const textFill = contrastTextColor(fill);
+              const showLabel = shouldShowSliceLabel(sliceAngle);
 
               return (
                 <g key={slice.prize.id}>
@@ -133,25 +142,28 @@ export function Wheel({
                     stroke="#0a0a0a"
                     strokeWidth={2}
                   />
-                  <text
-                    transform={`rotate(${labelRotation}, ${textPos.x}, ${textPos.y})`}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill={textFill}
-                    fontSize={fontSize}
-                    fontWeight={800}
-                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
-                  >
-                    {lines.map((line, lineIndex) => (
-                      <tspan
-                        key={lineIndex}
-                        x={textPos.x}
-                        dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
-                      >
-                        {line}
-                      </tspan>
-                    ))}
-                  </text>
+                  {showLabel && (
+                    <text
+                      clipPath={`url(#wheel-clip-${slice.prize.id})`}
+                      transform={`rotate(${labelRotation}, ${textPos.x}, ${textPos.y})`}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill={textFill}
+                      fontSize={fontSize}
+                      fontWeight={800}
+                      style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
+                    >
+                      {lines.map((line, lineIndex) => (
+                        <tspan
+                          key={lineIndex}
+                          x={textPos.x}
+                          dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
+                        >
+                          {line}
+                        </tspan>
+                      ))}
+                    </text>
+                  )}
                 </g>
               );
             })}
