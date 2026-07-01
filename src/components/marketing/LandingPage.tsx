@@ -269,7 +269,7 @@ function VisitsFlow() {
               </div>
               <span className={`cadeo-visit-pill ${v.pill}`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={14} />
+                  <SocialIcon brand={v.brand} size={18} />
                 </span>
                 <span className="cadeo-visit-pill-text">{v.action}</span>
               </span>

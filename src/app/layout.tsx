@@ -1,4 +1,4 @@
-import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans, Fredoka } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { I18nProvider } from "@/i18n/client";
@@ -30,6 +30,12 @@ const bodyFont = DM_Sans({
   variable: "--font-body",
 });
 
+const gameFont = Fredoka({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-game",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   return {
@@ -49,7 +55,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
         <I18nProvider locale={locale} messages={messages}>
