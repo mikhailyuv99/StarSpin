@@ -24,7 +24,7 @@
   color: var(--c-black);
   background: var(--c-gray);
   min-height: 100vh;
-  overflow-x: clip;
+  overflow-x: hidden;
   padding-bottom: 5.5rem;
 }
 
@@ -85,6 +85,27 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+/* Branded locale picker inside lavender nav */
+.cadeo-nav .locale-switcher-trigger {
+  background: var(--c-yellow-bright);
+  border: var(--c-border);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 0 var(--c-black);
+  font-size: 0.72rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.cadeo-nav .locale-switcher-menu {
+  background: #fff;
+  border: var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: var(--c-shadow-lg);
+}
+
+.cadeo-nav .locale-switcher-option--active {
+  background: var(--c-lavender);
 }
 
 .cadeo-nav-links {
@@ -231,15 +252,17 @@
 .cadeo-hero-visual {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   margin: 0 auto;
-  padding: 0.5rem 0 0.5rem 1.5rem;
+  padding: 0.5rem 0 0.5rem 2rem;
+  overflow: visible;
 }
 
 @media (min-width: 1024px) {
   .cadeo-hero-visual {
     margin: 0 0 0 auto;
-    padding-left: 2rem;
+    padding-left: 2.5rem;
+    max-width: 400px;
   }
 }
 
@@ -265,15 +288,30 @@
 .cadeo-hero-photo-inner {
   position: absolute;
   inset: 0;
+}
+
+.cadeo-hero-photo-img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.cadeo-hero-badges {
+  position: absolute;
+  z-index: 2;
+  left: -1.5rem;
+  top: 8%;
+  bottom: 8%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(4rem, 12vw, 6rem);
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
+  pointer-events: none;
 }
 
 .cadeo-stat-badge {
-  position: absolute;
-  z-index: 2;
+  position: relative;
+  left: auto;
+  top: auto;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -284,49 +322,28 @@
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1.2;
-  max-width: 145px;
+  max-width: 155px;
 }
 
-.cadeo-stat-badge--white { background: #fff; left: -1.25rem; top: 10%; }
-.cadeo-stat-badge--mint { background: var(--c-mint); left: -1.75rem; top: 34%; }
-.cadeo-stat-badge--yellow { background: var(--c-yellow); left: -0.75rem; top: 58%; }
-.cadeo-stat-badge--pink { background: var(--c-pink); left: 0.25rem; top: 80%; }
+.cadeo-stat-badge--white { background: #fff; }
+.cadeo-stat-badge--mint { background: var(--c-mint); }
+.cadeo-stat-badge--yellow { background: var(--c-yellow); }
+.cadeo-stat-badge--pink { background: var(--c-pink); }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .cadeo-hero-visual {
-    padding-left: 0;
+    padding-left: 1.25rem;
     max-width: 100%;
   }
 
-  .cadeo-stat-badge {
-    position: static;
-    max-width: none;
-    width: calc(100% - 1.5rem);
-    margin: 0.4rem auto 0;
-    font-size: 0.7rem;
-  }
-
   .cadeo-hero-badges {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.75rem;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(transparent, rgb(0 0 0 / 0.15));
+    left: -0.5rem;
   }
 
-  .cadeo-hero-photo {
-    aspect-ratio: 3 / 4;
-  }
-}
-
-@media (min-width: 481px) and (max-width: 1023px) {
-  .cadeo-hero-visual {
-    padding-left: 2rem;
-    max-width: 340px;
+  .cadeo-stat-badge {
+    font-size: 0.58rem;
+    max-width: 130px;
+    padding: 0.35rem 0.55rem;
   }
 }
 
@@ -399,8 +416,19 @@
 .cadeo-pillar--yellow { background: var(--c-yellow); }
 
 .cadeo-pillar-icon {
-  font-size: 2.25rem;
-  line-height: 1;
+  width: 100%;
+  height: 5.5rem;
+  border: var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: 3px 3px 0 0 var(--c-black);
+  overflow: hidden;
+  background: #fff;
+}
+
+.cadeo-pillar-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cadeo-pillar-text {
@@ -496,10 +524,8 @@
 .cadeo-flyer-logo {
   border: var(--c-border);
   border-radius: var(--c-radius);
-  padding: 1.25rem;
-  text-align: center;
-  font-weight: 800;
-  font-size: 0.75rem;
+  height: 5.5rem;
+  overflow: hidden;
   margin-bottom: 0.85rem;
 }
 
@@ -511,6 +537,20 @@
   border-radius: 50%;
   border: var(--c-border);
   overflow: hidden;
+}
+
+.cadeo-flyer-wheel-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  border: var(--c-border);
+  background: #fff;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+  z-index: 1;
 }
 
 .cadeo-flyer-qr {
@@ -610,15 +650,31 @@
   transform: rotate(-5deg);
 }
 
+.cadeo-phone-screen-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cadeo-phone-screen-bg img {
+  object-fit: cover;
+}
+
 .cadeo-phone-screen {
   border-radius: 20px;
-  background: linear-gradient(180deg, #fff 0%, #f0e6ff 100%);
+  background: #fff;
   aspect-ratio: 9 / 16;
   padding: 1.25rem 0.6rem 0.6rem;
   overflow: hidden;
   position: relative;
+}
+
+.cadeo-phone-screen-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .cadeo-phone-notch {
@@ -630,6 +686,7 @@
   height: 12px;
   background: var(--c-black);
   border-radius: 99px;
+  z-index: 2;
 }
 
 .cadeo-review-card {
@@ -696,9 +753,19 @@
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
   background: #fff;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.25rem 1.1rem;
   margin-bottom: 0.75rem;
   text-align: center;
+}
+
+.cadeo-visit-thumb {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.65rem;
+  border: var(--c-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 .cadeo-visit-label {
@@ -757,16 +824,20 @@
 }
 
 .cadeo-quote-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: var(--c-border);
   border-radius: 8px;
   background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+  overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.cadeo-quote-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cadeo-quote-btn {
@@ -796,10 +867,23 @@
 }
 
 .cadeo-win-screen {
+  position: relative;
   border-radius: 17px;
   background: #fff;
   padding: 0.85rem 0.65rem;
   font-size: 0.6rem;
+  overflow: hidden;
+}
+
+.cadeo-win-screen-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cadeo-win-screen-content {
+  position: relative;
+  z-index: 1;
 }
 
 .cadeo-win-title {
@@ -862,10 +946,19 @@
 }
 
 .cadeo-gift-box {
-  font-size: clamp(4rem, 15vw, 6rem);
-  filter: drop-shadow(4px 4px 0 var(--c-black));
   position: relative;
   z-index: 1;
+  width: min(220px, 70vw);
+  aspect-ratio: 1;
+  border: var(--c-border);
+  border-radius: var(--c-radius-lg);
+  box-shadow: var(--c-shadow-lg);
+  overflow: hidden;
+  background: #fff;
+}
+
+.cadeo-gift-box img {
+  object-fit: cover;
 }
 
 .cadeo-gift-tag {
@@ -914,21 +1007,26 @@
 
 .cadeo-adv-item {
   display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 0.85rem;
   border: var(--c-border);
   border-radius: var(--c-radius);
   box-shadow: var(--c-shadow);
   background: #fff;
-  padding: 1rem 1.1rem;
+  padding: 0.85rem 1rem;
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.4;
 }
 
-.cadeo-adv-icon {
-  font-size: 1.35rem;
+.cadeo-adv-thumb {
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
+  border: var(--c-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 /* Pricing */
@@ -1077,70 +1175,6 @@
   border-radius: 6px;
   margin-top: 0.35rem;
   line-height: 1.3;
-}
-
-/* Testimonials */
-.cadeo-testimonials-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.cadeo-testimonial-track {
-  display: flex;
-  gap: 1rem;
-  animation: cadeo-marquee 50s linear infinite;
-  width: max-content;
-  padding: 0 var(--c-page-pad) 0.5rem;
-}
-
-.cadeo-testimonial-card {
-  width: min(280px, 80vw);
-  flex-shrink: 0;
-  border: var(--c-border);
-  border-radius: var(--c-radius-lg);
-  box-shadow: var(--c-shadow);
-  background: #fff;
-  overflow: hidden;
-}
-
-.cadeo-testimonial-tag {
-  display: inline-block;
-  margin: 0.65rem 0 0 0.65rem;
-  padding: 0.25rem 0.55rem;
-  background: var(--c-yellow);
-  border: var(--c-border);
-  border-radius: 8px;
-  font-size: 0.6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.cadeo-testimonial-img {
-  height: 120px;
-  margin: 0.65rem;
-  border: var(--c-border);
-  border-radius: var(--c-radius);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-}
-
-.cadeo-testimonial-img--2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-.cadeo-testimonial-img--3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-.cadeo-testimonial-img--4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-
-.cadeo-testimonial-stat {
-  padding: 0.65rem 0.85rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-@keyframes cadeo-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
 }
 
 /* FAQ */
@@ -1371,11 +1405,5 @@
     left: auto;
     right: 1.25rem;
     margin: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cadeo-testimonial-track {
-    animation: none;
   }
 }

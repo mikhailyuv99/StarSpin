@@ -1,0 +1,39 @@
+/** Curated Unsplash photos for marketing (stable URLs) */
+export const marketingImages = {
+  heroBurger:
+    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=1000&fit=crop&q=85",
+  pillarCuriosity:
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=480&h=320&fit=crop&q=80",
+  pillarConnection:
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=480&h=320&fit=crop&q=80",
+  pillarData:
+    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=480&h=320&fit=crop&q=80",
+  pillarLoyalty:
+    "https://images.unsplash.com/photo-1549465220-1a35b5a6c1b8?w=480&h=320&fit=crop&q=80",
+  giftRewards:
+    "https://images.unsplash.com/photo-1513885535751-8b3258bebf35?w=640&h=640&fit=crop&q=85",
+  quoteAvatar:
+    "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=160&h=160&fit=crop&q=80",
+  crmPhone:
+    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=700&fit=crop&q=80",
+  pizzaGame:
+    "https://images.unsplash.com/photo-1513104890138-f7ee8e4e608d?w=400&h=600&fit=crop&q=80",
+  wheelFlyer:
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop&q=85",
+  advCommunity:
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&h=200&fit=crop&q=80",
+  advSupport:
+    "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&h=200&fit=crop&q=80",
+  advTargeting:
+    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=200&fit=crop&q=80",
+  advChat:
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&q=80",
+  visitGoogle:
+    "https://images.unsplash.com/photo-1611162617474-5b21e939e113?w=120&h=120&fit=crop&q=80",
+  visitInsta:
+    "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=120&h=120&fit=crop&q=80",
+  visitTiktok:
+    "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=120&h=120&fit=crop&q=80",
+  visitFacebook:
+    "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=120&h=120&fit=crop&q=80",
+} as const;
