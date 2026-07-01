@@ -1,3 +1,4 @@
+import { WheelPointer } from "@/components/WheelPointer";
 import { describeSlice, polarToCartesian, sliceLabelRotation } from "@/lib/wheel";
 
 const SLICES = [
@@ -22,53 +23,60 @@ export function MarketingSpinWheel({
   const cy = 50;
   const r = 44;
   const sliceAngle = 360 / SLICES.length;
+  const pointerW = Math.round(size * 0.22);
+  const pointerH = Math.round(size * 0.17);
 
   return (
-    <svg
-      viewBox="0 -6 100 106"
-      width={size}
-      height={size}
-      className={`marketing-wheel ${animate ? "marketing-wheel--spin" : ""} ${className}`.trim()}
-      aria-hidden
+    <div
+      className={`marketing-wheel-wrap ${className}`.trim()}
+      style={{ width: size, height: size }}
     >
-      {/* Tip at y=5 points down into wheel rim (~y=6) */}
-      <polygon points="50,5 44,-4 56,-4" fill="#0a0a0a" />
-      <polygon points="50,4 45,-2.5 55,-2.5" fill="#f5e08e" />
-      <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
-      <g className={animate ? "marketing-wheel__disc" : undefined}>
-        {SLICES.map((slice, i) => {
-          const start = i * sliceAngle;
-          const end = (i + 1) * sliceAngle;
-          const mid = start + sliceAngle / 2;
-          const labelPos = polarToCartesian(cx, cy, 26, mid);
-          const rotation = sliceLabelRotation(mid);
-          return (
-            <g key={slice.label}>
-              <path
-                d={describeSlice(cx, cy, r, start, end)}
-                fill={slice.color}
-                stroke="#0a0a0a"
-                strokeWidth="1.25"
-              />
-              <text
-                x={labelPos.x}
-                y={labelPos.y}
-                fill="#0a0a0a"
-                fontSize="5.5"
-                fontWeight="800"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
-              >
-                {slice.label}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-      <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
-      <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />
-    </svg>
+      <div className="marketing-wheel-pointer" aria-hidden>
+        <WheelPointer width={pointerW} height={pointerH} />
+      </div>
+      <svg
+        viewBox="0 0 100 100"
+        width={size}
+        height={size}
+        className={`marketing-wheel ${animate ? "marketing-wheel--spin" : ""}`.trim()}
+        aria-hidden
+      >
+        <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
+        <g className={animate ? "marketing-wheel__disc" : undefined}>
+          {SLICES.map((slice, i) => {
+            const start = i * sliceAngle;
+            const end = (i + 1) * sliceAngle;
+            const mid = start + sliceAngle / 2;
+            const labelPos = polarToCartesian(cx, cy, 26, mid);
+            const rotation = sliceLabelRotation(mid);
+            return (
+              <g key={slice.label}>
+                <path
+                  d={describeSlice(cx, cy, r, start, end)}
+                  fill={slice.color}
+                  stroke="#0a0a0a"
+                  strokeWidth="1.25"
+                />
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  fill="#0a0a0a"
+                  fontSize="5.5"
+                  fontWeight="800"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
+                >
+                  {slice.label}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+        <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
+        <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />
+      </svg>
+    </div>
   );
 }
 
