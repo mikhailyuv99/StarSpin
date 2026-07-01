@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -53,51 +54,95 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const inputClass =
+    "w-full rounded-sm border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-zinc-400 focus:border-accent focus:ring-1 focus:ring-accent";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-        <h1 className="mb-2 text-2xl font-bold">Roue Fidélité</h1>
-        <p className="mb-8 text-gray-600">
-          {isSignup ? "Créer un compte commerçant" : "Connexion commerçant"}
-        </p>
+    <div className="flex min-h-screen bg-surface">
+      <div className="marketing-grid hidden flex-1 border-r border-zinc-800 bg-ink p-12 lg:flex lg:flex-col lg:justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-white text-[11px] font-bold text-ink">
+            RF
+          </span>
+          <span className="text-[15px] font-semibold text-white">Roue Fidélité</span>
+        </Link>
+        <div>
+          <p className="section-label text-cyan-400">Espace commerçant</p>
+          <p className="mt-4 max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white">
+            Gérez votre programme de fidélisation depuis un tableau de bord unique.
+          </p>
+        </div>
+        <p className="font-mono text-xs text-zinc-500">Da Nang · Vietnam</p>
+      </div>
 
-        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-        {message && <p className="mb-4 text-sm text-green-600">{message}</p>}
+      <div className="flex flex-1 items-center justify-center px-5 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 lg:hidden">
+            <Link href="/" className="text-[15px] font-semibold text-ink">
+              ← Roue Fidélité
+            </Link>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            {isSignup ? "Créer un compte" : "Connexion"}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {isSignup ? "Accès commerçant à la plateforme" : "Identifiants de votre espace"}
+          </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full rounded-lg border px-4 py-3"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mot de passe"
-            required
-            minLength={6}
-            className="w-full rounded-lg border px-4 py-3"
-          />
+          {error && (
+            <p className="mt-6 rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="mt-6 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              {message}
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
+                Mot de passe
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-sm bg-accent py-2.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+            >
+              {loading ? "Chargement…" : isSignup ? "Créer le compte" : "Se connecter"}
+            </button>
+          </form>
+
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-orange-600 py-3 font-semibold text-white disabled:opacity-50"
+            type="button"
+            onClick={() => setIsSignup(!isSignup)}
+            className="mt-6 w-full text-center text-sm text-muted hover:text-ink"
           >
-            {loading ? "..." : isSignup ? "S'inscrire" : "Se connecter"}
+            {isSignup ? "Déjà un compte — se connecter" : "Pas de compte — s'inscrire"}
           </button>
-        </form>
-
-        <button
-          type="button"
-          onClick={() => setIsSignup(!isSignup)}
-          className="mt-4 w-full text-sm text-gray-600 hover:text-gray-900"
-        >
-          {isSignup ? "Déjà un compte ? Se connecter" : "Pas de compte ? S'inscrire"}
-        </button>
+        </div>
       </div>
     </div>
   );

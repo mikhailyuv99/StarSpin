@@ -1,26 +1,49 @@
 import Link from "next/link";
+import {
+  IconChart,
+  IconCheck,
+  IconFlow,
+  IconLayers,
+  IconPin,
+  IconShield,
+  IconWheel,
+} from "./icons";
+
+const btnPrimary =
+  "inline-flex items-center justify-center rounded-sm bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover";
+const btnSecondary =
+  "inline-flex items-center justify-center rounded-sm border border-border bg-white px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface";
+const btnGhostDark =
+  "inline-flex items-center justify-center rounded-sm border border-zinc-700 bg-transparent px-5 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-900";
+const card =
+  "rounded-sm border border-border bg-white";
+const cardDark =
+  "rounded-sm border border-zinc-800 bg-zinc-950";
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-600 text-sm font-bold text-white">
+    <header className="sticky top-0 z-50 border-b border-border bg-white">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-ink text-[11px] font-bold tracking-wider text-white">
             RF
           </span>
-          <span className="text-lg font-bold text-slate-900">Roue Fidélité</span>
+          <span className="text-[15px] font-semibold tracking-tight text-ink">Roue Fidélité</span>
         </Link>
-        <nav className="flex items-center gap-3 sm:gap-6">
-          <a href="#fonctionnalites" className="hidden text-sm font-medium text-slate-600 hover:text-slate-900 sm:block">
+        <nav className="flex items-center gap-8">
+          <a
+            href="#fonctionnalites"
+            className="hidden text-[13px] font-medium text-muted hover:text-ink sm:block"
+          >
             Fonctionnalités
           </a>
-          <a href="#comment-ca-marche" className="hidden text-sm font-medium text-slate-600 hover:text-slate-900 sm:block">
-            Comment ça marche
-          </a>
-          <Link
-            href="/login"
-            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700"
+          <a
+            href="#comment-ca-marche"
+            className="hidden text-[13px] font-medium text-muted hover:text-ink sm:block"
           >
+            Processus
+          </a>
+          <Link href="/login" className={btnPrimary}>
             Espace commerçant
           </Link>
         </nav>
@@ -31,92 +54,89 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-24">
+    <section className="marketing-grid border-b border-zinc-800 bg-ink text-white">
+      <div className="mx-auto grid max-w-6xl gap-16 px-5 py-20 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
         <div>
-          <p className="mb-4 inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-800">
-            Fidélisation locale · Da Nang
-          </p>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] lg:leading-tight">
-            Transformez chaque scan QR en client fidèle
+          <p className="section-label text-cyan-400">Infrastructure fidélisation · Da Nang</p>
+          <h1 className="mt-5 text-[2.5rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+            Chaque scan QR devient une relation client mesurable
           </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            Une page brandée, un parcours guidé (réseaux sociaux, avis Google) et une roue de
-            la fortune pour récompenser vos clients — sans application à installer.
+          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-zinc-400">
+            Parcours mobile structuré : vérification, engagement social, avis Google et
+            distribution de récompenses. Déployé en minutes, opéré depuis un tableau de bord
+            unique.
           </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/login"
-              className="rounded-lg bg-orange-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-orange-700"
-            >
-              Créer mon commerce
+          <div className="mt-9 flex flex-wrap gap-3">
+            <Link href="/login" className={btnPrimary}>
+              Déployer un commerce
             </Link>
-            <a
-              href="#comment-ca-marche"
-              className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-800 hover:bg-slate-50"
-            >
-              Voir le parcours client
+            <a href="#comment-ca-marche" className={btnGhostDark}>
+              Voir le processus
             </a>
           </div>
-          <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-slate-700">
-            <li className="flex items-center gap-2">
-              <span className="text-orange-600">✓</span> Setup en 10 minutes
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-orange-600">✓</span> 100% mobile web
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-orange-600">✓</span> Anti-abus intégré
-            </li>
-          </ul>
+          <dl className="mt-12 grid grid-cols-3 gap-6 border-t border-zinc-800 pt-8">
+            {[
+              { label: "Mise en ligne", value: "< 10 min" },
+              { label: "Client", value: "Mobile web" },
+              { label: "Fraude", value: "Multi-couche" },
+            ].map((item) => (
+              <div key={item.label}>
+                <dt className="section-label text-zinc-500">{item.label}</dt>
+                <dd className="mt-1 font-mono text-sm font-medium text-zinc-100">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500" />
+        <div className={`${cardDark} p-0 shadow-2xl shadow-black/40`}>
+          <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
+              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
+              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
+            </div>
+            <span className="font-mono text-[11px] text-zinc-500">session / r / cafe-bienvenue</span>
+          </div>
+          <div className="border-b border-zinc-800 p-5">
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-sm bg-zinc-800" />
               <div>
-                <p className="font-bold text-slate-900">Café Bienvenue</p>
-                <p className="text-sm text-slate-500">/r/cafe-bienvenue</p>
+                <p className="text-sm font-semibold text-white">Café Bienvenue</p>
+                <p className="font-mono text-xs text-zinc-500">merchant.active · trial</p>
               </div>
             </div>
-            <div className="space-y-3">
-              {[
-                { step: "1", label: "Vérification SMS", done: true },
-                { step: "2", label: "Follow Instagram", done: true },
-                { step: "3", label: "Avis Google", done: true },
-                { step: "4", label: "Tourner la roue", active: true },
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${
-                    item.active
-                      ? "border-2 border-orange-500 bg-orange-50"
-                      : item.done
-                        ? "bg-emerald-50 text-emerald-900"
-                        : "bg-slate-50 text-slate-700"
+          </div>
+          <div className="space-y-0 divide-y divide-zinc-800 p-2">
+            {[
+              { id: "01", label: "Vérification SMS", status: "complete" },
+              { id: "02", label: "Engagement social", status: "complete" },
+              { id: "03", label: "Avis Google", status: "complete" },
+              { id: "04", label: "Distribution prix", status: "active" },
+            ].map((row) => (
+              <div
+                key={row.id}
+                className={`flex items-center gap-4 px-3 py-3 ${
+                  row.status === "active" ? "bg-cyan-950/40" : ""
+                }`}
+              >
+                <span className="font-mono text-xs text-zinc-500">{row.id}</span>
+                <span className="flex-1 text-sm text-zinc-200">{row.label}</span>
+                <span
+                  className={`rounded-sm px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+                    row.status === "complete"
+                      ? "bg-zinc-800 text-zinc-400"
+                      : "bg-cyan-900 text-cyan-300"
                   }`}
                 >
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      item.active
-                        ? "bg-orange-600 text-white"
-                        : item.done
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-300 text-slate-700"
-                    }`}
-                  >
-                    {item.done ? "✓" : item.step}
-                  </span>
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 rounded-xl bg-slate-900 p-4 text-center">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Prix gagné</p>
-              <p className="mt-1 text-lg font-bold text-white">Boisson offerte</p>
-              <p className="mt-2 font-mono text-sm text-amber-400">CODE · A7F2B9C1</p>
-            </div>
+                  {row.status === "complete" ? "ok" : "live"}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-zinc-800 bg-zinc-900/80 p-5">
+            <p className="section-label text-zinc-500">Récompense émise</p>
+            <p className="mt-2 text-lg font-semibold text-white">Boisson offerte</p>
+            <p className="mt-2 font-mono text-sm text-cyan-400">REF · A7F2-B9C1</p>
           </div>
         </div>
       </div>
@@ -126,66 +146,65 @@ function Hero() {
 
 const FEATURES = [
   {
-    title: "Page brandée par commerce",
+    title: "Identité par établissement",
     description:
-      "Logo, couleurs et liens sociaux personnalisés. Chaque établissement a sa propre URL et son QR code.",
-    icon: "🎨",
+      "URL dédiée, QR code, logo et palette. Chaque point de vente conserve sa marque sans développement sur mesure.",
+    Icon: IconLayers,
   },
   {
-    title: "Parcours client guidé",
+    title: "Pipeline client structuré",
     description:
-      "Téléphone, follow, avis Google puis roue — un funnel clair qui maximise l'engagement à chaque étape.",
-    icon: "📱",
+      "Étapes séquentielles avec validation à chaque niveau. Le client reste dans le navigateur, sans application.",
+    Icon: IconFlow,
   },
   {
-    title: "Roue configurable",
+    title: "Moteur de récompenses",
     description:
-      "Définissez vos prix, probabilités et stocks. Réductions, produits offerts, ou cases « perdu ».",
-    icon: "🎡",
+      "Probabilités, stocks et libellés configurables. Distribution contrôlée et traçable en caisse.",
+    Icon: IconWheel,
   },
   {
-    title: "Anti-abus multicouche",
+    title: "Contrôle anti-abus",
     description:
-      "OTP SMS, empreinte appareil et validation d'avis. Un numéro = un spin par commerce tous les 30 jours.",
-    icon: "🛡️",
+      "OTP, empreinte appareil et revue d'avis. Limite stricte : un numéro, un tirage par commerce sur 30 jours.",
+    Icon: IconShield,
   },
   {
-    title: "Dashboard commerçant",
+    title: "Tableau de bord opérationnel",
     description:
-      "Stats, gestion des prix, validation des captures d'avis et téléchargement du QR en un clic.",
-    icon: "📊",
+      "Métriques, modération des preuves d'avis, export QR. Vue consolidée pour le gérant.",
+    Icon: IconChart,
   },
   {
-    title: "Pensé pour Da Nang",
+    title: "Déploiement local",
     description:
-      "Simple à maintenir, adapté aux restaurants et commerces locaux. Pas de complexité inutile.",
-    icon: "📍",
+      "Conçu pour le marché de Da Nang : restaurants, cafés et commerces de proximité.",
+    Icon: IconPin,
   },
 ];
 
 function Features() {
   return (
-    <section id="fonctionnalites" className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-            Tout ce qu&apos;il faut pour fidéliser sur place
+    <section id="fonctionnalites" className="border-b border-border bg-white py-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="max-w-2xl">
+          <p className="section-label text-accent">Plateforme</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+            Infrastructure complète, interface épurée
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
-            Un outil complet, sans application mobile à développer ni parcours compliqué pour vos clients.
+          <p className="mt-4 text-[17px] leading-relaxed text-muted">
+            Les composants nécessaires à la fidélisation sur place, intégrés dans un seul système
+            cohérent.
           </p>
         </div>
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <article
-              key={f.title}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <span className="text-2xl" role="img" aria-hidden>
-                {f.icon}
-              </span>
-              <h3 className="mt-4 text-lg font-bold text-slate-900">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.description}</p>
+        <div className="mt-14 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ title, description, Icon }) => (
+            <article key={title} className="bg-white p-7">
+              <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-border text-accent">
+                <Icon />
+              </div>
+              <h3 className="mt-5 text-[17px] font-semibold text-ink">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>
             </article>
           ))}
         </div>
@@ -197,42 +216,46 @@ function Features() {
 const STEPS = [
   {
     num: "01",
-    title: "Le client scanne le QR",
-    text: "Sur table ou comptoir. Il arrive sur votre page aux couleurs de votre établissement.",
+    title: "Scan du QR",
+    text: "Accès immédiat à la page brandée depuis table ou comptoir.",
   },
   {
     num: "02",
-    title: "Il valide son numéro",
-    text: "Code SMS pour limiter les abus. Un numéro ne peut jouer qu'une fois par mois chez vous.",
+    title: "Authentification",
+    text: "Numéro vérifié par SMS. Règle d'usage appliquée avant toute récompense.",
   },
   {
     num: "03",
-    title: "Il suit & laisse un avis",
-    text: "Liens vers vos réseaux et Google. Capture d'avis uploadée pour vérification.",
+    title: "Engagement & avis",
+    text: "Redirections sociales et Google. Preuve d'avis soumise pour contrôle.",
   },
   {
     num: "04",
-    title: "Il tourne la roue",
-    text: "Prix tiré selon vos probabilités. Code unique à présenter en caisse.",
+    title: "Émission du prix",
+    text: "Tirage pondéré. Code unique présenté en caisse pour validation.",
   },
 ];
 
 function HowItWorks() {
   return (
-    <section id="comment-ca-marche" className="border-y border-slate-200 bg-slate-900 py-20 text-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold sm:text-4xl">Comment ça marche</h2>
-          <p className="mt-4 text-lg text-slate-300">
-            Quatre étapes. Zéro friction inutile. Vos clients restent dans leur navigateur.
+    <section id="comment-ca-marche" className="border-b border-border bg-surface py-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="max-w-2xl">
+          <p className="section-label text-accent">Processus</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+            Quatre étapes, un flux maîtrisé
+          </h2>
+          <p className="mt-4 text-[17px] leading-relaxed text-muted">
+            De l&apos;arrivée sur la page à la remise du gain — chaque transition est définie et
+            journalisée.
           </p>
         </div>
-        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((step) => (
-            <div key={step.num} className="relative">
-              <p className="text-4xl font-bold text-orange-500">{step.num}</p>
-              <h3 className="mt-4 text-lg font-bold text-white">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">{step.text}</p>
+            <div key={step.num} className={`${card} p-6`}>
+              <p className="font-mono text-2xl font-medium text-accent">{step.num}</p>
+              <h3 className="mt-4 text-[15px] font-semibold text-ink">{step.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{step.text}</p>
             </div>
           ))}
         </div>
@@ -243,60 +266,71 @@ function HowItWorks() {
 
 function ForMerchants() {
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+    <section className="border-b border-border bg-white py-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="grid items-start gap-16 lg:grid-cols-2">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-              Vous gardez le contrôle
+            <p className="section-label text-accent">Opérations</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              Pilotage centralisé
             </h2>
-            <p className="mt-4 text-lg text-slate-600">
-              Depuis votre dashboard, configurez tout sans toucher au code : branding, prix de la
-              roue, suivi des participations et validation des avis en attente.
+            <p className="mt-4 text-[17px] leading-relaxed text-muted">
+              Configuration, modération et reporting depuis un espace commerçant dédié. Aucune
+              intervention technique requise au quotidien.
             </p>
-            <ul className="mt-8 space-y-4">
+            <ul className="mt-10 space-y-4 border-t border-border pt-8">
               {[
-                "QR code PNG prêt à imprimer",
-                "Prix avec poids de probabilité et stock limité",
-                "Historique des spins et stats journalières",
-                "Suivi du nombre d'avis Google (optionnel)",
+                "Export QR haute résolution",
+                "Gestion des probabilités et stocks",
+                "Historique des participations",
+                "Suivi agrégé des avis Google",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-slate-700">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
-                    ✓
+                <li key={item} className="flex items-center gap-3 text-sm text-ink">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-accent-subtle text-accent">
+                    <IconCheck />
                   </span>
                   {item}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-lg">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Spins ce mois</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">127</p>
+
+          <div className={`${cardDark} overflow-hidden`}>
+            <div className="border-b border-zinc-800 px-5 py-3">
+              <p className="section-label text-zinc-500">Aperçu · tableau de bord</p>
+            </div>
+            <div className="grid grid-cols-2 gap-px bg-zinc-800">
+              <div className="bg-zinc-950 p-5">
+                <p className="section-label text-zinc-500">Spins</p>
+                <p className="mt-2 font-mono text-3xl font-medium text-white">127</p>
+                <p className="mt-1 font-mono text-xs text-zinc-500">période · 30j</p>
               </div>
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Follows sociaux</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">98</p>
+              <div className="bg-zinc-950 p-5">
+                <p className="section-label text-zinc-500">Social</p>
+                <p className="mt-2 font-mono text-3xl font-medium text-white">98</p>
+                <p className="mt-1 font-mono text-xs text-zinc-500">conversions</p>
               </div>
-              <div className="col-span-2 rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Prix les plus tirés</p>
-                <div className="mt-3 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-700">10% réduction</span>
-                    <span className="font-semibold text-slate-900">42%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full w-[42%] rounded-full bg-orange-500" />
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-700">Boisson offerte</span>
-                    <span className="font-semibold text-slate-900">31%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full w-[31%] rounded-full bg-amber-500" />
-                  </div>
+              <div className="col-span-2 bg-zinc-950 p-5">
+                <p className="section-label text-zinc-500">Distribution des prix</p>
+                <div className="mt-4 space-y-4">
+                  {[
+                    { label: "10% réduction", pct: 42 },
+                    { label: "Boisson offerte", pct: 31 },
+                    { label: "Dessert offert", pct: 18 },
+                  ].map((row) => (
+                    <div key={row.label}>
+                      <div className="flex justify-between font-mono text-xs">
+                        <span className="text-zinc-400">{row.label}</span>
+                        <span className="text-zinc-200">{row.pct}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-zinc-800">
+                        <div
+                          className="h-full rounded-sm bg-cyan-600"
+                          style={{ width: `${row.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -309,27 +343,25 @@ function ForMerchants() {
 
 function CTA() {
   return (
-    <section className="bg-orange-600 py-20">
-      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-        <h2 className="text-3xl font-bold text-white sm:text-4xl">
-          Prêt à lancer votre roue ?
+    <section className="bg-ink py-24">
+      <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
+        <p className="section-label text-cyan-400">Démarrage</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Mettez votre programme en production
         </h2>
-        <p className="mt-4 text-lg text-orange-100">
-          Créez votre page, imprimez le QR, placez-le sur vos tables. Vos clients jouent en
-          quelques secondes.
+        <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-zinc-400">
+          Créez votre espace, configurez la roue, imprimez le QR. Vos clients interagissent en
+          moins d&apos;une minute.
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-9 flex flex-wrap justify-center gap-3">
           <Link
             href="/login"
-            className="rounded-lg bg-white px-8 py-3 text-base font-semibold text-orange-700 shadow-md hover:bg-orange-50"
+            className="inline-flex items-center justify-center rounded-sm bg-cyan-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500"
           >
-            Commencer gratuitement
+            Accéder à la plateforme
           </Link>
-          <a
-            href="mailto:contact@example.com"
-            className="rounded-lg border-2 border-white px-8 py-3 text-base font-semibold text-white hover:bg-orange-700"
-          >
-            Nous contacter
+          <a href="mailto:contact@example.com" className={btnGhostDark}>
+            Contact commercial
           </a>
         </div>
       </div>
@@ -339,16 +371,16 @@ function CTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-50 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
-        <p className="text-sm text-slate-600">
-          © {new Date().getFullYear()} Roue Fidélité · Da Nang, Vietnam
+    <footer className="border-t border-border bg-surface py-8">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 sm:flex-row sm:px-8">
+        <p className="font-mono text-xs text-muted">
+          © {new Date().getFullYear()} Roue Fidélité — Da Nang, VN
         </p>
-        <div className="flex gap-6 text-sm font-medium text-slate-600">
-          <Link href="/login" className="hover:text-slate-900">
-            Connexion commerçant
+        <div className="flex gap-8 text-[13px] font-medium text-muted">
+          <Link href="/login" className="hover:text-ink">
+            Connexion
           </Link>
-          <a href="#fonctionnalites" className="hover:text-slate-900">
+          <a href="#fonctionnalites" className="hover:text-ink">
             Fonctionnalités
           </a>
         </div>
@@ -359,7 +391,7 @@ function Footer() {
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-ink">
       <Nav />
       <main>
         <Hero />
