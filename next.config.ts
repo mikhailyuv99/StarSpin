@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey,
   },
+  experimental: {
+    optimizePackageImports: ["framer-motion", "lenis"],
+  },
 };
 
 export default nextConfig;

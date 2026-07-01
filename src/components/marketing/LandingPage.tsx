@@ -1,50 +1,36 @@
-import Link from "next/link";
-import {
-  IconChart,
-  IconCheck,
-  IconFlow,
-  IconLayers,
-  IconPin,
-  IconShield,
-  IconWheel,
-} from "./icons";
+"use client";
 
-const btnPrimary =
-  "inline-flex items-center justify-center rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800";
-const btnSecondary =
-  "inline-flex items-center justify-center rounded-sm border border-border bg-white px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface";
-const btnGhostDark =
-  "inline-flex items-center justify-center rounded-sm border border-zinc-700 bg-transparent px-5 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-900";
-const card =
-  "rounded-sm border border-border bg-white";
-const cardDark =
-  "rounded-sm border border-zinc-800 bg-zinc-950";
+import Link from "next/link";
+import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
+
+const LIME = "#d4ff00";
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-white">
+    <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-ink/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-ink text-[11px] font-bold tracking-wider text-white">
+        <Link href="/" className="flex items-center gap-2.5">
+          <span
+            className="flex h-9 w-9 items-center justify-center rounded-sm text-xs font-black tracking-tight text-ink"
+            style={{ backgroundColor: LIME }}
+          >
             RF
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-ink">Roue Fidélité</span>
+          <span className="text-[15px] font-bold tracking-tight text-white">Roue Fidélité</span>
         </Link>
-        <nav className="flex items-center gap-8">
-          <a
-            href="#fonctionnalites"
-            className="hidden text-[13px] font-medium text-muted hover:text-ink sm:block"
-          >
-            Fonctionnalités
+        <nav className="flex items-center gap-6">
+          <a href="#jeu" className="hidden text-[13px] font-semibold text-zinc-400 hover:text-white sm:block">
+            Le jeu
           </a>
-          <a
-            href="#comment-ca-marche"
-            className="hidden text-[13px] font-medium text-muted hover:text-ink sm:block"
-          >
-            Processus
+          <a href="#commercants" className="hidden text-[13px] font-semibold text-zinc-400 hover:text-white sm:block">
+            Commerçants
           </a>
-          <Link href="/login" className={btnPrimary}>
-            Espace commerçant
+          <Link
+            href="/login"
+            className="rounded-sm px-4 py-2 text-sm font-bold text-ink transition hover:brightness-110"
+            style={{ backgroundColor: LIME }}
+          >
+            Espace pro
           </Link>
         </nav>
       </div>
@@ -52,290 +38,276 @@ function Nav() {
   );
 }
 
+function HeroWheel() {
+  const slices = [
+    { color: LIME, label: "10%" },
+    { color: "#fff", label: "Café" },
+    { color: "#52525b", label: "20%" },
+    { color: "#a1a1aa", label: "Dessert" },
+    { color: "#3f3f46", label: "Merci" },
+    { color: "#71717a", label: "15%" },
+  ];
+
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[340px]">
+      <div className="hero-wheel absolute inset-0 rounded-full border-4 border-white/20 shadow-[0_0_80px_rgba(212,255,0,0.15)]">
+        <svg viewBox="0 0 200 200" className="h-full w-full">
+          {slices.map((s, i) => {
+            const start = (i / slices.length) * 360;
+            const end = ((i + 1) / slices.length) * 360;
+            const mid = (start + end) / 2;
+            const rad = ((mid - 90) * Math.PI) / 180;
+            const tx = 100 + 58 * Math.cos(rad);
+            const ty = 100 + 58 * Math.sin(rad);
+            const large = end - start > 180 ? 1 : 0;
+            const sRad = ((end - 90) * Math.PI) / 180;
+            const eRad = ((start - 90) * Math.PI) / 180;
+            const x1 = 100 + 92 * Math.cos(sRad);
+            const y1 = 100 + 92 * Math.sin(sRad);
+            const x2 = 100 + 92 * Math.cos(eRad);
+            const y2 = 100 + 92 * Math.sin(eRad);
+            return (
+              <g key={s.label}>
+                <path
+                  d={`M100 100 L${x1} ${y1} A92 92 0 ${large} 0 ${x2} ${y2} Z`}
+                  fill={s.color}
+                  stroke="#18181b"
+                  strokeWidth={1}
+                />
+                <text
+                  x={tx}
+                  y={ty}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  transform={`rotate(${mid}, ${tx}, ${ty})`}
+                  fill={s.color === "#fff" || s.color === LIME ? "#09090b" : "#fff"}
+                  fontSize={9}
+                  fontWeight={700}
+                >
+                  {s.label}
+                </text>
+              </g>
+            );
+          })}
+          <circle cx="100" cy="100" r="22" fill="#09090b" stroke="#fff" strokeWidth={2} />
+          <text x="100" y="103" textAnchor="middle" fill={LIME} fontSize={10} fontWeight={800}>
+            SPIN
+          </text>
+        </svg>
+      </div>
+      <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 text-2xl">▼</div>
+      <div
+        className="absolute -inset-4 -z-10 rounded-full opacity-40 blur-3xl"
+        style={{ background: `radial-gradient(circle, ${LIME}40, transparent 70%)` }}
+      />
+    </div>
+  );
+}
+
 function Hero() {
   return (
-    <section className="marketing-grid border-b border-zinc-800 bg-ink text-white">
-      <div className="mx-auto grid max-w-6xl gap-16 px-5 py-20 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
-        <div>
-          <p className="section-label text-zinc-400">Infrastructure fidélisation · Da Nang</p>
-          <h1 className="mt-5 text-[2.5rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem]">
-            Chaque scan QR devient une relation client mesurable
-          </h1>
-          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-zinc-400">
-            Parcours mobile structuré : vérification, engagement social, avis Google et
-            distribution de récompenses. Déployé en minutes, opéré depuis un tableau de bord
-            unique.
+    <section className="relative overflow-hidden border-b border-zinc-800 bg-ink text-white">
+      <div className="marketing-dots pointer-events-none absolute inset-0 opacity-40" />
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:items-center lg:py-24">
+        <Reveal>
+          <p className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/80 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: LIME }} />
+            Da Nang · Fidélisation gamifiée
           </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/login" className={btnPrimary}>
-              Déployer un commerce
+          <h1 className="mt-6 text-[2.35rem] font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+            Transformez chaque client en{" "}
+            <span style={{ color: LIME }}>joueur</span> qui revient
+          </h1>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-zinc-400">
+            QR code sur table → SMS → réseaux → avis Google →{" "}
+            <strong className="font-semibold text-white">roue de la fortune</strong>. Zéro appli.
+            Zéro friction. Des clients qui postent, suivent et reviennent.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="rounded-sm px-6 py-3 text-sm font-bold text-ink transition hover:brightness-110"
+              style={{ backgroundColor: LIME }}
+            >
+              Lancer mon commerce
             </Link>
-            <a href="#comment-ca-marche" className={btnGhostDark}>
-              Voir le processus
+            <a
+              href="#jeu"
+              className="rounded-sm border border-zinc-600 px-6 py-3 text-sm font-bold text-white transition hover:border-zinc-400 hover:bg-zinc-900"
+            >
+              Voir le parcours client
             </a>
           </div>
-          <dl className="mt-12 grid grid-cols-3 gap-6 border-t border-zinc-800 pt-8">
+          <dl className="mt-12 grid grid-cols-3 gap-4 border-t border-zinc-800 pt-8">
             {[
-              { label: "Mise en ligne", value: "< 10 min" },
-              { label: "Client", value: "Mobile web" },
-              { label: "Fraude", value: "Multi-couche" },
-            ].map((item) => (
-              <div key={item.label}>
-                <dt className="section-label text-zinc-500">{item.label}</dt>
-                <dd className="mt-1 font-mono text-sm font-medium text-zinc-100">{item.value}</dd>
+              { v: "< 60s", l: "Parcours client" },
+              { v: "1 QR", l: "Mise en place" },
+              { v: "0 app", l: "À installer" },
+            ].map((s) => (
+              <div key={s.l}>
+                <dd className="font-mono text-xl font-bold text-white">{s.v}</dd>
+                <dt className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                  {s.l}
+                </dt>
               </div>
             ))}
           </dl>
-        </div>
+        </Reveal>
 
-        <div className={`${cardDark} p-0 shadow-2xl shadow-black/40`}>
-          <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
-              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
-              <span className="h-2 w-2 rounded-sm bg-zinc-600" />
-            </div>
-            <span className="font-mono text-[11px] text-zinc-500">session / cafe-bienvenue</span>
-          </div>
-          <div className="border-b border-zinc-800 p-5">
-            <div className="flex items-center gap-4">
-              <div className="h-11 w-11 rounded-sm bg-zinc-800" />
-              <div>
-                <p className="text-sm font-semibold text-white">Café Bienvenue</p>
-                <p className="font-mono text-xs text-zinc-500">merchant.active · trial</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-0 divide-y divide-zinc-800 p-2">
-            {[
-              { id: "01", label: "Vérification SMS", status: "complete" },
-              { id: "02", label: "Engagement social", status: "complete" },
-              { id: "03", label: "Avis Google", status: "complete" },
-              { id: "04", label: "Distribution prix", status: "active" },
-            ].map((row) => (
-              <div
-                key={row.id}
-                className={`flex items-center gap-4 px-3 py-3 ${
-                  row.status === "active" ? "bg-zinc-800" : ""
-                }`}
-              >
-                <span className="font-mono text-xs text-zinc-500">{row.id}</span>
-                <span className="flex-1 text-sm text-zinc-200">{row.label}</span>
-                <span
-                  className={`rounded-sm px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
-                    row.status === "complete"
-                      ? "bg-zinc-800 text-zinc-400"
-                      : "bg-zinc-700 text-white"
-                  }`}
-                >
-                  {row.status === "complete" ? "ok" : "live"}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-zinc-800 bg-zinc-900/80 p-5">
-            <p className="section-label text-zinc-500">Récompense émise</p>
-            <p className="mt-2 text-lg font-semibold text-white">Boisson offerte</p>
-            <p className="mt-2 font-mono text-sm text-zinc-300">REF · A7F2-B9C1</p>
-          </div>
-        </div>
+        <Reveal delay={0.12} y={40}>
+          <HeroWheel />
+          <p className="mt-6 text-center font-mono text-xs text-zinc-500">
+            Aperçu live · Café Bienvenue · spin #1847
+          </p>
+        </Reveal>
       </div>
     </section>
   );
 }
 
-const FEATURES = [
+const GAME_STEPS = [
+  { emoji: "📱", title: "Scan QR", desc: "Page brandée du commerce. Pas d'appli, pas de compte." },
+  { emoji: "✅", title: "SMS validé", desc: "Un numéro = un tirage. Anti-triche intégré." },
+  { emoji: "❤️", title: "Follow social", desc: "Instagram, Facebook ou TikTok en un tap." },
+  { emoji: "⭐", title: "Avis Google", desc: "Capture d'écran → roue débloquée." },
+  { emoji: "🎰", title: "Spin & win", desc: "Prix pondérés, code unique en caisse." },
+];
+
+function GameFlow() {
+  return (
+    <section id="jeu" className="border-b border-border bg-white py-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <Reveal className="max-w-2xl">
+          <p className="section-label text-muted">Le parcours</p>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-ink sm:text-4xl">
+            Cinq niveaux. Un seul objectif :{" "}
+            <span className="underline decoration-[3px] underline-offset-4" style={{ textDecorationColor: LIME }}>
+              faire revenir le client
+            </span>
+          </h2>
+        </Reveal>
+
+        <RevealStagger className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {GAME_STEPS.map((step, i) => (
+            <RevealItem key={step.title}>
+              <article className="group relative h-full rounded-sm border border-border bg-surface p-5 transition hover:border-ink hover:shadow-lg">
+                <span className="font-mono text-xs font-bold text-muted">0{i + 1}</span>
+                <p className="mt-3 text-3xl">{step.emoji}</p>
+                <h3 className="mt-3 text-base font-bold text-ink">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{step.desc}</p>
+              </article>
+            </RevealItem>
+          ))}
+        </RevealStagger>
+      </div>
+    </section>
+  );
+}
+
+const PERKS = [
   {
-    title: "Identité par établissement",
-    description:
-      "URL dédiée, QR code, logo et palette. Chaque point de vente conserve sa marque sans développement sur mesure.",
-    Icon: IconLayers,
+    title: "Roue avec vos vrais prix",
+    desc: "Chaque segment affiche le libellé. Probabilités et stocks depuis le dashboard.",
   },
   {
-    title: "Pipeline client structuré",
-    description:
-      "Étapes séquentielles avec validation à chaque niveau. Le client reste dans le navigateur, sans application.",
-    Icon: IconFlow,
+    title: "Anti-abus multi-couche",
+    desc: "OTP SMS, empreinte appareil, modération des captures. Un tirage par numéro.",
   },
   {
-    title: "Moteur de récompenses",
-    description:
-      "Probabilités, stocks et libellés configurables. Distribution contrôlée et traçable en caisse.",
-    Icon: IconWheel,
+    title: "Votre marque, pas la nôtre",
+    desc: "Logo, couleurs, URL dédiée. Le client vit l'expérience de votre établissement.",
   },
   {
-    title: "Contrôle anti-abus",
-    description:
-      "OTP, empreinte appareil et revue d'avis. Limite stricte : un numéro, un tirage par commerce sur 30 jours.",
-    Icon: IconShield,
-  },
-  {
-    title: "Tableau de bord opérationnel",
-    description:
-      "Métriques, modération des preuves d'avis, export QR. Vue consolidée pour le gérant.",
-    Icon: IconChart,
-  },
-  {
-    title: "Déploiement local",
-    description:
-      "Conçu pour le marché de Da Nang : restaurants, cafés et commerces de proximité.",
-    Icon: IconPin,
+    title: "Stats qui comptent",
+    desc: "Spins, conversions sociales, distribution des gains. Pilotage en temps réel.",
   },
 ];
 
-function Features() {
+function Perks() {
   return (
-    <section id="fonctionnalites" className="border-b border-border bg-white py-24">
+    <section className="border-b border-border bg-surface py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="max-w-2xl">
-          <p className="section-label text-muted">Plateforme</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            Infrastructure complète, interface épurée
-          </h2>
-          <p className="mt-4 text-[17px] leading-relaxed text-muted">
-            Les composants nécessaires à la fidélisation sur place, intégrés dans un seul système
-            cohérent.
-          </p>
-        </div>
-        <div className="mt-14 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ title, description, Icon }) => (
-            <article key={title} className="bg-white p-7">
-              <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-border text-ink">
-                <Icon />
-              </div>
-              <h3 className="mt-5 text-[17px] font-semibold text-ink">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const STEPS = [
-  {
-    num: "01",
-    title: "Scan du QR",
-    text: "Accès immédiat à la page brandée depuis table ou comptoir.",
-  },
-  {
-    num: "02",
-    title: "Authentification",
-    text: "Numéro vérifié par SMS. Règle d'usage appliquée avant toute récompense.",
-  },
-  {
-    num: "03",
-    title: "Engagement & avis",
-    text: "Redirections sociales et Google. Preuve d'avis soumise pour contrôle.",
-  },
-  {
-    num: "04",
-    title: "Émission du prix",
-    text: "Tirage pondéré. Code unique présenté en caisse pour validation.",
-  },
-];
-
-function HowItWorks() {
-  return (
-    <section id="comment-ca-marche" className="border-b border-border bg-surface py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="max-w-2xl">
-          <p className="section-label text-muted">Processus</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            Quatre étapes, un flux maîtrisé
-          </h2>
-          <p className="mt-4 text-[17px] leading-relaxed text-muted">
-            De l&apos;arrivée sur la page à la remise du gain — chaque transition est définie et
-            journalisée.
-          </p>
-        </div>
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step) => (
-            <div key={step.num} className={`${card} p-6`}>
-              <p className="font-mono text-2xl font-medium text-ink">{step.num}</p>
-              <h3 className="mt-4 text-[15px] font-semibold text-ink">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{step.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ForMerchants() {
-  return (
-    <section className="border-b border-border bg-white py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="grid items-start gap-16 lg:grid-cols-2">
-          <div>
-            <p className="section-label text-muted">Opérations</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-              Pilotage centralisé
+        <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+          <Reveal>
+            <p className="section-label text-muted">Pourquoi ça marche</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-ink sm:text-4xl">
+              La gamification n&apos;est pas un gadget — c&apos;est un moteur de croissance
             </h2>
             <p className="mt-4 text-[17px] leading-relaxed text-muted">
-              Configuration, modération et reporting depuis un espace commerçant dédié. Aucune
-              intervention technique requise au quotidien.
+              Les clients ne &quot;remplissent pas un formulaire&quot;. Ils jouent, gagnent, et
+              partagent. Vous récoltez avis, abonnés et données — sans équipe marketing.
             </p>
-            <ul className="mt-10 space-y-4 border-t border-border pt-8">
-              {[
-                "Export QR haute résolution",
-                "Gestion des probabilités et stocks",
-                "Historique des participations",
-                "Suivi agrégé des avis Google",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-3 text-sm text-ink">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-ink">
-                    <IconCheck />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          </Reveal>
 
-          <div className={`${cardDark} overflow-hidden`}>
-            <div className="border-b border-zinc-800 px-5 py-3">
-              <p className="section-label text-zinc-500">Aperçu · tableau de bord</p>
-            </div>
-            <div className="grid grid-cols-2 gap-px bg-zinc-800">
-              <div className="bg-zinc-950 p-5">
-                <p className="section-label text-zinc-500">Spins</p>
-                <p className="mt-2 font-mono text-3xl font-medium text-white">127</p>
-                <p className="mt-1 font-mono text-xs text-zinc-500">période · 30j</p>
-              </div>
-              <div className="bg-zinc-950 p-5">
-                <p className="section-label text-zinc-500">Social</p>
-                <p className="mt-2 font-mono text-3xl font-medium text-white">98</p>
-                <p className="mt-1 font-mono text-xs text-zinc-500">conversions</p>
-              </div>
-              <div className="col-span-2 bg-zinc-950 p-5">
-                <p className="section-label text-zinc-500">Distribution des prix</p>
-                <div className="mt-4 space-y-4">
-                  {[
-                    { label: "10% réduction", pct: 42 },
-                    { label: "Boisson offerte", pct: 31 },
-                    { label: "Dessert offert", pct: 18 },
-                  ].map((row) => (
-                    <div key={row.label}>
-                      <div className="flex justify-between font-mono text-xs">
-                        <span className="text-zinc-400">{row.label}</span>
-                        <span className="text-zinc-200">{row.pct}%</span>
-                      </div>
-                      <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-zinc-800">
-                        <div
-                          className="h-full rounded-sm bg-ink"
-                          style={{ width: `${row.pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+          <RevealStagger className="grid gap-3 sm:grid-cols-2">
+            {PERKS.map((p) => (
+              <RevealItem key={p.title}>
+                <div className="h-full rounded-sm border border-border bg-white p-5">
+                  <h3 className="text-sm font-bold text-ink">{p.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{p.desc}</p>
                 </div>
-              </div>
-            </div>
-          </div>
+              </RevealItem>
+            ))}
+          </RevealStagger>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function Merchants() {
+  return (
+    <section id="commercants" className="border-b border-border bg-white py-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <p className="section-label text-muted">Commerçants</p>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-ink sm:text-4xl">
+            En ligne avant la fin du service
+          </h2>
+          <p className="mt-4 text-[17px] text-muted">
+            Créez votre espace, configurez la roue, imprimez le QR. C&apos;est tout.
+          </p>
+        </Reveal>
+
+        <RevealStagger className="mt-14 grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              step: "1",
+              title: "Configurez",
+              items: ["Logo & couleurs", "Prix et probabilités", "Liens sociaux & Google"],
+            },
+            {
+              step: "2",
+              title: "Imprimez",
+              items: ["QR haute résolution", "Posez sur tables / comptoir", "Clients scannent"],
+            },
+            {
+              step: "3",
+              title: "Pilotez",
+              items: ["Modérez les avis", "Suivez les spins", "Ajustez les gains"],
+            },
+          ].map((card) => (
+            <RevealItem key={card.step}>
+              <div className="h-full rounded-sm border-2 border-ink bg-ink p-6 text-white">
+                <span
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-sm font-mono text-sm font-bold text-ink"
+                  style={{ backgroundColor: LIME }}
+                >
+                  {card.step}
+                </span>
+                <h3 className="mt-4 text-xl font-bold">{card.title}</h3>
+                <ul className="mt-4 space-y-2">
+                  {card.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-zinc-300">
+                      <span style={{ color: LIME }}>→</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </RevealItem>
+          ))}
+        </RevealStagger>
       </div>
     </section>
   );
@@ -343,25 +315,30 @@ function ForMerchants() {
 
 function CTA() {
   return (
-    <section className="bg-ink py-24">
-      <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
-        <p className="section-label text-zinc-400">Démarrage</p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Mettez votre programme en production
+    <section className="relative overflow-hidden bg-ink py-24">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          background: `radial-gradient(ellipse 80% 60% at 50% 100%, ${LIME}55, transparent)`,
+        }}
+      />
+      <Reveal className="relative mx-auto max-w-3xl px-5 text-center sm:px-8">
+        <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+          Prêt à faire tourner la roue ?
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-zinc-400">
-          Créez votre espace, configurez la roue, imprimez le QR. Vos clients interagissent en
-          moins d&apos;une minute.
+        <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-400">
+          Rejoignez les cafés et restaurants de Da Nang qui transforment leurs clients en ambassadeurs.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Link href="/login" className={btnPrimary}>
-            Accéder à la plateforme
+          <Link
+            href="/login"
+            className="rounded-sm px-8 py-3.5 text-sm font-bold text-ink transition hover:brightness-110"
+            style={{ backgroundColor: LIME }}
+          >
+            Démarrer gratuitement
           </Link>
-          <a href="mailto:contact@example.com" className={btnGhostDark}>
-            Contact commercial
-          </a>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -371,14 +348,14 @@ function Footer() {
     <footer className="border-t border-border bg-surface py-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 sm:flex-row sm:px-8">
         <p className="font-mono text-xs text-muted">
-          © {new Date().getFullYear()} Roue Fidélité — Da Nang, VN
+          © {new Date().getFullYear()} Roue Fidélité — Da Nang, Vietnam
         </p>
-        <div className="flex gap-8 text-[13px] font-medium text-muted">
+        <div className="flex gap-8 text-[13px] font-semibold text-muted">
           <Link href="/login" className="hover:text-ink">
             Connexion
           </Link>
-          <a href="#fonctionnalites" className="hover:text-ink">
-            Fonctionnalités
+          <a href="#jeu" className="hover:text-ink">
+            Le jeu
           </a>
         </div>
       </div>
@@ -392,9 +369,9 @@ export function LandingPage() {
       <Nav />
       <main>
         <Hero />
-        <Features />
-        <HowItWorks />
-        <ForMerchants />
+        <GameFlow />
+        <Perks />
+        <Merchants />
         <CTA />
       </main>
       <Footer />

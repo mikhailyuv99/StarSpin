@@ -1,15 +1,40 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Merchant, Prize, PublicStep } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
 import { verifyReviewScreenshot } from "@/lib/ocr";
+import { prizeSliceAngles } from "@/lib/wheel";
 
 interface PublicFlowProps {
   merchant: Merchant;
   prizes: Prize[];
+}
+
+const STEP_ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "result"];
+
+const stepVariants = {
+  enter: { opacity: 0, x: 24 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -24 },
+};
+
+function fireConfetti(accent: string) {
+  import("canvas-confetti").then(({ default: confetti }) => {
+    confetti({
+      particleCount: 90,
+      spread: 70,
+      origin: { y: 0.65 },
+      colors: [accent, "#fff", "#fbbf24", "#34d399"],
+    });
+    setTimeout(() => {
+      confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, "#fff"] });
+      confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, "#fff"] });
+    }, 280);
+  });
 }
 
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
@@ -17,7 +42,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [step, setStep] = useState<PublicStep>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [followedSocial, setFollowedSocial] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [reviewStatus, setReviewStatus] = useState<"pending" | "verified" | "rejected">("pending");
@@ -30,16 +55,22 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [otpHint, setOtpHint] = useState<string | null>(null);
 
   const accent = merchant.primary_color;
+  const activePrizes = prizeSliceAngles(prizes);
+  const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
 
   const bgStyle = {
-    background: `linear-gradient(160deg, ${merchant.primary_color} 0%, ${merchant.secondary_color} 100%)`,
+    background: `linear-gradient(165deg, ${merchant.primary_color} 0%, ${merchant.secondary_color} 55%, #09090b 100%)`,
   };
 
   const btnPrimaryClass =
-    "public-touch-target w-full rounded-sm font-semibold text-white disabled:opacity-40 active:scale-[0.99] transition-transform";
+    "public-touch-target w-full rounded-sm font-bold text-white shadow-lg disabled:opacity-40 active:scale-[0.98] transition-transform";
 
   const btnOutlineClass =
-    "public-touch-target w-full rounded-sm border border-zinc-300 bg-white font-semibold text-zinc-900 active:bg-zinc-50";
+    "public-touch-target w-full rounded-sm border-2 border-zinc-200 bg-white font-semibold text-zinc-900 active:bg-zinc-50 active:scale-[0.98] transition-transform";
+
+  useEffect(() => {
+    if (step === "result" && wonPrize) fireConfetti(accent);
+  }, [step, wonPrize, accent]);
 
   const sendOtp = async () => {
     setLoading(true);
@@ -52,11 +83,12 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
+      setOtpSent(true);
       if (data.devCode) {
         setOtp(data.devCode);
         setOtpHint(`Code de test : ${data.devCode}`);
       } else {
-        setOtpHint("Code envoyé par SMS.");
+        setOtpHint("Code envoyé par SMS ✓");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
@@ -76,7 +108,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
-      setPhoneVerified(true);
       setPhone(data.phoneNumber);
       setStep("social");
     } catch (e) {
@@ -146,34 +177,69 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   };
 
   const handleWheelSpin = async () => {
-    const prize = await executeSpin();
-    if (prize) setTargetPrizeId(prize.id);
+    await executeSpin();
   };
+
+  const socialLinks = [
+    { key: "instagram", label: "Instagram", emoji: "📸", url: merchant.social_links.instagram },
+    { key: "facebook", label: "Facebook", emoji: "👍", url: merchant.social_links.facebook },
+    { key: "tiktok", label: "TikTok", emoji: "🎵", url: merchant.social_links.tiktok },
+  ].filter((l) => l.url);
 
   return (
     <div className="public-flow w-full" style={bgStyle}>
       <div className="mx-auto flex w-full max-w-lg flex-col">
         <MerchantHeader merchant={merchant} />
+
+        <div className="mb-4 px-1">
+          <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/80">
+            <span>Progression</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/20">
+            <motion.div
+              className="h-full rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]"
+              initial={false}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+        </div>
+
         <StepIndicator current={step} accent={accent} />
 
-        <div className="rounded-sm border border-white/25 bg-white p-4 shadow-2xl sm:p-6">
+        <div className="overflow-hidden rounded-sm border border-white/30 bg-white shadow-2xl">
           {error && (
             <div
-              className="mb-4 rounded-sm border border-red-200 bg-red-50 px-3 py-3 text-sm leading-snug text-red-800"
+              className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm leading-snug text-red-800"
               role="alert"
             >
               {error}
             </div>
           )}
 
-          {step === "phone" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">Vérification téléphone</h2>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-600">Vérification par SMS</p>
-              </div>
-              {!phoneVerified ? (
-                <>
+          <div className="p-4 sm:p-6">
+            <AnimatePresence mode="wait">
+              {step === "phone" && (
+                <motion.div
+                  key="phone"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-3xl" aria-hidden>
+                      🎯
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">C&apos;est parti !</h2>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      Entrez votre numéro pour débloquer la roue
+                    </p>
+                  </div>
+
                   <input
                     type="tel"
                     inputMode="tel"
@@ -182,191 +248,253 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     placeholder="0xx xxx xxxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="public-input"
+                    className="public-input text-center text-lg font-semibold"
                   />
+
+                  {!otpSent ? (
+                    <button
+                      type="button"
+                      onClick={sendOtp}
+                      disabled={loading || phone.length < 8}
+                      className={btnPrimaryClass}
+                      style={{ backgroundColor: accent }}
+                    >
+                      {loading ? "Envoi…" : "Recevoir mon code →"}
+                    </button>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        enterKeyHint="done"
+                        placeholder="• • • • • •"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="public-input text-center font-mono text-2xl tracking-[0.35em]"
+                      />
+                      {otpHint && (
+                        <p className="text-center text-sm font-medium text-emerald-700">{otpHint}</p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={verifyOtp}
+                        disabled={loading || otp.length < 4}
+                        className={btnPrimaryClass}
+                        style={{ backgroundColor: accent }}
+                      >
+                        {loading ? "Vérification…" : "Valider & continuer 🚀"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={sendOtp}
+                        disabled={loading}
+                        className="w-full text-center text-sm font-medium text-zinc-500 underline-offset-2 hover:underline"
+                      >
+                        Renvoyer le code
+                      </button>
+                    </>
+                  )}
+                </motion.div>
+              )}
+
+              {step === "social" && (
+                <motion.div
+                  key="social"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-3xl" aria-hidden>
+                      ⭐
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">+1 mission</h2>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      Suivez-nous — ça prend 10 secondes
+                    </p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {socialLinks.map((link) => (
+                      <button
+                        key={link.key}
+                        type="button"
+                        onClick={() => handleSocialClick(link.url!)}
+                        className={`${btnOutlineClass} flex items-center justify-center gap-2 text-left`}
+                      >
+                        <span className="text-xl">{link.emoji}</span>
+                        Suivre sur {link.label}
+                      </button>
+                    ))}
+                    {socialLinks.length === 0 && (
+                      <p className="text-center text-sm text-zinc-500">Aucun réseau configuré.</p>
+                    )}
+                  </div>
+
                   <button
                     type="button"
-                    onClick={sendOtp}
-                    disabled={loading || !phone}
+                    onClick={() => setStep("review")}
+                    disabled={!followedSocial && socialLinks.length > 0}
                     className={btnPrimaryClass}
                     style={{ backgroundColor: accent }}
                   >
-                    {loading ? "Envoi…" : "Recevoir le code"}
+                    Mission accomplie ✓
                   </button>
+                </motion.div>
+              )}
+
+              {step === "review" && (
+                <motion.div
+                  key="review"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-3xl" aria-hidden>
+                      🏆
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">Dernière étape !</h2>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      Un avis Google = accès à la roue
+                    </p>
+                  </div>
+
+                  {merchant.google_review_link && (
+                    <a
+                      href={merchant.google_review_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${btnPrimaryClass} flex items-center justify-center gap-2`}
+                      style={{ backgroundColor: "#18181b" }}
+                    >
+                      Ouvrir Google Avis ↗
+                    </a>
+                  )}
+
                   <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    enterKeyHint="done"
-                    placeholder="Code à 6 chiffres"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="public-input text-center font-mono text-lg tracking-[0.2em]"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleReviewUpload(file);
+                    }}
                   />
                   <button
                     type="button"
-                    onClick={verifyOtp}
-                    disabled={loading || otp.length < 4}
-                    className="public-touch-target w-full rounded-sm border border-zinc-900 bg-zinc-900 font-semibold text-white disabled:border-zinc-300 disabled:bg-zinc-300 disabled:text-zinc-500"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                    className={btnOutlineClass}
                   >
-                    Vérifier
+                    {loading ? "Analyse…" : "📷 Envoyer ma capture"}
                   </button>
-                  {otpHint && (
-                    <p className="rounded-sm border border-zinc-200 bg-zinc-50 px-3 py-3 text-center font-mono text-base leading-snug text-zinc-900">
-                      {otpHint}
+                  <p className="text-center text-xs text-zinc-500">
+                    Faites une capture de votre avis publié
+                  </p>
+                </motion.div>
+              )}
+
+              {step === "wheel" && (
+                <motion.div
+                  key="wheel"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-3xl" aria-hidden>
+                      🎰
                     </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">À vous de jouer !</h2>
+                    <p className="mt-1 text-sm text-zinc-600">Touchez le bouton — la roue décide</p>
+                  </div>
+
+                  {activePrizes.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {activePrizes.map(({ prize }) => (
+                        <span
+                          key={prize.id}
+                          className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold text-zinc-700"
+                        >
+                          {prize.label}
+                        </span>
+                      ))}
+                    </div>
                   )}
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setStep("social")}
-                  className={btnPrimaryClass}
-                  style={{ backgroundColor: accent }}
-                >
-                  Continuer
-                </button>
+
+                  <Wheel
+                    prizes={prizes}
+                    primaryColor={merchant.primary_color}
+                    secondaryColor={merchant.secondary_color}
+                    onSpinComplete={onSpinComplete}
+                    spinning={spinning}
+                    setSpinning={setSpinning}
+                    targetPrizeId={targetPrizeId}
+                    hideSpinButton
+                  />
+
+                  {!spinning && !targetPrizeId && (
+                    <button
+                      type="button"
+                      onClick={handleWheelSpin}
+                      disabled={loading}
+                      className={`${btnPrimaryClass} text-lg`}
+                      style={{ backgroundColor: accent }}
+                    >
+                      {loading ? "Préparation…" : "🎲 TOURNER LA ROUE"}
+                    </button>
+                  )}
+                </motion.div>
               )}
-            </div>
-          )}
 
-          {step === "social" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">Réseaux sociaux</h2>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-                  Touchez un réseau, suivez la page, puis revenez ici.
-                </p>
-              </div>
-              <div className="space-y-2.5">
-                {merchant.social_links.instagram && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialClick(merchant.social_links.instagram!)}
-                    className={btnOutlineClass}
-                  >
-                    Suivre sur Instagram
-                  </button>
-                )}
-                {merchant.social_links.facebook && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialClick(merchant.social_links.facebook!)}
-                    className={btnOutlineClass}
-                  >
-                    Suivre sur Facebook
-                  </button>
-                )}
-                {merchant.social_links.tiktok && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialClick(merchant.social_links.tiktok!)}
-                    className={btnOutlineClass}
-                  >
-                    Suivre sur TikTok
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep("review")}
-                disabled={!followedSocial}
-                className={btnPrimaryClass}
-                style={{ backgroundColor: accent }}
-              >
-                J&apos;ai suivi — continuer
-              </button>
-            </div>
-          )}
-
-          {step === "review" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">Avis Google</h2>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-                  Laissez un avis, faites une capture d&apos;écran, puis uploadez-la.
-                </p>
-              </div>
-              {merchant.google_review_link && (
-                <a
-                  href={merchant.google_review_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="public-touch-target flex w-full items-center justify-center rounded-sm border border-zinc-900 bg-zinc-900 font-semibold text-white"
+              {step === "result" && wonPrize && (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  className="space-y-5 py-2 text-center"
                 >
-                  Ouvrir Google Avis
-                </a>
+                  <motion.p
+                    className="text-5xl"
+                    animate={{ rotate: [0, -8, 8, 0] }}
+                    transition={{ repeat: 2, duration: 0.4 }}
+                    aria-hidden
+                  >
+                    🎉
+                  </motion.p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Vous avez gagné</p>
+                  <p className="text-balance text-2xl font-bold leading-tight text-zinc-900 sm:text-3xl">
+                    {wonPrize.label}
+                  </p>
+                  <div className="rounded-sm border-2 border-dashed border-zinc-300 bg-gradient-to-b from-zinc-50 to-white px-4 py-6">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Code caisse
+                    </p>
+                    <p className="mt-3 font-mono text-4xl font-bold tracking-wider text-zinc-900">
+                      {spinId?.slice(0, 8).toUpperCase()}
+                    </p>
+                  </div>
+                  <p className="text-sm leading-relaxed text-zinc-600">
+                    Montrez cet écran en caisse pour récupérer votre prix.
+                  </p>
+                </motion.div>
               )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleReviewUpload(file);
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                className={btnOutlineClass}
-              >
-                {loading ? "Analyse en cours…" : "Choisir une capture d'écran"}
-              </button>
-            </div>
-          )}
-
-          {step === "wheel" && (
-            <div className="space-y-4">
-              <h2 className="text-center text-lg font-semibold text-zinc-900">Roue de la fortune</h2>
-              {!spinning && !targetPrizeId ? (
-                <button
-                  type="button"
-                  onClick={handleWheelSpin}
-                  disabled={loading}
-                  className={`${btnPrimaryClass} max-w-none`}
-                  style={{ backgroundColor: accent }}
-                >
-                  {loading ? "Préparation…" : "Lancer le tirage"}
-                </button>
-              ) : (
-                <Wheel
-                  prizes={prizes}
-                  primaryColor={merchant.primary_color}
-                  secondaryColor={merchant.secondary_color}
-                  onSpinComplete={onSpinComplete}
-                  spinning={spinning}
-                  setSpinning={setSpinning}
-                  targetPrizeId={targetPrizeId}
-                />
-              )}
-            </div>
-          )}
-
-          {step === "result" && wonPrize && (
-            <div className="space-y-5 py-2 text-center">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Félicitations
-              </p>
-              <p className="text-balance text-2xl font-semibold leading-tight text-zinc-900">
-                {wonPrize.label}
-              </p>
-              <div className="rounded-sm border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Code à montrer en caisse
-                </p>
-                <p className="mt-3 font-mono text-3xl font-bold tracking-wider text-zinc-900 sm:text-4xl">
-                  {spinId?.slice(0, 8).toUpperCase()}
-                </p>
-              </div>
-              <p className="text-sm leading-relaxed text-zinc-600">
-                Gardez cet écran ouvert pour récupérer votre prix.
-              </p>
-            </div>
-          )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

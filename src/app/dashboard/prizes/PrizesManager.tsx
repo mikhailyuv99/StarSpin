@@ -6,6 +6,12 @@ import type { Prize } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 
+type EditForm = {
+  label: string;
+  probability_weight: number;
+  stock_remaining: string;
+};
+
 export function PrizesManager({
   merchantId,
   initialPrizes,
@@ -15,13 +21,59 @@ export function PrizesManager({
 }) {
   const router = useRouter();
   const [prizes, setPrizes] = useState(initialPrizes);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({
+    label: "",
+    probability_weight: 10,
+    stock_remaining: "",
+  });
   const [newPrize, setNewPrize] = useState({
     label: "",
     probability_weight: 10,
     stock_remaining: "",
   });
+  const [saving, setSaving] = useState(false);
 
   const refresh = () => router.refresh();
+
+  const startEdit = (prize: Prize) => {
+    setEditingId(prize.id);
+    setEditForm({
+      label: prize.label,
+      probability_weight: prize.probability_weight,
+      stock_remaining:
+        prize.stock_remaining !== null ? String(prize.stock_remaining) : "",
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    setSaving(true);
+    const supabase = createClient();
+    const payload = {
+      label: editForm.label.trim(),
+      probability_weight: editForm.probability_weight,
+      stock_remaining: editForm.stock_remaining
+        ? parseInt(editForm.stock_remaining, 10)
+        : null,
+    };
+    const { data, error } = await supabase
+      .from("prizes")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (!error && data) {
+      setPrizes((p) => p.map((x) => (x.id === id ? (data as Prize) : x)));
+      setEditingId(null);
+      refresh();
+    }
+    setSaving(false);
+  };
 
   const addPrize = async () => {
     const supabase = createClient();
@@ -58,6 +110,7 @@ export function PrizesManager({
     const supabase = createClient();
     await supabase.from("prizes").delete().eq("id", id);
     setPrizes((p) => p.filter((x) => x.id !== id));
+    if (editingId === id) setEditingId(null);
     refresh();
   };
 
@@ -70,26 +123,83 @@ export function PrizesManager({
         ) : (
           <div className="mt-5 divide-y divide-border border border-border">
             {prizes.map((prize) => (
-              <div
-                key={prize.id}
-                className="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-ink">{prize.label}</p>
-                  <p className="mt-0.5 font-mono text-xs text-muted">
-                    poids {prize.probability_weight}
-                    {prize.stock_remaining !== null && ` · stock ${prize.stock_remaining}`}
-                    {!prize.active && " · inactif"}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => toggleActive(prize)} className={ui.btnOutline}>
-                    {prize.active ? "Désactiver" : "Activer"}
-                  </button>
-                  <button type="button" onClick={() => deletePrize(prize.id)} className={ui.btnDanger}>
-                    Supprimer
-                  </button>
-                </div>
+              <div key={prize.id} className="bg-white px-4 py-4">
+                {editingId === prize.id ? (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label className={ui.label}>Libellé</label>
+                        <input
+                          value={editForm.label}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, label: e.target.value }))
+                          }
+                          className={ui.input}
+                        />
+                      </div>
+                      <div>
+                        <label className={ui.label}>Poids</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={editForm.probability_weight}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              probability_weight: parseInt(e.target.value, 10) || 1,
+                            }))
+                          }
+                          className={ui.input}
+                        />
+                      </div>
+                      <div>
+                        <label className={ui.label}>Stock (vide = ∞)</label>
+                        <input
+                          value={editForm.stock_remaining}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, stock_remaining: e.target.value }))
+                          }
+                          className={ui.input}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => saveEdit(prize.id)}
+                        disabled={saving || !editForm.label.trim()}
+                        className={ui.btn}
+                      >
+                        {saving ? "Enregistrement…" : "Enregistrer"}
+                      </button>
+                      <button type="button" onClick={cancelEdit} className={ui.btnOutline}>
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{prize.label}</p>
+                      <p className="mt-0.5 font-mono text-xs text-muted">
+                        poids {prize.probability_weight}
+                        {prize.stock_remaining !== null && ` · stock ${prize.stock_remaining}`}
+                        {!prize.active && " · inactif"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => startEdit(prize)} className={ui.btnOutline}>
+                        Modifier
+                      </button>
+                      <button type="button" onClick={() => toggleActive(prize)} className={ui.btnOutline}>
+                        {prize.active ? "Désactiver" : "Activer"}
+                      </button>
+                      <button type="button" onClick={() => deletePrize(prize.id)} className={ui.btnDanger}>
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
