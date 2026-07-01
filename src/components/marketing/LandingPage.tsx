@@ -59,9 +59,9 @@ function HeroWheelPhone() {
 
 function Hero() {
   const { t } = useI18n();
-  const badges: { cls: string; brand?: SocialBrand; text: string; letter?: string }[] = [
+  const badges: { cls: string; brand: SocialBrand; text: string }[] = [
     { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google reviews" },
-    { cls: "cadeo-stat-badge--mint", letter: "T", text: "+251 TripAdvisor" },
+    { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", text: "+251 TripAdvisor" },
     { cls: "cadeo-stat-badge--yellow", brand: "tiktok", text: "+150 TikTok" },
     { cls: "cadeo-stat-badge--pink", brand: "instagram", text: "+251 Instagram" },
   ];
@@ -100,7 +100,7 @@ function Hero() {
                 <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
                   <div className={`cadeo-stat-badge ${b.cls}`}>
                     <span className="cadeo-stat-badge-icon">
-                      {b.brand ? <SocialIcon brand={b.brand} size={14} /> : b.letter}
+                      <SocialIcon brand={b.brand} size={16} />
                     </span>
                     <span>{b.text}</span>
                   </div>
@@ -270,7 +270,7 @@ function VisitsFlow() {
               </div>
               <span className={`cadeo-visit-pill ${v.pill}`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={20} />
+                  <SocialIcon brand={v.brand} size={22} />
                 </span>
                 <span className="cadeo-visit-pill-text">{v.action}</span>
               </span>

@@ -31,8 +31,7 @@
 
 .cadeo-page > main,
 .cadeo-page > footer,
-.cadeo-page > .cadeo-nav-wrap,
-.cadeo-page > .cadeo-cookie {
+.cadeo-page > .cadeo-nav-wrap {
   position: relative;
   z-index: 2;
 }
@@ -460,15 +459,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 6px;
   background: #fff;
   overflow: hidden;
-  font-size: 0.6rem;
-  font-weight: 900;
+  padding: 1px;
+}
+
+.cadeo-stat-badge-icon svg,
+.cadeo-visit-pill-icon svg,
+.cadeo-review-btn-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .cadeo-stat-badge--white { background: #fff; }
@@ -1317,13 +1323,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.85rem;
+  height: 1.85rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
+  padding: 2px;
 }
 
 .cadeo-visit-pill--google { background: var(--c-lavender-dark); }
@@ -2074,11 +2081,11 @@
 /* Cookie */
 .cadeo-cookie {
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
-  right: 1rem;
-  z-index: 100;
-  max-width: 22rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 200;
+  width: min(22rem, calc(100vw - 2rem));
   margin: 0 auto;
   border: var(--c-border);
   border-radius: var(--c-radius);
@@ -2089,19 +2096,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
 .cadeo-cookie p {
   line-height: 1.35;
   min-width: 0;
+  flex: 1;
 }
 
 @media (min-width: 640px) {
   .cadeo-cookie {
     left: auto;
-    right: 1.25rem;
+    right: max(1.25rem, env(safe-area-inset-right));
+    width: min(22rem, calc(100vw - 2.5rem));
     margin: 0;
   }
 }

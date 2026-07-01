@@ -9,7 +9,9 @@ import {
   labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
-  truncateLabel,
+  sliceLabelRadius,
+  sliceLabelRotation,
+  splitSliceLabel,
 } from "@/lib/wheel";
 
 interface WheelProps {
@@ -86,7 +88,7 @@ export function Wheel({
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
   const r = wheelSize / 2 - 10;
-  const hubSize = Math.round(wheelSize * 0.19);
+  const hubSize = Math.round(wheelSize * 0.2);
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
@@ -116,11 +118,15 @@ export function Wheel({
             {slices.map((slice, i) => {
               const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
-              const labelRadius = r * (sliceAngle < 45 ? 0.5 : 0.6);
-              const textPos = polarToCartesian(cx, cy, labelRadius, mid);
+              const labelR = sliceLabelRadius(r, sliceAngle);
+              const textPos = polarToCartesian(cx, cy, labelR, mid);
               const fill = colors[i % colors.length]!;
-              const maxChars = sliceAngle < 40 ? 10 : sliceAngle < 70 ? 12 : 16;
               const fontSize = labelFontSize(sliceAngle, slices.length);
+              const lines = splitSliceLabel(slice.prize.label, sliceAngle);
+              const lineHeight = fontSize * 1.12;
+              const rotation = sliceLabelRotation(mid);
+              const textFill = contrastTextColor(fill);
+
               return (
                 <g key={slice.prize.id}>
                   <path
@@ -130,17 +136,23 @@ export function Wheel({
                     strokeWidth={2}
                   />
                   <text
-                    x={textPos.x}
-                    y={textPos.y}
-                    transform={`rotate(${mid + 90}, ${textPos.x}, ${textPos.y})`}
+                    transform={`rotate(${rotation}, ${textPos.x}, ${textPos.y})`}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill={contrastTextColor(fill)}
+                    fill={textFill}
                     fontSize={fontSize}
                     fontWeight={800}
                     style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
                   >
-                    {truncateLabel(slice.prize.label, maxChars)}
+                    {lines.map((line, lineIndex) => (
+                      <tspan
+                        key={lineIndex}
+                        x={textPos.x}
+                        dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
+                      >
+                        {line}
+                      </tspan>
+                    ))}
                   </text>
                 </g>
               );
