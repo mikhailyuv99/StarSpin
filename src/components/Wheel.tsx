@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Prize } from "@/lib/types";
 import { useTranslations } from "@/i18n/client";
 import {
+  contrastTextColor,
   describeSlice,
+  labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
   truncateLabel,
@@ -44,7 +46,7 @@ export function Wheel({
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      setWheelSize(Math.min(Math.max(w * 0.78, 240), 320));
+      setWheelSize(Math.min(Math.max(w * 0.78, 260), 340));
     };
     update();
     window.addEventListener("resize", update);
@@ -83,9 +85,8 @@ export function Wheel({
 
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
-  const r = wheelSize / 2 - 8;
-  const hubSize = Math.round(wheelSize * 0.2);
-  const fontSize = slices.length > 8 ? 8 : slices.length > 5 ? 9 : 11;
+  const r = wheelSize / 2 - 10;
+  const hubSize = Math.round(wheelSize * 0.19);
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
@@ -113,9 +114,13 @@ export function Wheel({
           >
             <circle cx={cx} cy={cy} r={r + 4} fill="#0a0a0a" />
             {slices.map((slice, i) => {
+              const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
-              const textPos = polarToCartesian(cx, cy, r * 0.62, mid);
-              const fill = colors[i % colors.length];
+              const labelRadius = r * (sliceAngle < 45 ? 0.5 : 0.6);
+              const textPos = polarToCartesian(cx, cy, labelRadius, mid);
+              const fill = colors[i % colors.length]!;
+              const maxChars = sliceAngle < 40 ? 10 : sliceAngle < 70 ? 12 : 16;
+              const fontSize = labelFontSize(sliceAngle, slices.length);
               return (
                 <g key={slice.prize.id}>
                   <path
@@ -127,14 +132,15 @@ export function Wheel({
                   <text
                     x={textPos.x}
                     y={textPos.y}
-                    transform={`rotate(${mid}, ${textPos.x}, ${textPos.y})`}
+                    transform={`rotate(${mid + 90}, ${textPos.x}, ${textPos.y})`}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="#0a0a0a"
+                    fill={contrastTextColor(fill)}
                     fontSize={fontSize}
                     fontWeight={800}
+                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
                   >
-                    {truncateLabel(slice.prize.label)}
+                    {truncateLabel(slice.prize.label, maxChars)}
                   </text>
                 </g>
               );
@@ -145,7 +151,7 @@ export function Wheel({
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div
-            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[10px] font-extrabold uppercase tracking-wider text-black shadow-[2px_2px_0_0_#0a0a0a]"
+            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[11px] font-extrabold uppercase tracking-wider text-black shadow-[2px_2px_0_0_#0a0a0a]"
             style={{ width: hubSize, height: hubSize }}
           >
             {t("public.wheelGo")}
@@ -159,7 +165,7 @@ export function Wheel({
           onClick={spin}
           disabled={spinning}
           className="public-btn public-touch-target max-w-xs"
-          style={{ backgroundColor: primaryColor, color: "#fff" }}
+          style={{ backgroundColor: primaryColor, color: contrastTextColor(primaryColor) }}
         >
           {spinning ? t("public.wheelSpinning") : t("public.wheelSpin")}
         </button>

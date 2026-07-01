@@ -11,30 +11,34 @@ export default async function StatsPage() {
   const intl = localeToIntl(locale);
   const supabase = await createClient();
 
-  const { count: spinCount } = await supabase
-    .from("spins")
-    .select("*", { count: "exact", head: true })
-    .eq("merchant_id", merchant.id);
-
-  const { count: followCount } = await supabase
-    .from("spins")
-    .select("*", { count: "exact", head: true })
-    .eq("merchant_id", merchant.id)
-    .eq("followed_social", true);
-
-  const { data: reviewHistory } = await supabase
-    .from("review_counts_history")
-    .select("*")
-    .eq("merchant_id", merchant.id)
-    .order("checked_at", { ascending: false })
-    .limit(30);
-
-  const { data: recentSpins } = await supabase
-    .from("spins")
-    .select("created_at, prize:prizes(label)")
-    .eq("merchant_id", merchant.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const [
+    { count: spinCount },
+    { count: followCount },
+    { data: reviewHistory },
+    { data: recentSpins },
+  ] = await Promise.all([
+    supabase
+      .from("spins")
+      .select("*", { count: "exact", head: true })
+      .eq("merchant_id", merchant.id),
+    supabase
+      .from("spins")
+      .select("*", { count: "exact", head: true })
+      .eq("merchant_id", merchant.id)
+      .eq("followed_social", true),
+    supabase
+      .from("review_counts_history")
+      .select("*")
+      .eq("merchant_id", merchant.id)
+      .order("checked_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("spins")
+      .select("created_at, prize:prizes(label)")
+      .eq("merchant_id", merchant.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -43,7 +47,7 @@ export default async function StatsPage() {
         <p className={ui.muted}>{t("dashboard.statsSubtitle")}</p>
       </div>
 
-      <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className={ui.stat}>
           <p className={ui.statLabel}>{t("dashboard.totalSpins")}</p>
           <p className={ui.statValue}>{spinCount ?? 0}</p>

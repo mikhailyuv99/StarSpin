@@ -4,10 +4,12 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 
-function isMerchantPublicPage(path: string): boolean {
+function isSmoothScrollPath(path: string): boolean {
+  if (path === "/" || path.startsWith("/dashboard") || path.startsWith("/admin") || path.startsWith("/login") || path.startsWith("/setup")) {
+    return false;
+  }
   const seg = path.split("/").filter(Boolean);
-  if (seg.length !== 1) return false;
-  return !["login", "setup", "admin"].includes(seg[0]);
+  return seg.length === 1 && !["login", "setup", "admin"].includes(seg[0]);
 }
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
@@ -15,7 +17,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    if (isMerchantPublicPage(pathname)) return;
+    if (!isSmoothScrollPath(pathname)) return;
 
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;

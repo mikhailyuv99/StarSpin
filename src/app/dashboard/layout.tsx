@@ -13,7 +13,8 @@ export default async function DashboardLayout({
   const t = await getTranslations();
 
   const NAV = [
-    { href: "/dashboard", label: t("dashboard.navHome") },
+    { href: "/dashboard", label: t("common.dashboard") },
+    { href: "/", label: t("dashboard.navHome") },
     { href: "/dashboard/branding", label: t("dashboard.navBranding") },
     { href: "/dashboard/prizes", label: t("dashboard.navPrizes") },
     { href: "/dashboard/reviews", label: t("dashboard.navReviews") },
@@ -22,7 +23,14 @@ export default async function DashboardLayout({
   ];
 
   return (
-    <DashboardShell merchantName={merchant.name} nav={NAV}>
+    <DashboardShell
+      merchantName={merchant.name}
+      nav={NAV}
+      labels={{
+        dashboard: t("common.dashboard"),
+        viewSite: t("dashboard.viewSite"),
+      }}
+    >
       {children}
     </DashboardShell>
   );

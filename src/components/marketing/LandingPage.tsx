@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
+import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
@@ -144,7 +145,7 @@ function Pillars() {
         </Reveal>
         <RevealStagger className="cadeo-pillars-grid">
           {items.map((item) => (
-            <RevealItem key={item.text}>
+            <RevealItem key={item.text} className="cadeo-pillar-item">
               <article className={`cadeo-pillar ${item.cls}`}>
                 <div className="cadeo-pillar-top">
                   <span className="cadeo-pillar-level">LVL {item.num}</span>
@@ -269,7 +270,7 @@ function VisitsFlow() {
               </div>
               <span className={`cadeo-visit-pill ${v.pill}`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={18} />
+                  <SocialIcon brand={v.brand} size={20} />
                 </span>
                 <span className="cadeo-visit-pill-text">{v.action}</span>
               </span>
@@ -370,9 +371,10 @@ function Features() {
             <div className="cadeo-quote-photo">
               <Image
                 src={marketingImages.blackBarbershopOwner}
-                alt=""
+                alt="Duc, owner of The Black Barbershop"
                 fill
-                sizes="(max-width: 768px) 100vw, 220px"
+                sizes="(max-width: 768px) 90vw, 280px"
+                unoptimized
                 className="cadeo-quote-photo-img"
               />
             </div>
@@ -475,7 +477,7 @@ function Pricing() {
 
   return (
     <section id="pricing" className="cadeo-section">
-      <div className="cadeo-section-inner" style={{ maxWidth: "56rem" }}>
+      <div className="cadeo-section-inner cadeo-pricing-section">
         <Reveal y={30}>
           <div className="cadeo-pricing-wrap">
           <div className="cadeo-pricing-inner">
@@ -490,10 +492,10 @@ function Pricing() {
                 ))}
               </ul>
               <div className="cadeo-signup-box">
-                <p className="text-sm font-extrabold">{t("marketing.signupBanner")}</p>
+                <p className="cadeo-signup-banner">{t("marketing.signupBanner")}</p>
                 <span className="cadeo-signup-badge">{t("marketing.signupBannerSub")}</span>
                 <div className="mt-4">
-                  <Link href="/login" className="cadeo-btn cadeo-btn-purple">
+                  <Link href="/login" className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
                     {t("marketing.navCta")}
                   </Link>
                 </div>
@@ -507,13 +509,18 @@ function Pricing() {
                   <span className="cadeo-pricing-period"> {t("marketing.pricingPeriod")}</span>
                 </div>
               </div>
-              <p className="text-xs font-extrabold uppercase tracking-widest opacity-50 mb-4">
-                {t("marketing.pricingIncludes")}
-              </p>
+              <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
               <div className="cadeo-pricing-features">
                 {[...left, ...right].map((f) => (
                   <div key={f} className="cadeo-check">
-                    {f}
+                    {f === t("marketing.priceF2") ? (
+                      <span className="cadeo-check-social">
+                        <span>{t("marketing.priceF2")}</span>
+                        <SocialIconRow size={16} />
+                      </span>
+                    ) : (
+                      f
+                    )}
                   </div>
                 ))}
               </div>

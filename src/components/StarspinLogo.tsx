@@ -56,12 +56,14 @@ export function StarspinLogo({
   variant = "light",
   size = "md",
   showWordmark = true,
+  wordmark = "STARSPIN",
   className = "",
 }: {
   href?: string;
   variant?: LogoVariant;
   size?: LogoSize;
   showWordmark?: boolean;
+  wordmark?: string;
   className?: string;
 }) {
   const markSize = markSizes[size];
@@ -74,7 +76,7 @@ export function StarspinLogo({
   const content = (
     <span className={innerClass}>
       <StarspinMark size={markSize} className="starspin-logo__mark" />
-      {showWordmark && <span className="starspin-logo__word">STARSPIN</span>}
+      {showWordmark && <span className="starspin-logo__word">{wordmark}</span>}
     </span>
   );
 
@@ -83,7 +85,7 @@ export function StarspinLogo({
       <Link
         href={href}
         className={["starspin-logo-link", className].filter(Boolean).join(" ")}
-        aria-label="STARSPIN"
+        aria-label={wordmark}
       >
         {content}
       </Link>

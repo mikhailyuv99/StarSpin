@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Merchant } from "@/lib/types";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 
-export async function getCurrentMerchant(): Promise<Merchant | null> {
+export const getCurrentMerchant = cache(async (): Promise<Merchant | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -17,7 +18,7 @@ export async function getCurrentMerchant(): Promise<Merchant | null> {
     .maybeSingle();
 
   return data as Merchant | null;
-}
+});
 
 export async function requireMerchant(): Promise<Merchant> {
   const merchant = await getCurrentMerchant();

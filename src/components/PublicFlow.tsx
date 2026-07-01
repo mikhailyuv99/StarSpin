@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
+import { contrastTextColor } from "@/lib/wheel";
 import type { Merchant, Prize, PublicStep } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
@@ -63,7 +64,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const activePrizes = prizeSliceAngles(prizes);
   const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
 
-  const btnStyle = { backgroundColor: accent, color: "#fff" };
+  const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
 
   useEffect(() => {
     if (step === "result" && wonPrize) fireConfetti(accent);

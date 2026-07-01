@@ -2,26 +2,28 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/SignOutButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
-import { getTranslations } from "@/i18n/server";
 
 type NavItem = { href: string; label: string };
 
-export async function DashboardShell({
+export function DashboardShell({
   merchantName,
   nav,
+  labels,
   children,
 }: {
   merchantName: string;
   nav: NavItem[];
+  labels: {
+    dashboard: string;
+    viewSite: string;
+  };
   children: React.ReactNode;
 }) {
-  const t = await getTranslations();
-
   return (
     <div className="brutal-page pb-10">
       <div className="brutal-nav-wrap">
         <header className="brutal-nav">
-          <StarspinLogo href="/" variant="light" size="md" />
+          <StarspinLogo href="/dashboard" variant="light" size="md" wordmark="DASHBOARD" />
           <nav className="brutal-nav-links" aria-label="Dashboard">
             {nav.map((item) => (
               <Link key={item.href} href={item.href} className="brutal-nav-link">
@@ -40,12 +42,12 @@ export async function DashboardShell({
         <div className="brutal-card mb-8 flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
-              {t("common.dashboard")}
+              {labels.dashboard}
             </p>
             <p className="text-base font-extrabold text-ink">{merchantName}</p>
           </div>
           <Link href="/" className="brutal-btn brutal-btn-yellow text-sm">
-            {t("login.back")}
+            {labels.viewSite}
           </Link>
         </div>
         <main>{children}</main>

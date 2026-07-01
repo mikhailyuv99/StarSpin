@@ -11,7 +11,7 @@ export function MerchantHeader({ merchant }: { merchant: Merchant }) {
         <img
           src={merchant.logo_url}
           alt={merchant.name}
-          className="mx-auto mb-3 h-16 w-16 rounded-[14px] border-[2.5px] border-black object-cover shadow-[4px_4px_0_0_#0a0a0a] sm:h-[4.5rem] sm:w-[4.5rem]"
+          className="mx-auto mb-3 h-16 w-16 rounded-[14px] border-[2.5px] border-black object-cover sm:h-[4.5rem] sm:w-[4.5rem]"
         />
       )}
       <h1 className="font-[family-name:var(--font-display)] text-balance text-xl font-extrabold uppercase leading-tight text-ink sm:text-2xl">
