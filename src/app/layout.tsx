@@ -1,4 +1,4 @@
-import { IBM_Plex_Mono, IBM_Plex_Sans, Nunito } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { I18nProvider } from "@/i18n/client";
@@ -18,10 +18,16 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
 });
 
-const nunito = Nunito({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["600", "700", "800"],
   variable: "--font-display",
+});
+
+const bodyFont = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,7 +49,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${plexSans.variable} ${plexMono.variable} ${nunito.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
         <I18nProvider locale={locale} messages={messages}>

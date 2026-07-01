@@ -6,160 +6,89 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import "./cadeo-styles.css";
 
-const PURPLE = "#6C5CE7";
+function Logo() {
+  const { t } = useI18n();
+  return (
+    <Link href="/" className="cadeo-logo">
+      {t("common.brand").toUpperCase().replace(" ", "")}
+    </Link>
+  );
+}
 
 function Nav() {
   const { t } = useI18n();
   return (
-    <header className="sticky top-0 z-50 border-b border-purple-100/80 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <span
-            className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-black text-white shadow-lg"
-            style={{ background: PURPLE }}
-          >
-            RF
-          </span>
-          <span className="text-lg font-extrabold text-zinc-900">{t("common.brand")}</span>
-        </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          <a href="#features" className="text-sm font-semibold text-zinc-600 hover:text-[#6C5CE7]">
-            {t("marketing.navFeatures")}
-          </a>
-          <a href="#pricing" className="text-sm font-semibold text-zinc-600 hover:text-[#6C5CE7]">
-            {t("marketing.navPricing")}
-          </a>
-          <a href="#faq" className="text-sm font-semibold text-zinc-600 hover:text-[#6C5CE7]">
-            {t("marketing.navFaq")}
-          </a>
-        </nav>
-        <div className="flex items-center gap-2 sm:gap-3">
+    <div className="cadeo-nav-wrap">
+      <nav className="cadeo-nav">
+        <Logo />
+        <div className="cadeo-nav-links">
+          <a href="#features">{t("marketing.navFeatures")}</a>
+          <a href="#pricing">{t("marketing.navPricing")}</a>
+          <a href="#testimonials">{t("marketing.testimonialsTitle")}</a>
+          <a href="#faq">{t("marketing.navFaq")}</a>
+        </div>
+        <div className="flex items-center gap-2">
           <LocaleSwitcher variant="light" />
-          <Link href="/login" className="hidden text-sm font-semibold text-zinc-600 sm:block">
-            {t("marketing.navLogin")}
-          </Link>
-          <Link href="/login" className="cadeo-btn-primary !px-4 !py-2.5 !text-sm">
-            {t("marketing.navCta")}
+          <Link href="/login" className="cadeo-btn cadeo-btn-yellow !hidden sm:!inline-flex">
+            {t("marketing.footerDemo")}
           </Link>
         </div>
-      </div>
-    </header>
+      </nav>
+    </div>
   );
 }
 
-function HeroWheel({ t }: { t: (k: string) => string }) {
-  const slices = [
-    { color: PURPLE, label: t("marketing.wheelSlice1") },
-    { color: "#FD79A8", label: t("marketing.wheelSlice2") },
-    { color: "#FDCB6E", label: t("marketing.wheelSlice3") },
-    { color: "#55EFC4", label: t("marketing.wheelSlice4") },
-    { color: "#A29BFE", label: "15%" },
-    { color: "#FF7675", label: "VIP" },
-  ];
-
+function TrustBar() {
+  const { t } = useI18n();
   return (
-    <div className="cadeo-wheel-float relative mx-auto w-full max-w-md">
-      <div className="cadeo-blob -left-8 top-8 h-32 w-32 bg-[#FD79A8]" />
-      <div className="cadeo-blob -right-4 bottom-4 h-40 w-40 bg-[#6C5CE7]" />
-      <div className="relative">
-        <div className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 text-3xl drop-shadow">▼</div>
-        <div className="cadeo-wheel-spin rounded-full border-[6px] border-white p-2 shadow-2xl shadow-purple-200">
-          <svg viewBox="0 0 200 200" className="h-full w-full">
-            {slices.map((s, i) => {
-              const start = (i / slices.length) * 360;
-              const end = ((i + 1) / slices.length) * 360;
-              const mid = (start + end) / 2;
-              const rad = ((mid - 90) * Math.PI) / 180;
-              const tx = 100 + 58 * Math.cos(rad);
-              const ty = 100 + 58 * Math.sin(rad);
-              const large = end - start > 180 ? 1 : 0;
-              const sRad = ((end - 90) * Math.PI) / 180;
-              const eRad = ((start - 90) * Math.PI) / 180;
-              const x1 = 100 + 90 * Math.cos(sRad);
-              const y1 = 100 + 90 * Math.sin(sRad);
-              const x2 = 100 + 90 * Math.cos(eRad);
-              const y2 = 100 + 90 * Math.sin(eRad);
-              return (
-                <g key={i}>
-                  <path
-                    d={`M100 100 L${x1} ${y1} A90 90 0 ${large} 0 ${x2} ${y2} Z`}
-                    fill={s.color}
-                    stroke="#fff"
-                    strokeWidth={2}
-                  />
-                  <text
-                    x={tx}
-                    y={ty}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${mid}, ${tx}, ${ty})`}
-                    fill="#fff"
-                    fontSize={8}
-                    fontWeight={800}
-                  >
-                    {s.label}
-                  </text>
-                </g>
-              );
-            })}
-            <circle cx="100" cy="100" r="24" fill="#fff" stroke={PURPLE} strokeWidth={3} />
-            <text x="100" y="104" textAnchor="middle" fill={PURPLE} fontSize={11} fontWeight={900}>
-              {t("marketing.wheelSpin")}
-            </text>
-          </svg>
-        </div>
-      </div>
-      {/* Phone mockup frame */}
-      <div className="absolute -bottom-6 -right-4 hidden rounded-3xl border-4 border-zinc-900 bg-zinc-900 p-1 shadow-xl sm:block">
-        <div className="h-24 w-14 rounded-2xl bg-gradient-to-b from-[#6C5CE7] to-[#FD79A8]" />
-      </div>
+    <div className="cadeo-trust">
+      <span>{t("marketing.trustedBy")}</span>
+      <span className="cadeo-trust-rating">
+        Google <span className="cadeo-trust-stars">★★★★★</span> 4.9
+      </span>
+      <span className="cadeo-trust-rating">
+        Trustpilot <span className="cadeo-trust-stars">★★★★★</span> 4.8
+      </span>
     </div>
   );
 }
 
 function Hero() {
   const { t } = useI18n();
+  const badges = [
+    { cls: "cadeo-stat-badge--white", icon: "G", text: "+ 351 Google reviews" },
+    { cls: "cadeo-stat-badge--mint", icon: "T", text: "+ 251 TripAdvisor reviews" },
+    { cls: "cadeo-stat-badge--yellow", icon: "♪", text: "150 TikTok followers" },
+    { cls: "cadeo-stat-badge--pink", icon: "◎", text: "251 Instagram followers" },
+  ];
+
   return (
-    <section className="cadeo-gradient-hero relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2">
+    <section className="cadeo-hero">
+      <div className="cadeo-hero-inner">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-[#6C5CE7] shadow-sm">
-            ✨ {t("marketing.magicRecipe")}
-          </p>
-          <h1 className="mt-6 text-4xl font-black leading-[1.08] tracking-tight text-zinc-900 sm:text-5xl lg:text-[3.25rem]">
-            {t("marketing.heroTitle")}
-            <br />
-            <span className="bg-gradient-to-r from-[#6C5CE7] to-[#FD79A8] bg-clip-text text-transparent">
-              {t("marketing.heroTitleAccent")}
-            </span>
+          <h1>
+            {t("marketing.heroTitle")} {t("marketing.heroTitleAccent")}
           </h1>
-          <p className="mt-5 text-lg font-semibold text-zinc-700">{t("marketing.heroSubtitle")}</p>
-          <p className="mt-2 text-base text-zinc-500">{t("marketing.heroBody")}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/login" className="cadeo-btn-primary">
-              {t("marketing.heroCta")}
+          <p className="cadeo-sub">{t("marketing.heroSubtitle")}</p>
+          <p className="cadeo-sub">{t("marketing.heroBody")}</p>
+          <div className="mt-8">
+            <Link href="/login" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
+              ✨ {t("marketing.magicRecipe")}
             </Link>
-            <a href="#features" className="cadeo-btn-outline">
-              {t("marketing.heroDemo")}
-            </a>
-          </div>
-          <div className="mt-10">
-            <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-              {t("marketing.trustedBy")}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-4">
-              {["Google ★ 4.9", "Trustpilot ★ 4.8"].map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-full bg-white px-4 py-2 text-sm font-bold text-zinc-800 shadow-sm"
-                >
-                  {badge}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
-        <HeroWheel t={t} />
+        <div className="cadeo-hero-visual">
+          <div className="cadeo-hero-glow" />
+          <div className="cadeo-hero-photo">
+            <div className="cadeo-hero-photo-inner">🍔</div>
+            {badges.map((b) => (
+              <div key={b.text} className={`cadeo-stat-badge ${b.cls}`}>
+                <span className="font-black">{b.icon}</span>
+                <span>{b.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -168,165 +97,236 @@ function Hero() {
 function Pillars() {
   const { t } = useI18n();
   const items = [
-    { emoji: "👀", text: t("marketing.pillar1") },
-    { emoji: "🤝", text: t("marketing.pillar2") },
-    { emoji: "📊", text: t("marketing.pillar3") },
-    { emoji: "💜", text: t("marketing.pillar4") },
+    { cls: "cadeo-pillar--purple", icon: "⭐", text: t("marketing.pillar1") },
+    { cls: "cadeo-pillar--pink", icon: "🤝", text: t("marketing.pillar2") },
+    { cls: "cadeo-pillar--blue", icon: "👤", text: t("marketing.pillar3") },
+    { cls: "cadeo-pillar--yellow", icon: "🎁", text: t("marketing.pillar4") },
   ];
+
   return (
-    <section className="border-y border-purple-100 bg-white py-16">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2 className="text-center text-2xl font-black text-zinc-900 sm:text-3xl">
-          {t("marketing.pillarsTitle")}
-        </h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="cadeo-section">
+      <div className="cadeo-section-inner">
+        <h2 className="cadeo-h2 text-center">{t("marketing.pillarsTitle")}</h2>
+        <div className="cadeo-pillars-grid">
           {items.map((item) => (
-            <div key={item.text} className="cadeo-card p-6 text-center">
-              <span className="text-4xl">{item.emoji}</span>
-              <p className="mt-3 text-sm font-bold leading-snug text-zinc-800">{item.text}</p>
+            <div key={item.text} className={`cadeo-pillar ${item.cls}`}>
+              <div className="cadeo-pillar-icon">{item.icon}</div>
+              <p className="cadeo-pillar-text">{item.text}</p>
             </div>
           ))}
+        </div>
+        <div className="cadeo-pillars-cta">
+          <a href="#features" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
+            {t("marketing.allFeatures")}
+          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function FeatureBlock({
-  title,
-  subtitle,
-  body,
-  reverse,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  body: string;
-  reverse?: boolean;
-  children?: React.ReactNode;
-}) {
+function WheelFlyer() {
   return (
-    <div
-      className={`grid items-center gap-10 lg:grid-cols-2 ${reverse ? "lg:[&>*:first-child]:order-2" : ""}`}
-    >
-      <div>
-        <p className="text-sm font-bold uppercase tracking-wider text-[#6C5CE7]">{subtitle}</p>
-        <h3 className="mt-2 text-2xl font-black leading-tight text-zinc-900 sm:text-3xl">{title}</h3>
-        <p className="mt-4 text-base leading-relaxed text-zinc-600">{body}</p>
+    <div className="cadeo-card cadeo-flyer">
+      <div className="cadeo-flyer-logo">
+        LOGO
+        <span className="cadeo-annot" style={{ top: "-18px", right: "-60px" }}>
+          → YOUR LOGO
+        </span>
       </div>
-      <div>{children}</div>
+      <div className="cadeo-flyer-wheel" style={{ background: "conic-gradient(from 0deg, #fff 0deg 60deg, #0a0a0a 60deg 120deg, #fff 120deg 180deg, #0a0a0a 180deg 240deg, #fff 240deg 300deg, #0a0a0a 300deg 360deg)" }}>
+        <div className="cadeo-flyer-qr">
+          <div style={{ fontSize: "1.5rem" }}>▦</div>
+          Scan to play
+        </div>
+      </div>
+      <div className="cadeo-flyer-steps">
+        {["📱 SCAN", "🎰 SPIN", "🎁 WIN"].map((s) => (
+          <div key={s} className="cadeo-flyer-step">{s}</div>
+        ))}
+      </div>
+      <span className="cadeo-annot" style={{ bottom: "-20px", left: "50%", transform: "translateX(-50%)" }}>
+        YOUR STYLE ↓
+      </span>
+    </div>
+  );
+}
+
+function PhoneScene() {
+  const { t } = useI18n();
+  return (
+    <div className="cadeo-phone-scene">
+      <div className="cadeo-phone">
+        <div className="cadeo-phone-screen relative flex flex-col">
+          <div className="cadeo-phone-notch" />
+          <p className="text-center text-[0.55rem] font-extrabold uppercase leading-tight mt-4 px-1">
+            Play our game &amp; win a prize!
+          </p>
+          <div className="mt-auto mb-8 px-2">
+            <div className="h-16 rounded-full border-2 border-black bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300" />
+            <button type="button" className="mt-2 w-full rounded-full border-2 border-black bg-purple-500 py-1 text-[0.55rem] font-extrabold text-white">
+              PLAY!
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="cadeo-review-card">
+        <h4>{t("marketing.visit1Action")}</h4>
+        <p className="cadeo-review-step">1. Leave a Google review</p>
+        <p className="cadeo-review-step">2. Come back to this page</p>
+        <p className="cadeo-review-step">3. Spin the wheel</p>
+        <div className="cadeo-review-btn">Rate on Google ★ 4.9</div>
+      </div>
+    </div>
+  );
+}
+
+function VisitsFlow() {
+  const { t } = useI18n();
+  const visits = [
+    { label: t("marketing.visit1"), action: t("marketing.visit1Action"), pill: "cadeo-visit-pill--google", icon: "G" },
+    { label: t("marketing.visit2"), action: t("marketing.visit2Action"), pill: "cadeo-visit-pill--insta", icon: "◎" },
+    { label: t("marketing.visit3"), action: t("marketing.visit3Action"), pill: "cadeo-visit-pill--tiktok", icon: "♪" },
+    { label: t("marketing.visit4"), action: t("marketing.visit4Action"), pill: "cadeo-visit-pill--facebook", icon: "f" },
+  ];
+
+  return (
+    <div className="cadeo-visits">
+      {visits.map((v) => (
+        <div key={v.label} className="cadeo-visit-card">
+          <p className="cadeo-visit-label">{v.label}</p>
+          <span className={`cadeo-visit-pill ${v.pill}`}>
+            <span className="font-black">{v.icon}</span>
+            {v.action}
+          </span>
+          <span className="cadeo-visit-arrow" aria-hidden>↷</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DataScene() {
+  return (
+    <div className="cadeo-data-scene">
+      <div className="cadeo-poll-card cadeo-poll-card--1">How was the welcome?</div>
+      <div className="cadeo-poll-card cadeo-poll-card--2">Rate our service</div>
+      <div className="cadeo-poll-card cadeo-poll-card--3">Your opinion matters</div>
+      <div className="cadeo-win-phone">
+        <div className="cadeo-win-screen">
+          <p className="cadeo-win-title">YOU WON! 🎉<br />1 FREE DRINK</p>
+          <div className="cadeo-form-field">First name</div>
+          <div className="cadeo-form-field">Last name</div>
+          <div className="cadeo-form-field">Email</div>
+          <div className="cadeo-form-field">Phone</div>
+          <div className="mt-2 rounded-lg border-2 border-black bg-yellow-200 py-1 text-center text-[0.55rem] font-extrabold">
+            Claim my prize
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GiftScene() {
+  const { t } = useI18n();
+  const tags = [
+    { cls: "cadeo-gift-tag--purple", text: "Redeem on next visit" },
+    { cls: "cadeo-gift-tag--white", text: "Valid 1 month" },
+    { cls: "cadeo-gift-tag--yellow", text: "Min. spend $5" },
+    { cls: "cadeo-gift-tag--pink", text: "In-store only" },
+  ];
+
+  return (
+    <div className="cadeo-gift-scene">
+      {tags.map((tag) => (
+        <div key={tag.text} className={`cadeo-gift-tag ${tag.cls}`}>
+          {tag.text}
+        </div>
+      ))}
+      <div className="cadeo-gift-box" title={t("marketing.prizeTitle")}>
+        🎁
+      </div>
     </div>
   );
 }
 
 function Features() {
   const { t } = useI18n();
-  const visits = [
-    { n: t("marketing.visit1"), a: t("marketing.visit1Action"), icon: "⭐" },
-    { n: t("marketing.visit2"), a: t("marketing.visit2Action"), icon: "📸" },
-    { n: t("marketing.visit3"), a: t("marketing.visit3Action"), icon: "🎵" },
-    { n: t("marketing.visit4"), a: t("marketing.visit4Action"), icon: "👍" },
-  ];
 
   return (
-    <section id="features" className="py-20">
-      <div className="mx-auto max-w-6xl space-y-24 px-5 sm:px-8">
-        <p className="text-center text-sm font-bold uppercase tracking-widest text-[#6C5CE7]">
-          {t("marketing.allFeatures")}
-        </p>
-
-        <FeatureBlock
-          title={t("marketing.scanTitle")}
-          subtitle={t("marketing.scanSubtitle")}
-          body={t("marketing.scanBody")}
-          children={
-            <div className="cadeo-card flex aspect-video items-center justify-center bg-gradient-to-br from-[#EDE9FE] to-[#FDF2F8] p-8">
-              <div className="text-center">
-                <span className="text-6xl">📱</span>
-                <p className="mt-4 text-5xl font-black text-[#6C5CE7]">QR</p>
-              </div>
-            </div>
-          }
-        />
-
-        <FeatureBlock
-          title={t("marketing.funTitle")}
-          subtitle={t("marketing.funSubtitle")}
-          body={t("marketing.funBody")}
-          reverse
-          children={
-            <div className="cadeo-card flex aspect-video items-center justify-center gap-4 bg-gradient-to-br from-[#FFF9E6] to-[#EDE9FE] p-8">
-              {["⭐", "❤️", "🎰"].map((e) => (
-                <span key={e} className="text-5xl">
-                  {e}
-                </span>
-              ))}
-            </div>
-          }
-        />
-
-        <div>
-          <h3 className="text-2xl font-black text-zinc-900 sm:text-3xl">{t("marketing.visitsTitle")}</h3>
-          <p className="mt-3 max-w-2xl text-zinc-600">{t("marketing.visitsBody")}</p>
-          <div className="mt-8 space-y-3">
-            {visits.map((v, i) => (
-              <div
-                key={v.n}
-                className="cadeo-card flex items-center gap-4 p-4"
-                style={{ marginLeft: `${i * 12}px` }}
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EDE9FE] text-xl">
-                  {v.icon}
-                </span>
-                <div>
-                  <p className="text-xs font-bold uppercase text-[#6C5CE7]">{v.n}</p>
-                  <p className="font-bold text-zinc-900">{v.a}</p>
-                </div>
-              </div>
-            ))}
+    <section id="features" className="cadeo-section">
+      <div className="cadeo-section-inner">
+        <div className="cadeo-feature">
+          <div className="cadeo-feature-visual">
+            <WheelFlyer />
+          </div>
+          <div>
+            <p className="cadeo-feature-label">{t("marketing.scanSubtitle")}</p>
+            <h3 className="cadeo-feature-title">{t("marketing.scanTitle")}</h3>
+            <p className="cadeo-feature-body">{t("marketing.scanBody")}</p>
           </div>
         </div>
 
-        <div className="cadeo-card bg-gradient-to-br from-[#6C5CE7] to-[#A29BFE] p-8 text-white sm:p-12">
-          <p className="text-xl font-black sm:text-2xl">{t("marketing.quote")}</p>
-          <p className="mt-4 text-white/85">{t("marketing.quoteBody")}</p>
-          <p className="mt-4 text-sm font-bold text-[#FDCB6E]">— {t("marketing.quoteAuthor")}</p>
+        <div className="cadeo-feature cadeo-feature--reverse">
+          <div className="cadeo-feature-visual">
+            <PhoneScene />
+          </div>
+          <div>
+            <p className="cadeo-feature-label">{t("marketing.funSubtitle")}</p>
+            <h3 className="cadeo-feature-title">{t("marketing.funTitle")}</h3>
+            <p className="cadeo-feature-body">{t("marketing.funBody")}</p>
+          </div>
         </div>
 
-        <FeatureBlock
-          title={t("marketing.dataTitle")}
-          subtitle="CRM"
-          body={t("marketing.dataBody")}
-          children={
-            <div className="cadeo-card p-6">
-              <div className="space-y-3">
-                {["Name", "Phone", "Email ✓"].map((row) => (
-                  <div key={row} className="flex items-center justify-between rounded-xl bg-[#F5F3FF] px-4 py-3 text-sm font-semibold">
-                    <span className="text-zinc-500">{row}</span>
-                    <span className="text-[#6C5CE7]">●</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          }
-        />
+        <div className="text-center" style={{ marginBottom: "2rem" }}>
+          <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
+          <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
+          <VisitsFlow />
+        </div>
 
-        <FeatureBlock
-          title={t("marketing.prizeTitle")}
-          subtitle="🎁"
-          body={t("marketing.prizeBody")}
-          reverse
-          children={
-            <div className="cadeo-card flex aspect-video flex-col items-center justify-center bg-[#FDCB6E]/20 p-8">
-              <span className="text-7xl">🎁</span>
-              <p className="mt-4 text-2xl font-black text-zinc-900">WIN!</p>
+        <div className="cadeo-quote">
+          <p className="cadeo-quote-title">{t("marketing.quote")}</p>
+          <p className="mt-4 text-sm leading-relaxed opacity-85">{t("marketing.quoteBody")}</p>
+          <div className="cadeo-quote-author">
+            <div className="cadeo-quote-avatar">🍟</div>
+            <div>
+              <p className="text-sm font-extrabold">{t("marketing.quoteAuthor")}</p>
+              <p className="text-xs font-semibold opacity-60">Marketing Manager</p>
             </div>
-          }
-        />
+          </div>
+          <div className="cadeo-quote-btn">
+            <a href="#testimonials" className="cadeo-btn cadeo-btn-yellow">
+              {t("marketing.testimonialsTitle")}
+            </a>
+          </div>
+        </div>
 
-        <div className="cadeo-section-alt rounded-3xl p-8 text-center sm:p-12">
-          <h3 className="text-2xl font-black text-zinc-900 sm:text-3xl">{t("marketing.easyTitle")}</h3>
-          <p className="mx-auto mt-4 max-w-xl text-zinc-600">{t("marketing.easyBody")}</p>
+        <div className="cadeo-feature">
+          <div className="cadeo-feature-visual">
+            <DataScene />
+          </div>
+          <div>
+            <p className="cadeo-feature-label">CRM</p>
+            <h3 className="cadeo-feature-title">{t("marketing.dataTitle")}</h3>
+            <p className="cadeo-feature-body">{t("marketing.dataBody")}</p>
+          </div>
+        </div>
+
+        <div className="cadeo-feature cadeo-feature--reverse">
+          <div className="cadeo-feature-visual">
+            <GiftScene />
+          </div>
+          <div>
+            <p className="cadeo-feature-label">🎁</p>
+            <h3 className="cadeo-feature-title">{t("marketing.prizeTitle")}</h3>
+            <p className="cadeo-feature-body">{t("marketing.prizeBody")}</p>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h3 className="cadeo-h2">{t("marketing.easyTitle")}</h3>
+          <p className="cadeo-sub mx-auto max-w-lg">{t("marketing.easyBody")}</p>
         </div>
       </div>
     </section>
@@ -335,21 +335,25 @@ function Features() {
 
 function Advantages() {
   const { t } = useI18n();
-  const items = [t("marketing.adv1"), t("marketing.adv2"), t("marketing.adv3"), t("marketing.adv4")];
+  const items = [
+    { icon: "👥", text: t("marketing.adv1") },
+    { icon: "📚", text: t("marketing.adv2") },
+    { icon: "🎯", text: t("marketing.adv3") },
+    { icon: "💬", text: t("marketing.adv4") },
+  ];
+
   return (
-    <section className="cadeo-section-alt py-16">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2 className="text-center text-2xl font-black text-zinc-900">{t("marketing.advantagesTitle")}</h2>
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+    <section className="cadeo-section" style={{ paddingTop: 0 }}>
+      <div className="cadeo-section-inner">
+        <h2 className="cadeo-h2 text-center">{t("marketing.advantagesTitle")}</h2>
+        <div className="cadeo-adv-grid">
           {items.map((item) => (
-            <li key={item} className="cadeo-card flex items-start gap-3 p-5">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#6C5CE7] text-xs text-white">
-                ✓
-              </span>
-              <span className="text-sm font-semibold text-zinc-700">{item}</span>
-            </li>
+            <div key={item.text} className="cadeo-adv-item">
+              <span className="cadeo-adv-icon">{item.icon}</span>
+              <span>{item.text}</span>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
@@ -371,43 +375,51 @@ function Pricing() {
     t("marketing.priceF9"),
     t("marketing.priceF10"),
   ];
+  const sideAdv = [t("marketing.adv1"), t("marketing.adv2"), t("marketing.adv3"), t("marketing.adv4")];
+
   return (
-    <section id="pricing" className="py-20">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="cadeo-card overflow-hidden border-2 border-[#6C5CE7]/20">
-          <div className="cadeo-gradient-cta px-6 py-4 text-center text-white sm:px-10">
-            <p className="text-sm font-bold uppercase tracking-wider">{t("marketing.signupBanner")}</p>
-            <p className="mt-1 text-lg font-black">{t("marketing.signupBannerSub")}</p>
-          </div>
-          <div className="p-8 sm:p-10">
-            <div className="text-center">
-              <h3 className="text-2xl font-black text-zinc-900">{t("marketing.pricingName")}</h3>
-              <p className="mt-2">
-                <span className="text-5xl font-black text-[#6C5CE7]">{t("marketing.pricingPrice")}</span>
-                <span className="ml-2 text-zinc-500">{t("marketing.pricingPeriod")}</span>
+    <section id="pricing" className="cadeo-section">
+      <div className="cadeo-section-inner" style={{ maxWidth: "56rem" }}>
+        <div className="cadeo-pricing-wrap">
+          <div className="cadeo-pricing-inner">
+            <div className="cadeo-pricing-side">
+              <h3>{t("marketing.advantagesTitle")}</h3>
+              <ul>
+                {sideAdv.map((a) => (
+                  <li key={a}>
+                    <span>🎯</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="cadeo-signup-box">
+                <p className="text-sm font-extrabold">{t("marketing.signupBanner")}</p>
+                <span className="cadeo-signup-badge">{t("marketing.signupBannerSub")}</span>
+                <div className="mt-4">
+                  <Link href="/login" className="cadeo-btn cadeo-btn-purple">
+                    {t("marketing.navCta")}
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className="cadeo-pricing-main">
+              <div className="cadeo-pricing-header">
+                <h3 className="cadeo-pricing-name">{t("marketing.pricingName")}</h3>
+                <div>
+                  <span className="cadeo-pricing-price">{t("marketing.pricingPrice")}</span>
+                  <span className="cadeo-pricing-period"> {t("marketing.pricingPeriod")}</span>
+                </div>
+              </div>
+              <p className="text-xs font-extrabold uppercase tracking-widest opacity-50 mb-4">
+                {t("marketing.pricingIncludes")}
               </p>
-              <p className="mt-4 text-sm font-bold uppercase text-zinc-400">{t("marketing.pricingIncludes")}</p>
-            </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2">
-              <ul className="space-y-2">
-                {left.map((f) => (
-                  <li key={f} className="flex gap-2 text-sm text-zinc-700">
-                    <span className="text-[#6C5CE7]">✓</span> {f}
-                  </li>
+              <div className="cadeo-pricing-features">
+                {[...left, ...right].map((f) => (
+                  <div key={f} className="cadeo-check">
+                    {f}
+                  </div>
                 ))}
-              </ul>
-              <ul className="space-y-2">
-                {right.map((f) => (
-                  <li key={f} className="flex gap-2 text-sm text-zinc-700">
-                    <span className="text-[#6C5CE7]">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mt-10 text-center">
-              <Link href="/login" className="cadeo-btn-primary">
-                {t("marketing.heroCta")}
-              </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -419,27 +431,31 @@ function Pricing() {
 function Testimonials() {
   const { t } = useI18n();
   const cards = [
-    { industry: t("marketing.t1Industry"), stat: t("marketing.t1Stat"), quote: t("marketing.t1Quote") },
-    { industry: t("marketing.t2Industry"), stat: t("marketing.t2Stat"), quote: "" },
-    { industry: t("marketing.t3Industry"), stat: t("marketing.t3Stat"), quote: "" },
+    { tag: t("marketing.t1Industry"), stat: t("marketing.t1Stat"), img: "" },
+    { tag: t("marketing.t2Industry"), stat: t("marketing.t2Stat"), img: "cadeo-testimonial-img--2" },
+    { tag: t("marketing.t3Industry"), stat: t("marketing.t3Stat"), img: "cadeo-testimonial-img--3" },
+    { tag: "Hotels", stat: "+150 Google reviews in one weekend", img: "cadeo-testimonial-img--4" },
+    { tag: "Fast-food", stat: "+3000 Google reviews in 20 days", img: "" },
   ];
-  const doubled = [...cards, ...cards, ...cards, ...cards];
+  const doubled = [...cards, ...cards];
+  const emojis = ["☕", "🍕", "🛍️", "🏨", "🍔"];
+
   return (
-    <section className="overflow-hidden py-16">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2 className="text-center text-2xl font-black text-zinc-900">{t("marketing.testimonialsTitle")}</h2>
-        <p className="mt-2 text-center text-zinc-500">{t("marketing.testimonialsSub")}</p>
-      </div>
-      <div className="mt-10 overflow-hidden">
-        <div className="cadeo-testimonial-track px-5">
-          {doubled.map((card, i) => (
-            <div key={i} className="cadeo-card w-72 shrink-0 p-6">
-              <p className="text-xs font-bold uppercase text-[#6C5CE7]">{card.industry}</p>
-              <p className="mt-2 text-xl font-black text-zinc-900">{card.stat}</p>
-              {card.quote && <p className="mt-3 text-sm text-zinc-600">&ldquo;{card.quote}&rdquo;</p>}
-            </div>
-          ))}
+    <section id="testimonials" className="cadeo-section overflow-hidden">
+      <div className="cadeo-section-inner">
+        <div className="cadeo-testimonials-header">
+          <h2 className="cadeo-h2">{t("marketing.testimonialsTitle")}</h2>
+          <p className="cadeo-sub">{t("marketing.testimonialsSub")}</p>
         </div>
+      </div>
+      <div className="cadeo-testimonial-track">
+        {doubled.map((card, i) => (
+          <div key={`${card.tag}-${i}`} className="cadeo-testimonial-card">
+            <span className="cadeo-testimonial-tag">{card.tag}</span>
+            <div className={`cadeo-testimonial-img ${card.img}`}>{emojis[i % emojis.length]}</div>
+            <p className="cadeo-testimonial-stat">{card.stat}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -454,27 +470,31 @@ function FAQ() {
     { q: t("marketing.faq3Q"), a: t("marketing.faq3A") },
     { q: t("marketing.faq4Q"), a: t("marketing.faq4A") },
   ];
+
   return (
-    <section id="faq" className="cadeo-section-alt py-20">
-      <div className="mx-auto max-w-3xl px-5 sm:px-8">
-        <h2 className="text-center text-3xl font-black text-zinc-900">{t("marketing.faqTitle")}</h2>
-        <p className="mt-2 text-center text-zinc-500">{t("marketing.faqSub")}</p>
-        <div className="mt-10 space-y-3">
+    <section id="faq" className="cadeo-section cadeo-faq-section">
+      <div className="cadeo-faq-glow" />
+      <span className="cadeo-faq-mascot" aria-hidden>☕</span>
+      <div className="cadeo-section-inner">
+        <div className="cadeo-faq-header">
+          <h2 className="cadeo-h2">{t("marketing.faqTitle")}</h2>
+          <p className="cadeo-sub">
+            <span className="cadeo-faq-highlight">{t("marketing.faqSub")}</span>
+          </p>
+        </div>
+        <div className="cadeo-faq-list">
           {items.map((item, i) => (
-            <div key={i} className="cadeo-card overflow-hidden">
+            <div key={item.q} className="cadeo-faq-item">
               <button
                 type="button"
+                className="cadeo-faq-btn"
                 onClick={() => setOpen(open === i ? null : i)}
-                className="flex w-full items-center justify-between gap-4 p-5 text-left font-bold text-zinc-900"
+                aria-expanded={open === i}
               >
                 {item.q}
-                <span className="text-2xl text-[#6C5CE7]">{open === i ? "−" : "+"}</span>
+                <span className="cadeo-faq-plus">{open === i ? "−" : "+"}</span>
               </button>
-              {open === i && (
-                <div className="border-t border-purple-50 px-5 pb-5 text-sm leading-relaxed text-zinc-600">
-                  {item.a}
-                </div>
-              )}
+              {open === i && <div className="cadeo-faq-answer">{item.a}</div>}
             </div>
           ))}
         </div>
@@ -483,49 +503,62 @@ function FAQ() {
   );
 }
 
+function Footer() {
+  const { t } = useI18n();
+  return (
+    <footer className="cadeo-footer">
+      <div className="cadeo-footer-box">
+        <div className="cadeo-footer-top">
+          <Logo />
+          <div className="cadeo-footer-social">
+            <a href="#" className="cadeo-social-btn" aria-label="Facebook">f</a>
+            <a href="#" className="cadeo-social-btn" aria-label="Instagram">◎</a>
+            <a href="#" className="cadeo-social-btn" aria-label="LinkedIn">in</a>
+          </div>
+        </div>
+        <div className="cadeo-footer-cols">
+          <div>
+            <span className="cadeo-footer-sticker">{t("marketing.footerSocial")}</span>
+            <ul className="cadeo-footer-links">
+              <li><a href="#testimonials">{t("marketing.testimonialsTitle")}</a></li>
+              <li><Link href="/login">{t("marketing.footerDemo")}</Link></li>
+            </ul>
+          </div>
+          <div>
+            <span className="cadeo-footer-sticker cadeo-footer-sticker--2">{t("marketing.navFaq")}</span>
+            <ul className="cadeo-footer-links">
+              <li><Link href="/login">{t("marketing.navLogin")}</Link></li>
+              <li><a href="mailto:hello@rouefidelite.com">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+        <p className="cadeo-footer-copy">
+          {t("marketing.footerRights", { year: new Date().getFullYear() })}
+        </p>
+      </div>
+    </footer>
+  );
+}
+
 function CookieBanner() {
   const { t } = useI18n();
   const [visible, setVisible] = useState(true);
   if (!visible) return null;
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto flex max-w-lg items-center justify-between gap-4 rounded-2xl border border-purple-100 bg-white p-4 shadow-xl sm:left-auto sm:right-6">
-      <p className="text-sm font-medium text-zinc-700">{t("marketing.cookieText")}</p>
-      <button
-        type="button"
-        onClick={() => setVisible(false)}
-        className="shrink-0 rounded-full bg-[#6C5CE7] px-4 py-2 text-xs font-bold text-white"
-      >
+    <div className="cadeo-cookie">
+      <p>{t("marketing.cookieText")}</p>
+      <button type="button" className="cadeo-btn cadeo-btn-yellow !px-3 !py-1.5 !text-xs" onClick={() => setVisible(false)}>
         {t("marketing.cookieAccept")}
       </button>
     </div>
   );
 }
 
-function Footer() {
-  const { t } = useI18n();
-  return (
-    <footer className="border-t border-purple-100 bg-white py-12">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-8">
-        <p className="text-sm text-zinc-500">
-          {t("marketing.footerRights", { year: new Date().getFullYear() })}
-        </p>
-        <div className="flex items-center gap-6">
-          <Link href="/login" className="text-sm font-semibold text-[#6C5CE7]">
-            {t("marketing.navLogin")}
-          </Link>
-          <a href="mailto:hello@rouefidelite.com" className="cadeo-btn-outline !py-2 !text-sm">
-            {t("marketing.footerDemo")}
-          </a>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 export function LandingPage() {
   return (
-    <div className="cadeo-page min-h-screen bg-white text-zinc-900">
+    <div className="cadeo-page">
       <Nav />
+      <TrustBar />
       <main>
         <Hero />
         <Pillars />
