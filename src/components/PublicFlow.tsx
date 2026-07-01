@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import type { Merchant, Prize, PublicStep } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
@@ -181,10 +182,10 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   };
 
   const socialLinks = [
-    { key: "instagram", label: t("public.followInstagram"), emoji: "📸", url: merchant.social_links.instagram },
-    { key: "facebook", label: t("public.followFacebook"), emoji: "👍", url: merchant.social_links.facebook },
-    { key: "tiktok", label: t("public.followTiktok"), emoji: "🎵", url: merchant.social_links.tiktok },
-  ].filter((l) => l.url);
+    { key: "instagram" as SocialBrand, label: t("public.followInstagram"), url: merchant.social_links.instagram },
+    { key: "facebook" as SocialBrand, label: t("public.followFacebook"), url: merchant.social_links.facebook },
+    { key: "tiktok" as SocialBrand, label: t("public.followTiktok"), url: merchant.social_links.tiktok },
+  ].filter((l) => l.url) as { key: SocialBrand; label: string; url: string }[];
 
   return (
     <div className="public-flow w-full">
@@ -325,7 +326,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         onClick={() => handleSocialClick(link.url!)}
                       className={`public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2 text-left`}
                       >
-                        <span className="text-xl">{link.emoji}</span>
+                        <SocialIcon brand={link.key} size={20} />
                         {link.label}
                       </button>
                     ))}
@@ -372,6 +373,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       className="public-btn public-touch-target flex items-center justify-center gap-2"
                       style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
                     >
+                      <SocialIcon brand="google" size={20} />
                       {t("public.openGoogle")}
                     </a>
                   )}

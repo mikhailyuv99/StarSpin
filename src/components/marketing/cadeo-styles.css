@@ -1,4 +1,3 @@
-/* Cadeo.io neo-brutalist design system */
 .cadeo-page {
   --c-lavender: #d8ccf5;
   --c-lavender-dark: #c4b5eb;
@@ -26,6 +25,55 @@
   min-height: 100vh;
   overflow-x: clip;
   padding-bottom: 5.5rem;
+  position: relative;
+}
+
+.cadeo-page > main,
+.cadeo-page > footer,
+.cadeo-page > .cadeo-nav-wrap,
+.cadeo-page > .cadeo-cookie {
+  position: relative;
+  z-index: 2;
+}
+
+.cadeo-page-fallers {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cadeo-page-faller {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.45rem;
+  background: #fff;
+  border: 2.5px solid var(--c-black);
+  border-radius: 11px;
+  box-shadow: 3px 3px 0 0 var(--c-black);
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.82;
+  will-change: transform;
+}
+
+.cadeo-page-faller--text {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.72rem !important;
+  background: var(--c-yellow-bright);
+  min-width: 1.85rem;
+  min-height: 1.85rem;
+}
+
+@media (max-width: 900px) {
+  .cadeo-page-fallers {
+    display: none;
+  }
 }
 
 .cadeo-page h1,
@@ -401,12 +449,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.35rem;
+  height: 1.35rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 6px;
   background: #fff;
+  overflow: hidden;
   font-size: 0.6rem;
   font-weight: 900;
 }
@@ -1082,13 +1131,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 6px;
   border: 2px solid var(--c-black);
   background: #fff;
-  font-size: 0.48rem;
-  font-weight: 900;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 @media (min-width: 480px) {
@@ -1108,6 +1157,7 @@
 .cadeo-visits-intro {
   margin-bottom: clamp(3rem, 8vw, 4.5rem);
   text-align: center;
+  padding: 0 clamp(0.5rem, 2vw, 1.5rem);
 }
 
 .cadeo-visits-shell {
@@ -1115,34 +1165,35 @@
 }
 
 .cadeo-visits-block {
-  margin-top: 0;
+  margin-top: 1.5rem;
 }
 
 .cadeo-visits {
   display: grid;
-  gap: 0.85rem;
-  max-width: 56rem;
+  gap: 1rem;
+  max-width: 68rem;
   margin: 0 auto;
-  padding: 0 0.25rem;
+  padding: 0;
   align-items: stretch;
 }
 
 .cadeo-visit-item {
   display: flex;
+  min-width: 0;
   height: 100%;
 }
 
 @media (min-width: 768px) {
   .cadeo-visits {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem;
   }
 }
 
 @media (min-width: 1024px) {
   .cadeo-visits {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.85rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.35rem;
   }
 }
 
@@ -1153,12 +1204,12 @@
   align-items: center;
   width: 100%;
   height: 100%;
-  min-height: 12.5rem;
+  min-height: 14rem;
   border: var(--c-border);
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
   background: #fff;
-  padding: 1.1rem 1rem 1.15rem;
+  padding: 1.25rem 1rem 1.2rem;
   text-align: center;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -1212,33 +1263,38 @@
 .cadeo-visit-pill {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
+  justify-content: flex-start;
+  gap: 0.5rem;
   margin-top: auto;
   width: 100%;
-  min-height: 2.85rem;
-  padding: 0.55rem 0.65rem;
+  min-height: 3.1rem;
+  padding: 0.55rem 0.6rem;
   border: var(--c-border);
   border-radius: 999px;
-  font-size: clamp(0.62rem, 1.6vw, 0.76rem);
+  font-size: clamp(0.62rem, 1.5vw, 0.74rem);
   font-weight: 800;
   box-shadow: 3px 3px 0 0 var(--c-black);
   line-height: 1.2;
   box-sizing: border-box;
+  text-align: left;
+}
+
+.cadeo-visit-pill-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .cadeo-visit-pill-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.35rem;
+  height: 1.35rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 6px;
   background: #fff;
-  font-size: 0.55rem;
-  font-weight: 900;
+  overflow: hidden;
 }
 
 .cadeo-visit-pill--google { background: var(--c-lavender-dark); }
@@ -1252,11 +1308,46 @@
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow-lg);
   background: var(--c-lavender);
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  max-width: 640px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  max-width: 52rem;
   margin: 0 auto 3rem;
   position: relative;
   z-index: 1;
+}
+
+.cadeo-quote-layout {
+  display: grid;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .cadeo-quote-layout {
+    grid-template-columns: minmax(9rem, 11rem) 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.cadeo-quote-photo {
+  position: relative;
+  width: 100%;
+  max-width: 11rem;
+  margin: 0 auto;
+  aspect-ratio: 4 / 5;
+  border: var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: var(--c-shadow);
+  overflow: hidden;
+  background: var(--c-black);
+}
+
+.cadeo-quote-photo-img {
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.cadeo-quote-content {
+  min-width: 0;
 }
 
 .cadeo-quote-title {
@@ -1266,24 +1357,27 @@
   line-height: 1.2;
 }
 
+.cadeo-quote-body {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
 .cadeo-quote-author {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
   margin-top: 1.25rem;
 }
 
-.cadeo-quote-avatar {
-  width: 40px;
-  height: 40px;
-  border: var(--c-border);
-  border-radius: 8px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  flex-shrink: 0;
+.cadeo-quote-author-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.cadeo-quote-author-role {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.65;
 }
 
 .cadeo-quote-btn {
@@ -1895,8 +1989,8 @@
 }
 
 .cadeo-social-btn {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1904,9 +1998,8 @@
   border-radius: 10px;
   box-shadow: var(--c-shadow);
   background: #fff;
-  font-size: 0.8rem;
-  font-weight: 800;
   text-decoration: none;
+  overflow: hidden;
   color: var(--c-black);
 }
 
@@ -1980,12 +2073,12 @@
     animation: none;
   }
 
-  .cadeo-fallers-layer {
+  .cadeo-page-fallers {
     display: none;
   }
 }
 
-/* Scroll fallers + section shell */
+/* Section shell (legacy wrapper) */
 .cadeo-section-shell {
   position: relative;
 }
@@ -1993,42 +2086,6 @@
 .cadeo-section-shell__content {
   position: relative;
   z-index: 1;
-}
-
-.cadeo-fallers-layer {
-  position: absolute;
-  top: 0;
-  right: -4%;
-  bottom: 0;
-  left: -4%;
-  z-index: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.cadeo-faller-sticker {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.1rem;
-  min-height: 2.1rem;
-  padding: 0.2rem 0.4rem;
-  background: #fff;
-  border: 2.5px solid var(--c-black);
-  border-radius: 11px;
-  box-shadow: 3px 3px 0 0 var(--c-black);
-  font-weight: 900;
-  line-height: 1;
-  will-change: transform, opacity;
-}
-
-.cadeo-faller-sticker--text {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-size: 0.72rem !important;
-  background: var(--c-yellow-bright);
-  min-width: 1.85rem;
-  min-height: 1.85rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
