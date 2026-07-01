@@ -55,7 +55,7 @@ function InstagramIcon({ size, className, label }: { size: number; className: st
   );
 }
 
-/** Official TikTok logomark (48×48 viewBox — cyan/red/black, no clipping). */
+/** Official TikTok logomark — cyan / red / black note (48×48 brand asset). */
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
   return (
     <svg

@@ -9,7 +9,6 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
 import { verifyReviewScreenshot } from "@/lib/ocr";
-import { prizeSliceAngles } from "@/lib/wheel";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
@@ -19,7 +18,7 @@ interface PublicFlowProps {
   prizes: Prize[];
 }
 
-const STEP_ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "result"];
+const STEP_ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "claim", "result"];
 
 const stepVariants = {
   enter: { opacity: 0, x: 24 },
@@ -56,12 +55,16 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [error, setError] = useState<string | null>(null);
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [spinId, setSpinId] = useState<string | null>(null);
+  const [prizeCode, setPrizeCode] = useState<string | null>(null);
+  const [claimSmsSent, setClaimSmsSent] = useState(false);
+  const [claimFirstName, setClaimFirstName] = useState("");
+  const [claimEmail, setClaimEmail] = useState("");
+  const [claimPhone, setClaimPhone] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
   const [otpHint, setOtpHint] = useState<string | null>(null);
 
   const accent = merchant.primary_color;
-  const activePrizes = prizeSliceAngles(prizes);
   const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
 
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
@@ -107,6 +110,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setPhone(data.phoneNumber);
+      setClaimPhone(data.phoneNumber);
       setStep("social");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
@@ -175,7 +179,35 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
   const onSpinComplete = (prize: Prize) => {
     setWonPrize(prize);
-    setStep("result");
+    setClaimPhone(phone);
+    setStep("claim");
+  };
+
+  const submitClaim = async () => {
+    if (!spinId || !wonPrize) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/spin/claim", {
+        method: "POST",
+        headers: localeHeaders(locale),
+        body: JSON.stringify({
+          spinId,
+          firstName: claimFirstName,
+          email: claimEmail,
+          phoneNumber: claimPhone || phone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? t("public.error"));
+      setPrizeCode(data.prizeCode);
+      setClaimSmsSent(Boolean(data.smsSent));
+      setStep("result");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("public.error"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleWheelSpin = async () => {
@@ -422,19 +454,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="mt-1 text-sm font-medium text-muted">{t("public.wheelSubtitle")}</p>
                   </div>
 
-                  {activePrizes.length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-1.5">
-                      {activePrizes.map(({ prize }) => (
-                        <span
-                          key={prize.id}
-                          className="public-prize-chip"
-                        >
-                          {prize.label}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
                   <Wheel
                     prizes={prizes}
                     primaryColor={merchant.primary_color}
@@ -460,7 +479,62 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                 </motion.div>
               )}
 
-              {step === "result" && wonPrize && (
+              {step === "claim" && wonPrize && (
+                <motion.div
+                  key="claim"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{t("public.claimTitle")}</p>
+                    <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-tight text-ink">
+                      {wonPrize.label}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-muted">{t("public.claimSubtitle")}</p>
+                  </div>
+
+                  <input
+                    type="text"
+                    autoComplete="given-name"
+                    placeholder={t("public.claimFirstName")}
+                    value={claimFirstName}
+                    onChange={(e) => setClaimFirstName(e.target.value)}
+                    className="public-input font-semibold"
+                  />
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    placeholder={t("public.claimEmail")}
+                    value={claimEmail}
+                    onChange={(e) => setClaimEmail(e.target.value)}
+                    className="public-input font-semibold"
+                  />
+                  <input
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder={t("public.claimPhone")}
+                    value={claimPhone}
+                    onChange={(e) => setClaimPhone(e.target.value)}
+                    className="public-input text-center font-semibold"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={submitClaim}
+                    disabled={loading || claimFirstName.trim().length < 2}
+                    className="public-btn public-touch-target"
+                    style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
+                  >
+                    {loading ? t("public.claimSending") : t("public.claimSubmit")}
+                  </button>
+                </motion.div>
+              )}
+
+              {step === "result" && wonPrize && prizeCode && (
                 <motion.div
                   key="result"
                   initial={{ opacity: 0, scale: 0.92 }}
@@ -485,9 +559,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       {t("public.checkoutCode")}
                     </p>
                     <p className="mt-3 font-mono text-4xl font-extrabold tracking-wider text-ink">
-                      {spinId?.slice(0, 8).toUpperCase()}
+                      {prizeCode}
                     </p>
                   </div>
+                  <p className="text-sm font-medium leading-relaxed text-muted">
+                    {claimSmsSent
+                      ? t("public.codeSentSms", { phone: claimPhone || phone })
+                      : t("public.codeSentDev")}
+                  </p>
                   <p className="text-sm font-medium leading-relaxed text-muted">{t("public.showScreen")}</p>
                 </motion.div>
               )}

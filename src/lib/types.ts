@@ -41,6 +41,10 @@ export interface Spin {
   followed_social: boolean;
   review_screenshot_url: string | null;
   review_screenshot_status: ReviewScreenshotStatus;
+  claim_first_name?: string | null;
+  claim_email?: string | null;
+  prize_code?: string | null;
+  claim_notified_at?: string | null;
   created_at: string;
   prize?: Prize;
 }
@@ -52,4 +56,4 @@ export interface ReviewCountHistory {
   checked_at: string;
 }
 
-export type PublicStep = "phone" | "social" | "review" | "wheel" | "result";
+export type PublicStep = "phone" | "social" | "review" | "wheel" | "claim" | "result";

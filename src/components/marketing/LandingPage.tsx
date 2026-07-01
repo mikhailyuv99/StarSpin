@@ -219,7 +219,7 @@ function PhoneScene() {
             <div className="cadeo-phone-screen-content">
               <p className="cadeo-phone-title">Play &amp; win a prize!</p>
               <div className="cadeo-phone-wheel-slot">
-                <MarketingSpinWheel size={88} animate />
+                <MarketingSpinWheel size={100} animate className="cadeo-phone-wheel-svg" />
               </div>
               <button type="button" className="cadeo-phone-play-btn">
                 PLAY!

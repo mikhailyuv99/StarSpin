@@ -3,16 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Prize } from "@/lib/types";
 import { useTranslations } from "@/i18n/client";
+import { WheelPointer } from "@/components/WheelPointer";
 import {
   contrastTextColor,
   describeSlice,
   labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
-  shouldShowSliceLabel,
   sliceLabelRadius,
   sliceLabelRotation,
-  wheelSliceLabel,
+  splitSliceLabel,
 } from "@/lib/wheel";
 
 interface WheelProps {
@@ -94,11 +94,8 @@ export function Wheel({
   return (
     <div className="flex w-full flex-col items-center gap-4">
       <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
-        <div className="absolute -top-2 left-1/2 z-20 -translate-x-1/2" aria-hidden>
-          <svg width="28" height="24" viewBox="0 0 28 24" fill="none">
-            <path d="M14 24L2 4h24L14 24z" fill="#0a0a0a" />
-            <path d="M14 21L5 7h18L14 21z" fill="#f5e08e" />
-          </svg>
+        <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 translate-y-0.5" aria-hidden>
+          <WheelPointer width={30} height={24} />
         </div>
 
         <div
@@ -122,10 +119,10 @@ export function Wheel({
               const labelR = sliceLabelRadius(r, sliceAngle);
               const textPos = polarToCartesian(cx, cy, labelR, mid);
               const fill = colors[i % colors.length]!;
-              const showLabel = shouldShowSliceLabel(sliceAngle);
-              const fontSize = labelFontSize(sliceAngle);
-              const label = wheelSliceLabel(slice.prize.label, sliceAngle);
-              const rotation = sliceLabelRotation(mid);
+              const fontSize = labelFontSize(sliceAngle, slices.length);
+              const lines = splitSliceLabel(slice.prize.label, sliceAngle);
+              const lineHeight = fontSize * 1.12;
+              const labelRotation = sliceLabelRotation(mid);
               const textFill = contrastTextColor(fill);
 
               return (
@@ -136,21 +133,25 @@ export function Wheel({
                     stroke="#0a0a0a"
                     strokeWidth={2}
                   />
-                  {showLabel && (
-                    <text
-                      x={textPos.x}
-                      y={textPos.y}
-                      transform={`rotate(${rotation}, ${textPos.x}, ${textPos.y})`}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill={textFill}
-                      fontSize={fontSize}
-                      fontWeight={800}
-                      style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
-                    >
-                      {label}
-                    </text>
-                  )}
+                  <text
+                    transform={`rotate(${labelRotation}, ${textPos.x}, ${textPos.y})`}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill={textFill}
+                    fontSize={fontSize}
+                    fontWeight={800}
+                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
+                  >
+                    {lines.map((line, lineIndex) => (
+                      <tspan
+                        key={lineIndex}
+                        x={textPos.x}
+                        dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
+                      >
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
                 </g>
               );
             })}
@@ -160,7 +161,7 @@ export function Wheel({
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div
-            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[11px] font-extrabold uppercase tracking-wider text-black shadow-[2px_2px_0_0_#0a0a0a]"
+            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[11px] font-extrabold uppercase tracking-wider text-black"
             style={{ width: hubSize, height: hubSize }}
           >
             {t("public.wheelGo")}

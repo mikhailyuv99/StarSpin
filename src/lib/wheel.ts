@@ -45,35 +45,45 @@ export function contrastTextColor(bg: string): string {
   return luminance > 0.58 ? "#0a0a0a" : "#ffffff";
 }
 
-/** Minimum slice angle (degrees) before we draw a label on the wheel. */
-export function shouldShowSliceLabel(sliceAngle: number): boolean {
-  return sliceAngle >= 14;
+export function labelFontSize(sliceAngle: number, sliceCount: number): number {
+  const byAngle = sliceAngle * 0.18;
+  const byCount = sliceCount > 8 ? 7.5 : sliceCount > 5 ? 9 : 10.5;
+  return Math.min(12, Math.max(7, Math.min(byAngle, byCount)));
 }
 
-export function labelFontSize(sliceAngle: number): number {
-  if (sliceAngle < 22) return 6.5;
-  if (sliceAngle < 35) return 7.5;
-  return Math.min(12, Math.max(8, sliceAngle * 0.17));
-}
-
-export function sliceLabelRadius(r: number, sliceAngle: number): number {
-  const hub = 0.38;
-  const outer = 0.24;
-  const t = Math.min(1, sliceAngle / 120);
-  return r * (hub + outer * t);
-}
-
-/** Tangential text aligned to slice — always upright to the reader. */
+/** Keep slice labels right-side up on the wheel */
 export function sliceLabelRotation(mid: number): number {
   return mid > 90 && mid < 270 ? mid + 180 : mid;
 }
 
-export function wheelSliceLabel(label: string, sliceAngle: number): string {
-  const maxChars =
-    sliceAngle < 22 ? 5 : sliceAngle < 35 ? 8 : sliceAngle < 55 ? 11 : sliceAngle < 90 ? 15 : 22;
-  const trimmed = label.trim();
-  if (trimmed.length <= maxChars) return trimmed;
-  return `${trimmed.slice(0, Math.max(3, maxChars - 1))}…`;
+export function splitSliceLabel(label: string, sliceAngle: number): string[] {
+  const maxChars = sliceAngle < 35 ? 9 : sliceAngle < 55 ? 12 : sliceAngle < 90 ? 16 : 22;
+  const maxLines = sliceAngle < 40 ? 2 : 3;
+  const words = label.trim().split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+
+  if (lines.length <= maxLines) return lines;
+  const merged = lines.slice(0, maxLines - 1);
+  merged.push(lines.slice(maxLines - 1).join(" "));
+  return merged;
+}
+
+export function sliceLabelRadius(r: number, sliceAngle: number): number {
+  const hubClearance = 0.34;
+  const outerBias = Math.min(sliceAngle, 140) / 360;
+  return r * (hubClearance + outerBias * 0.34);
 }
 
 export function prizeSliceAngles(prizes: Prize[]): { prize: Prize; start: number; end: number }[] {

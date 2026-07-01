@@ -593,14 +593,16 @@ body {
   padding: 4px;
   border: 2px solid var(--c-black);
   border-radius: 8px;
-  background: #b8b8b8;
+  background: #ffffff;
   box-sizing: border-box;
 }
 
-.public-social-icon-box svg {
+.public-social-icon-box svg,
+.public-social-icon-box img {
   display: block;
   width: 86%;
   height: 86%;
+  object-fit: contain;
 }
 
 .public-progress-track {

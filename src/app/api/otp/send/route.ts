@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { OTP_EXPIRY_MINUTES, OTP_LENGTH, SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
+import { sendSmsMessage } from "@/lib/sms";
 import { apiT, resolveRequestLocale } from "@/i18n/api";
 
 function generateOtp(): string {
@@ -16,32 +17,6 @@ function normalizePhone(phone: string): string {
   return `+84${cleaned}`;
 }
 
-function isSmsConfigured(): boolean {
-  return Boolean(
-    process.env.TWILIO_ACCOUNT_SID &&
-      process.env.TWILIO_AUTH_TOKEN &&
-      process.env.TWILIO_PHONE_NUMBER,
-  );
-}
-
-async function sendSms(phone: string, code: string, body: string): Promise<boolean> {
-  if (!isSmsConfigured()) {
-    console.log(`[OTP no SMS] ${phone}: ${code}`);
-    return false;
-  }
-
-  const twilio = await import("twilio");
-  const client = twilio.default(
-    process.env.TWILIO_ACCOUNT_SID!,
-    process.env.TWILIO_AUTH_TOKEN!,
-  );
-  await client.messages.create({
-    body,
-    from: process.env.TWILIO_PHONE_NUMBER!,
-    to: phone,
-  });
-  return true;
-}
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
@@ -102,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     const smsBody = t("api.smsBody", { code, minutes: OTP_EXPIRY_MINUTES });
-    const smsSent = await sendSms(phoneNumber, code, smsBody);
+    const smsSent = await sendSmsMessage(phoneNumber, smsBody);
 
     return NextResponse.json({
       ok: true,

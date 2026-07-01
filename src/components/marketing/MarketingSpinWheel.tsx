@@ -25,12 +25,15 @@ export function MarketingSpinWheel({
 
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 -6 100 106"
       width={size}
       height={size}
       className={`marketing-wheel ${animate ? "marketing-wheel--spin" : ""} ${className}`.trim()}
       aria-hidden
     >
+      {/* Tip at y=5 points down into wheel rim (~y=6) */}
+      <polygon points="50,5 44,-4 56,-4" fill="#0a0a0a" />
+      <polygon points="50,4 45,-2.5 55,-2.5" fill="#f5e08e" />
       <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
       <g className={animate ? "marketing-wheel__disc" : undefined}>
         {SLICES.map((slice, i) => {
@@ -65,7 +68,6 @@ export function MarketingSpinWheel({
       </g>
       <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
       <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />
-      <polygon points="50,3 46.5,11 53.5,11" fill="#0a0a0a" />
     </svg>
   );
 }
