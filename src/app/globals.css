@@ -34,7 +34,52 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* Client QR flow — mobile-first */
+.public-flow {
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.public-touch-target {
+  min-height: 3rem;
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+  font-size: 1rem;
+  line-height: 1.25rem;
+  touch-action: manipulation;
+}
+
+.public-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem; /* évite le zoom iOS */
+  line-height: 1.25rem;
+  border-radius: 3px;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  color: #18181b;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.public-input:focus {
+  border-color: #18181b;
+  box-shadow: 0 0 0 1px #18181b;
+}
+
+.public-input::placeholder {
+  color: #a1a1aa;
+}
+
 
 .marketing-grid {
   background-image:

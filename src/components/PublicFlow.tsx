@@ -1,14 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Merchant, Prize, PublicStep } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
 import { verifyReviewScreenshot } from "@/lib/ocr";
-
-const inputClass =
-  "w-full rounded-sm border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -16,6 +13,7 @@ interface PublicFlowProps {
 }
 
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<PublicStep>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -37,8 +35,11 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     background: `linear-gradient(160deg, ${merchant.primary_color} 0%, ${merchant.secondary_color} 100%)`,
   };
 
-  const btnPrimary = (disabled?: boolean) =>
-    `w-full rounded-sm py-2.5 text-sm font-semibold text-white disabled:opacity-40 ${disabled ? "" : ""}`;
+  const btnPrimaryClass =
+    "public-touch-target w-full rounded-sm font-semibold text-white disabled:opacity-40 active:scale-[0.99] transition-transform";
+
+  const btnOutlineClass =
+    "public-touch-target w-full rounded-sm border border-zinc-300 bg-white font-semibold text-zinc-900 active:bg-zinc-50";
 
   const sendOtp = async () => {
     setLoading(true);
@@ -53,7 +54,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       if (!res.ok) throw new Error(data.error ?? "Erreur");
       if (data.devCode) {
         setOtp(data.devCode);
-        setOtpHint(`Code de test (SMS non activé) : ${data.devCode}`);
+        setOtpHint(`Code de test : ${data.devCode}`);
       } else {
         setOtpHint("Code envoyé par SMS.");
       }
@@ -150,14 +151,17 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   };
 
   return (
-    <div className="min-h-screen px-4 py-10" style={bgStyle}>
-      <div className="mx-auto max-w-md">
+    <div className="public-flow w-full" style={bgStyle}>
+      <div className="mx-auto flex w-full max-w-lg flex-col">
         <MerchantHeader merchant={merchant} />
         <StepIndicator current={step} accent={accent} />
 
-        <div className="rounded-sm border border-white/20 bg-white p-6 shadow-2xl">
+        <div className="rounded-sm border border-white/25 bg-white p-4 shadow-2xl sm:p-6">
           {error && (
-            <div className="mb-4 rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            <div
+              className="mb-4 rounded-sm border border-red-200 bg-red-50 px-3 py-3 text-sm leading-snug text-red-800"
+              role="alert"
+            >
               {error}
             </div>
           )}
@@ -165,44 +169,50 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           {step === "phone" && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900">Vérification téléphone</h2>
-                <p className="mt-1 text-sm text-zinc-500">Vérification par SMS</p>
+                <h2 className="text-lg font-semibold text-zinc-900">Vérification téléphone</h2>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-600">Vérification par SMS</p>
               </div>
               {!phoneVerified ? (
                 <>
                   <input
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    enterKeyHint="next"
                     placeholder="0xx xxx xxxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className={inputClass}
+                    className="public-input"
                   />
                   <button
                     type="button"
                     onClick={sendOtp}
                     disabled={loading || !phone}
-                    className={btnPrimary()}
+                    className={btnPrimaryClass}
                     style={{ backgroundColor: accent }}
                   >
-                    Recevoir le code
+                    {loading ? "Envoi…" : "Recevoir le code"}
                   </button>
                   <input
                     type="text"
-                    placeholder="Code OTP"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    enterKeyHint="done"
+                    placeholder="Code à 6 chiffres"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className={inputClass}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className="public-input text-center font-mono text-lg tracking-[0.2em]"
                   />
                   <button
                     type="button"
                     onClick={verifyOtp}
-                    disabled={loading || !otp}
-                    className="w-full rounded-sm border border-zinc-900 bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:border-zinc-300 disabled:bg-zinc-300 disabled:text-zinc-500"
+                    disabled={loading || otp.length < 4}
+                    className="public-touch-target w-full rounded-sm border border-zinc-900 bg-zinc-900 font-semibold text-white disabled:border-zinc-300 disabled:bg-zinc-300 disabled:text-zinc-500"
                   >
                     Vérifier
                   </button>
                   {otpHint && (
-                    <p className="rounded-sm border border-zinc-200 bg-zinc-50 px-3 py-2 text-center font-mono text-sm text-zinc-800">
+                    <p className="rounded-sm border border-zinc-200 bg-zinc-50 px-3 py-3 text-center font-mono text-base leading-snug text-zinc-900">
                       {otpHint}
                     </p>
                   )}
@@ -211,7 +221,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                 <button
                   type="button"
                   onClick={() => setStep("social")}
-                  className={btnPrimary()}
+                  className={btnPrimaryClass}
                   style={{ backgroundColor: accent }}
                 >
                   Continuer
@@ -223,35 +233,37 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           {step === "social" && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900">Réseaux sociaux</h2>
-                <p className="mt-1 text-sm text-zinc-500">Ouvrez un lien puis revenez ici.</p>
+                <h2 className="text-lg font-semibold text-zinc-900">Réseaux sociaux</h2>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                  Touchez un réseau, suivez la page, puis revenez ici.
+                </p>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {merchant.social_links.instagram && (
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.instagram!)}
-                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+                    className={btnOutlineClass}
                   >
-                    Instagram
+                    Suivre sur Instagram
                   </button>
                 )}
                 {merchant.social_links.facebook && (
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.facebook!)}
-                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+                    className={btnOutlineClass}
                   >
-                    Facebook
+                    Suivre sur Facebook
                   </button>
                 )}
                 {merchant.social_links.tiktok && (
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.tiktok!)}
-                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+                    className={btnOutlineClass}
                   >
-                    TikTok
+                    Suivre sur TikTok
                   </button>
                 )}
               </div>
@@ -259,10 +271,10 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                 type="button"
                 onClick={() => setStep("review")}
                 disabled={!followedSocial}
-                className={btnPrimary(!followedSocial)}
+                className={btnPrimaryClass}
                 style={{ backgroundColor: accent }}
               >
-                Continuer
+                J&apos;ai suivi — continuer
               </button>
             </div>
           )}
@@ -270,41 +282,52 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           {step === "review" && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900">Avis Google</h2>
-                <p className="mt-1 text-sm text-zinc-500">Publiez un avis puis uploadez une capture.</p>
+                <h2 className="text-lg font-semibold text-zinc-900">Avis Google</h2>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                  Laissez un avis, faites une capture d&apos;écran, puis uploadez-la.
+                </p>
               </div>
               {merchant.google_review_link && (
                 <a
                   href={merchant.google_review_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full rounded-sm border border-zinc-900 bg-zinc-900 py-2.5 text-center text-sm font-semibold text-white"
+                  className="public-touch-target flex w-full items-center justify-center rounded-sm border border-zinc-900 bg-zinc-900 font-semibold text-white"
                 >
                   Ouvrir Google Avis
                 </a>
               )}
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                capture="environment"
+                className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleReviewUpload(file);
                 }}
-                className="w-full text-sm text-zinc-600 file:mr-3 file:rounded-sm file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
               />
-              {loading && <p className="text-sm text-zinc-500">Analyse en cours…</p>}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className={btnOutlineClass}
+              >
+                {loading ? "Analyse en cours…" : "Choisir une capture d'écran"}
+              </button>
             </div>
           )}
 
           {step === "wheel" && (
             <div className="space-y-4">
-              <h2 className="text-center text-base font-semibold text-zinc-900">Roue de la fortune</h2>
+              <h2 className="text-center text-lg font-semibold text-zinc-900">Roue de la fortune</h2>
               {!spinning && !targetPrizeId ? (
                 <button
                   type="button"
                   onClick={handleWheelSpin}
                   disabled={loading}
-                  className="mx-auto block rounded-sm px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+                  className={`${btnPrimaryClass} max-w-none`}
                   style={{ backgroundColor: accent }}
                 >
                   {loading ? "Préparation…" : "Lancer le tirage"}
@@ -324,20 +347,24 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           )}
 
           {step === "result" && wonPrize && (
-            <div className="space-y-4 text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            <div className="space-y-5 py-2 text-center">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
                 Félicitations
               </p>
-              <p className="text-xl font-semibold text-zinc-900">{wonPrize.label}</p>
-              <div className="rounded-sm border border-zinc-200 bg-zinc-50 px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  Code caisse
+              <p className="text-balance text-2xl font-semibold leading-tight text-zinc-900">
+                {wonPrize.label}
+              </p>
+              <div className="rounded-sm border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Code à montrer en caisse
                 </p>
-                <p className="mt-2 font-mono text-lg font-semibold text-zinc-900">
+                <p className="mt-3 font-mono text-3xl font-bold tracking-wider text-zinc-900 sm:text-4xl">
                   {spinId?.slice(0, 8).toUpperCase()}
                 </p>
               </div>
-              <p className="text-xs text-zinc-500">Conservez cet écran pour récupérer votre prix.</p>
+              <p className="text-sm leading-relaxed text-zinc-600">
+                Gardez cet écran ouvert pour récupérer votre prix.
+              </p>
             </div>
           )}
         </div>

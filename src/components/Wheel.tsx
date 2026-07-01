@@ -25,9 +25,20 @@ export function Wheel({
 }: WheelProps) {
   const wheelRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState(0);
+  const [wheelSize, setWheelSize] = useState(280);
   const slices = prizeSliceAngles(prizes);
 
   const colors = [primaryColor, secondaryColor, "#3f3f46", "#52525b", "#71717a", "#a1a1aa"];
+
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      setWheelSize(Math.min(Math.max(w * 0.78, 240), 320));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   const spin = useCallback(() => {
     if (spinning || slices.length === 0) return;
@@ -63,20 +74,29 @@ export function Wheel({
     })
     .join(", ");
 
+  const hubSize = Math.round(wheelSize * 0.18);
+
   return (
-    <div className="flex flex-col items-center gap-5">
-      <div className="relative">
-        <div className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 text-lg text-zinc-900">▼</div>
+    <div className="flex w-full flex-col items-center gap-4">
+      <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
+        <div className="absolute -top-1 left-1/2 z-10 -translate-x-1/2 text-xl text-zinc-900">
+          ▼
+        </div>
         <div
           ref={wheelRef}
-          className="h-64 w-64 rounded-full border-2 border-zinc-200 transition-transform duration-[4500ms] ease-out sm:h-72 sm:w-72"
+          className="rounded-full border-2 border-zinc-200 transition-transform duration-[4500ms] ease-out"
           style={{
+            width: wheelSize,
+            height: wheelSize,
             transform: `rotate(${rotation}deg)`,
             background: `conic-gradient(from 0deg, ${gradientStops})`,
           }}
         />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-sm border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-wide text-zinc-700">
+          <div
+            className="flex items-center justify-center rounded-sm border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-wide text-zinc-700"
+            style={{ width: hubSize, height: hubSize }}
+          >
             Spin
           </div>
         </div>
@@ -86,10 +106,10 @@ export function Wheel({
         type="button"
         onClick={spin}
         disabled={spinning}
-        className="rounded-sm px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+        className="public-touch-target w-full max-w-xs rounded-sm px-6 font-semibold text-white disabled:opacity-40"
         style={{ backgroundColor: primaryColor }}
       >
-        {spinning ? "En cours…" : "Tourner"}
+        {spinning ? "En cours…" : "Tourner la roue"}
       </button>
     </div>
   );

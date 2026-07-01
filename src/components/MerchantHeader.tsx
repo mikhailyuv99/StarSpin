@@ -4,18 +4,18 @@ import type { Merchant } from "@/lib/types";
 
 export function MerchantHeader({ merchant }: { merchant: Merchant }) {
   return (
-    <header className="mb-8 text-center">
+    <header className="mb-5 text-center sm:mb-8">
       {merchant.logo_url && (
         <img
           src={merchant.logo_url}
           alt={merchant.name}
-          className="mx-auto mb-4 h-16 w-16 rounded-sm border-2 border-white/30 object-cover"
+          className="mx-auto mb-3 h-14 w-14 rounded-sm border-2 border-white/40 object-cover sm:mb-4 sm:h-16 sm:w-16"
         />
       )}
-      <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+      <h1 className="text-balance text-xl font-semibold leading-tight tracking-tight text-white sm:text-2xl">
         {merchant.name}
       </h1>
-      <p className="mt-2 text-sm text-white/75">
+      <p className="mt-1.5 text-sm text-white/85 sm:mt-2">
         Suivez les étapes pour participer
       </p>
     </header>
