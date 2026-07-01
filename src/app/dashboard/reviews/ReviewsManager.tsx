@@ -4,9 +4,13 @@ import { createClient } from "@/lib/supabase/client";
 import type { Spin } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { useI18n } from "@/i18n/client";
+import { localeToIntl } from "@/i18n/config";
 
 export function ReviewsManager({ spins }: { spins: Spin[] }) {
   const router = useRouter();
+  const { t, locale } = useI18n();
+  const intl = localeToIntl(locale);
 
   const updateStatus = async (id: string, status: "verified" | "rejected") => {
     const supabase = createClient();
@@ -18,7 +22,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
   };
 
   if (spins.length === 0) {
-    return <p className={ui.muted}>Aucune capture pour le moment.</p>;
+    return <p className={ui.muted}>{t("dashboard.noScreenshots")}</p>;
   }
 
   return (
@@ -29,7 +33,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
             <div>
               <p className="font-mono text-sm text-ink">{spin.phone_number}</p>
               <p className="mt-1 text-xs text-muted">
-                {new Date(spin.created_at).toLocaleString("fr-FR")} ·{" "}
+                {new Date(spin.created_at).toLocaleString(intl)} ·{" "}
                 <span className="uppercase tracking-wide">{spin.review_screenshot_status}</span>
               </p>
             </div>
@@ -40,7 +44,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
                   onClick={() => updateStatus(spin.id, "verified")}
                   className={ui.btnSuccess}
                 >
-                  Valider
+                  {t("dashboard.approve")}
                 </button>
               )}
               {spin.review_screenshot_status !== "rejected" && (
@@ -49,7 +53,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
                   onClick={() => updateStatus(spin.id, "rejected")}
                   className={ui.btnDanger}
                 >
-                  Rejeter
+                  {t("dashboard.reject")}
                 </button>
               )}
             </div>
@@ -61,7 +65,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
               rel="noopener noreferrer"
               className={`mt-3 inline-block text-sm ${ui.link}`}
             >
-              Voir la capture
+              {t("dashboard.viewScreenshot")}
             </a>
           )}
         </div>

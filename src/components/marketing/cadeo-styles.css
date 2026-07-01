@@ -1,0 +1,124 @@
+/* Cadeo-inspired game marketing aesthetic */
+.cadeo-page {
+  --cadeo-purple: #6c5ce7;
+  --cadeo-purple-dark: #5849c7;
+  --cadeo-pink: #fd79a8;
+  --cadeo-yellow: #fdcb6e;
+  --cadeo-mint: #55efc4;
+  --cadeo-lavender: #f5f3ff;
+  --cadeo-lavender-2: #ede9fe;
+  font-family: var(--font-display), var(--font-plex-sans), system-ui, sans-serif;
+}
+
+.cadeo-gradient-hero {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #fff 100%);
+}
+
+.cadeo-gradient-cta {
+  background: linear-gradient(135deg, var(--cadeo-purple) 0%, #a29bfe 50%, var(--cadeo-pink) 100%);
+}
+
+.cadeo-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--cadeo-purple);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.875rem 1.75rem;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 8px 24px rgb(108 92 231 / 0.35);
+}
+
+.cadeo-btn-primary:hover {
+  background: var(--cadeo-purple-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgb(108 92 231 / 0.45);
+}
+
+.cadeo-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid var(--cadeo-purple);
+  color: var(--cadeo-purple);
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cadeo-btn-outline:hover {
+  background: var(--cadeo-lavender);
+}
+
+.cadeo-card {
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 4px 24px rgb(108 92 231 / 0.08);
+  border: 1px solid rgb(108 92 231 / 0.1);
+}
+
+.cadeo-section-alt {
+  background: var(--cadeo-lavender);
+}
+
+.cadeo-wheel-float {
+  animation: cadeo-float 4s ease-in-out infinite;
+}
+
+.cadeo-wheel-spin {
+  animation: cadeo-spin 20s linear infinite;
+}
+
+@keyframes cadeo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes cadeo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cadeo-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.cadeo-testimonial-track {
+  display: flex;
+  gap: 1rem;
+  animation: cadeo-scroll 40s linear infinite;
+  width: max-content;
+}
+
+@keyframes cadeo-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadeo-wheel-spin,
+  .cadeo-wheel-float,
+  .cadeo-testimonial-track {
+    animation: none;
+  }
+}

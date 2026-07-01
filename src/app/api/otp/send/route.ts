@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { OTP_EXPIRY_MINUTES, OTP_LENGTH, SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
+import { apiT, resolveRequestLocale } from "@/i18n/api";
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString().slice(0, OTP_LENGTH);
@@ -23,9 +24,9 @@ function isSmsConfigured(): boolean {
   );
 }
 
-async function sendSms(phone: string, code: string): Promise<boolean> {
+async function sendSms(phone: string, code: string, body: string): Promise<boolean> {
   if (!isSmsConfigured()) {
-    console.log(`[OTP sans SMS] ${phone}: ${code}`);
+    console.log(`[OTP no SMS] ${phone}: ${code}`);
     return false;
   }
 
@@ -35,7 +36,7 @@ async function sendSms(phone: string, code: string): Promise<boolean> {
     process.env.TWILIO_AUTH_TOKEN!,
   );
   await client.messages.create({
-    body: `Votre code Roue Fidélité: ${code}. Valide ${OTP_EXPIRY_MINUTES} min.`,
+    body,
     from: process.env.TWILIO_PHONE_NUMBER!,
     to: phone,
   });
@@ -43,10 +44,13 @@ async function sendSms(phone: string, code: string): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
+  const locale = resolveRequestLocale(request);
+  const t = apiT(locale);
+
   try {
     const { merchantId, phone } = await request.json();
     if (!merchantId || !phone) {
-      return NextResponse.json({ error: "merchantId et phone requis" }, { status: 400 });
+      return NextResponse.json({ error: t("api.merchantPhoneRequired") }, { status: 400 });
     }
 
     const phoneNumber = normalizePhone(String(phone));
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
       .single();
 
     if (!merchant || !["active", "trial"].includes(merchant.subscription_status)) {
-      return NextResponse.json({ error: "Commerce indisponible" }, { status: 404 });
+      return NextResponse.json({ error: t("api.merchantUnavailable") }, { status: 404 });
     }
 
     const fingerprint = createDeviceFingerprint(
@@ -70,13 +74,13 @@ export async function POST(request: Request) {
     const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
     if (blocker === "phone") {
       return NextResponse.json(
-        { error: `Ce numéro a déjà participé (${SPIN_COOLDOWN_DAYS} jours)` },
+        { error: t("api.phoneAlreadyPlayed", { days: SPIN_COOLDOWN_DAYS }) },
         { status: 429 },
       );
     }
     if (blocker === "device") {
       return NextResponse.json(
-        { error: `Cet appareil a déjà participé (${SPIN_COOLDOWN_DAYS} jours)` },
+        { error: t("api.deviceAlreadyPlayed", { days: SPIN_COOLDOWN_DAYS }) },
         { status: 429 },
       );
     }
@@ -94,10 +98,11 @@ export async function POST(request: Request) {
 
     if (insertError) {
       console.error("OTP insert error:", insertError);
-      return NextResponse.json({ error: "Erreur enregistrement OTP" }, { status: 500 });
+      return NextResponse.json({ error: t("api.otpSaveError") }, { status: 500 });
     }
 
-    const smsSent = await sendSms(phoneNumber, code);
+    const smsBody = t("api.smsBody", { code, minutes: OTP_EXPIRY_MINUTES });
+    const smsSent = await sendSms(phoneNumber, code, smsBody);
 
     return NextResponse.json({
       ok: true,
@@ -106,6 +111,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("OTP send error:", err);
-    return NextResponse.json({ error: "Erreur envoi OTP" }, { status: 500 });
+    return NextResponse.json({ error: t("api.otpSendError") }, { status: 500 });
   }
 }

@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "@/i18n/client";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export default function LoginPage() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
@@ -36,7 +39,7 @@ export default function LoginPage() {
       if (signUpError) {
         setError(signUpError.message);
       } else {
-        setMessage("Vérifiez votre email pour confirmer votre compte.");
+        setMessage(t("login.verifyEmail"));
       }
     } else {
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -64,29 +67,33 @@ export default function LoginPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-white text-[11px] font-bold text-ink">
             RF
           </span>
-          <span className="text-[15px] font-semibold text-white">Roue Fidélité</span>
+          <span className="text-[15px] font-semibold text-white">{t("common.brand")}</span>
         </Link>
         <div>
-          <p className="section-label text-zinc-400">Espace commerçant</p>
+          <p className="section-label text-zinc-400">{t("login.merchantSpace")}</p>
           <p className="mt-4 max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white">
-            Gérez votre programme de fidélisation depuis un tableau de bord unique.
+            {t("login.tagline")}
           </p>
         </div>
-        <p className="font-mono text-xs text-zinc-500">Da Nang · Vietnam</p>
+        <p className="font-mono text-xs text-zinc-500">{t("login.location")}</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-5 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
+          <div className="mb-8 flex items-center justify-between lg:hidden">
             <Link href="/" className="text-[15px] font-semibold text-ink">
-              ← Roue Fidélité
+              {t("login.back")}
             </Link>
+            <LocaleSwitcher variant="light" />
+          </div>
+          <div className="mb-6 hidden lg:flex lg:justify-end">
+            <LocaleSwitcher variant="light" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            {isSignup ? "Créer un compte" : "Connexion"}
+            {isSignup ? t("login.signupTitle") : t("login.signinTitle")}
           </h1>
           <p className="mt-2 text-sm text-muted">
-            {isSignup ? "Accès commerçant à la plateforme" : "Identifiants de votre espace"}
+            {isSignup ? t("login.signupSubtitle") : t("login.signinSubtitle")}
           </p>
 
           {error && (
@@ -103,7 +110,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-                Email
+                {t("common.email")}
               </label>
               <input
                 type="email"
@@ -115,7 +122,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-                Mot de passe
+                {t("common.password")}
               </label>
               <input
                 type="password"
@@ -131,7 +138,11 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-sm bg-ink py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
             >
-              {loading ? "Chargement…" : isSignup ? "Créer le compte" : "Se connecter"}
+              {loading
+                ? t("common.loading")
+                : isSignup
+                  ? t("login.createAccount")
+                  : t("login.signIn")}
             </button>
           </form>
 
@@ -140,7 +151,7 @@ export default function LoginPage() {
             onClick={() => setIsSignup(!isSignup)}
             className="mt-6 w-full text-center text-sm text-muted hover:text-ink"
           >
-            {isSignup ? "Déjà un compte — se connecter" : "Pas de compte — s'inscrire"}
+            {isSignup ? t("login.toggleSignup") : t("login.toggleSignin")}
           </button>
         </div>
       </div>

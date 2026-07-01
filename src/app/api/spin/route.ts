@@ -1,3 +1,4 @@
+import { apiT, resolveRequestLocale } from "@/i18n/api";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SPIN_COOLDOWN_DAYS } from "@/lib/constants";
@@ -7,6 +8,9 @@ import { pickWeightedPrize } from "@/lib/wheel";
 import type { Prize } from "@/lib/types";
 
 export async function POST(request: Request) {
+  const locale = resolveRequestLocale(request);
+  const t = apiT(locale);
+
   try {
     const body = await request.json();
     const {
@@ -18,7 +22,7 @@ export async function POST(request: Request) {
     } = body;
 
     if (!merchantId || !phoneNumber) {
-      return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
+      return NextResponse.json({ error: t("api.missingFields") }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -38,7 +42,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!verifiedOtp) {
-      return NextResponse.json({ error: "Téléphone non vérifié" }, { status: 403 });
+      return NextResponse.json({ error: t("api.phoneNotVerified") }, { status: 403 });
     }
 
     const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
@@ -47,8 +51,8 @@ export async function POST(request: Request) {
         {
           error:
             blocker === "phone"
-              ? `Participation déjà enregistrée pour ce numéro (${SPIN_COOLDOWN_DAYS}j)`
-              : `Participation déjà enregistrée pour cet appareil (${SPIN_COOLDOWN_DAYS}j)`,
+              ? t("api.alreadyPlayedPhone", { days: SPIN_COOLDOWN_DAYS })
+              : t("api.alreadyPlayedDevice", { days: SPIN_COOLDOWN_DAYS }),
         },
         { status: 429 },
       );
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
 
     const selected = pickWeightedPrize((prizes ?? []) as Prize[]);
     if (!selected) {
-      return NextResponse.json({ error: "Aucun prix disponible" }, { status: 400 });
+      return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
     }
 
     const status = reviewScreenshotStatus ?? "pending";
@@ -97,6 +101,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("Spin error:", err);
-    return NextResponse.json({ error: "Erreur lors du tirage" }, { status: 500 });
+    return NextResponse.json({ error: t("api.spinError") }, { status: 500 });
   }
 }

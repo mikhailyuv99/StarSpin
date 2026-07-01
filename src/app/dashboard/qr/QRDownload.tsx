@@ -2,8 +2,10 @@
 
 import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { ui } from "@/components/ui/styles";
+import { useTranslations } from "@/i18n/client";
 
 export function QRDownload({ slug }: { slug: string }) {
+  const t = useTranslations();
   const displayUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}${publicMerchantPath(slug)}`
@@ -16,7 +18,7 @@ export function QRDownload({ slug }: { slug: string }) {
       <img src={qrUrl} alt={`QR ${slug}`} className="w-full border border-border" />
       <p className="mt-4 text-center font-mono text-xs text-muted">{displayUrl}</p>
       <a href={qrUrl} download={`qr-${slug}.png`} className={`mt-6 block w-full text-center ${ui.btn}`}>
-        Télécharger PNG
+        {t("dashboard.downloadPng")}
       </a>
     </div>
   );

@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
+import { getTranslations } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Participation",
-  description: "Programme de fidélisation",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-  },
-  formatDetection: {
-    telephone: false,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return {
+    title: t("meta.merchantTitle"),
+    description: t("meta.merchantDescription"),
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+    },
+    formatDetection: {
+      telephone: false,
+    },
+  };
+}
 
 export default function PublicMerchantLayout({
   children,

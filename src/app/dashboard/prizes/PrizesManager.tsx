@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Prize } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { useTranslations } from "@/i18n/client";
 
 type EditForm = {
   label: string;
@@ -19,6 +20,7 @@ export function PrizesManager({
   merchantId: string;
   initialPrizes: Prize[];
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const [prizes, setPrizes] = useState(initialPrizes);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -117,9 +119,9 @@ export function PrizesManager({
   return (
     <div className="space-y-8">
       <div className={ui.card}>
-        <h2 className={ui.h2}>Prix configurés</h2>
+        <h2 className={ui.h2}>{t("dashboard.prizesConfigured")}</h2>
         {prizes.length === 0 ? (
-          <p className={`mt-4 ${ui.muted}`}>Aucun prix pour le moment.</p>
+          <p className={`mt-4 ${ui.muted}`}>{t("dashboard.noPrizes")}</p>
         ) : (
           <div className="mt-5 divide-y divide-border border border-border">
             {prizes.map((prize) => (
@@ -128,7 +130,7 @@ export function PrizesManager({
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div>
-                        <label className={ui.label}>Libellé</label>
+                        <label className={ui.label}>{t("dashboard.label")}</label>
                         <input
                           value={editForm.label}
                           onChange={(e) =>
@@ -138,7 +140,7 @@ export function PrizesManager({
                         />
                       </div>
                       <div>
-                        <label className={ui.label}>Poids</label>
+                        <label className={ui.label}>{t("dashboard.weight")}</label>
                         <input
                           type="number"
                           min={1}
@@ -153,7 +155,7 @@ export function PrizesManager({
                         />
                       </div>
                       <div>
-                        <label className={ui.label}>Stock (vide = ∞)</label>
+                        <label className={ui.label}>{t("dashboard.stockOptional")}</label>
                         <input
                           value={editForm.stock_remaining}
                           onChange={(e) =>
@@ -170,10 +172,10 @@ export function PrizesManager({
                         disabled={saving || !editForm.label.trim()}
                         className={ui.btn}
                       >
-                        {saving ? "Enregistrement…" : "Enregistrer"}
+                        {saving ? t("common.saving") : t("common.save")}
                       </button>
                       <button type="button" onClick={cancelEdit} className={ui.btnOutline}>
-                        Annuler
+                        {t("common.cancel")}
                       </button>
                     </div>
                   </div>
@@ -182,20 +184,20 @@ export function PrizesManager({
                     <div>
                       <p className="text-sm font-semibold text-ink">{prize.label}</p>
                       <p className="mt-0.5 font-mono text-xs text-muted">
-                        poids {prize.probability_weight}
-                        {prize.stock_remaining !== null && ` · stock ${prize.stock_remaining}`}
-                        {!prize.active && " · inactif"}
+                        {t("common.weight")} {prize.probability_weight}
+                        {prize.stock_remaining !== null && ` · ${t("common.stock")} ${prize.stock_remaining}`}
+                        {!prize.active && ` · ${t("common.inactive")}`}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => startEdit(prize)} className={ui.btnOutline}>
-                        Modifier
+                        {t("common.edit")}
                       </button>
                       <button type="button" onClick={() => toggleActive(prize)} className={ui.btnOutline}>
-                        {prize.active ? "Désactiver" : "Activer"}
+                        {prize.active ? t("common.deactivate") : t("common.activate")}
                       </button>
                       <button type="button" onClick={() => deletePrize(prize.id)} className={ui.btnDanger}>
-                        Supprimer
+                        {t("common.delete")}
                       </button>
                     </div>
                   </div>
@@ -207,10 +209,10 @@ export function PrizesManager({
       </div>
 
       <div className={ui.card}>
-        <h2 className={ui.h2}>Ajouter un prix</h2>
+        <h2 className={ui.h2}>{t("dashboard.addPrize")}</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <div>
-            <label className={ui.label}>Libellé</label>
+            <label className={ui.label}>{t("dashboard.label")}</label>
             <input
               value={newPrize.label}
               onChange={(e) => setNewPrize((p) => ({ ...p, label: e.target.value }))}
@@ -218,7 +220,7 @@ export function PrizesManager({
             />
           </div>
           <div>
-            <label className={ui.label}>Poids</label>
+            <label className={ui.label}>{t("dashboard.weight")}</label>
             <input
               type="number"
               value={newPrize.probability_weight}
@@ -243,7 +245,7 @@ export function PrizesManager({
           disabled={!newPrize.label}
           className={`mt-5 ${ui.btn}`}
         >
-          Ajouter
+          {t("common.add")}
         </button>
       </div>
     </div>

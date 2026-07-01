@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Prize } from "@/lib/types";
+import { useTranslations } from "@/i18n/client";
 import {
   describeSlice,
   polarToCartesian,
@@ -30,6 +31,7 @@ export function Wheel({
   targetPrizeId,
   hideSpinButton = false,
 }: WheelProps) {
+  const t = useTranslations();
   const [rotation, setRotation] = useState(0);
   const [wheelSize, setWheelSize] = useState(280);
   const spunRef = useRef<string | undefined>(undefined);
@@ -74,7 +76,7 @@ export function Wheel({
   }, [targetPrizeId, spinning, spin]);
 
   if (slices.length === 0) {
-    return <p className="text-center text-sm text-zinc-500">Aucun prix configuré.</p>;
+    return <p className="text-center text-sm text-zinc-500">{t("public.wheelEmpty")}</p>;
   }
 
   const cx = wheelSize / 2;
@@ -147,7 +149,7 @@ export function Wheel({
             className="flex items-center justify-center rounded-full border-2 border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-wider text-zinc-800 shadow-sm"
             style={{ width: hubSize, height: hubSize }}
           >
-            GO
+            {t("public.wheelGo")}
           </div>
         </div>
       </div>
@@ -160,7 +162,7 @@ export function Wheel({
           className="public-touch-target w-full max-w-xs rounded-sm px-6 font-semibold text-white disabled:opacity-40"
           style={{ backgroundColor: primaryColor }}
         >
-          {spinning ? "En cours…" : "Tourner la roue"}
+          {spinning ? t("public.wheelSpinning") : t("public.wheelSpin")}
         </button>
       )}
     </div>

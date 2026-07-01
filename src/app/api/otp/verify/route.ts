@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { apiT, resolveRequestLocale } from "@/i18n/api";
 
 function normalizePhone(phone: string): string {
   return phone.replace(/\s+/g, "").replace(/^0/, "+84");
 }
 
 export async function POST(request: Request) {
+  const locale = resolveRequestLocale(request);
+  const t = apiT(locale);
+
   try {
     const { merchantId, phone, code } = await request.json();
     if (!merchantId || !phone || !code) {
-      return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
+      return NextResponse.json({ error: t("api.missingFields") }, { status: 400 });
     }
 
     const phoneNumber = normalizePhone(String(phone));
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!otp || otp.code !== String(code)) {
-      return NextResponse.json({ error: "Code invalide ou expiré" }, { status: 400 });
+      return NextResponse.json({ error: t("api.otpInvalid") }, { status: 400 });
     }
 
     await supabase
@@ -38,6 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, phoneNumber });
   } catch (err) {
     console.error("OTP verify error:", err);
-    return NextResponse.json({ error: "Erreur vérification" }, { status: 500 });
+    return NextResponse.json({ error: t("api.verifyError") }, { status: 500 });
   }
 }

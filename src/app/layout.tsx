@@ -1,6 +1,9 @@
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Nunito } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
+import { I18nProvider } from "@/i18n/client";
+import { getMessages } from "@/i18n/get-messages";
+import { getLocale, getTranslations } from "@/i18n/server";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -15,20 +18,37 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
 });
 
-export const metadata: Metadata = {
-  title: "Roue Fidélité — Fidélisation QR & Roue de la Fortune",
-  description: "Plateforme SaaS de fidélisation pour commerces à Da Nang",
-};
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-display",
+});
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = getMessages(locale);
+
   return (
-    <html lang="fr" className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
+    <html
+      lang={locale}
+      className={`${plexSans.variable} ${plexMono.variable} ${nunito.variable} h-full antialiased`}
+    >
       <body className="min-h-full font-sans">
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <I18nProvider locale={locale} messages={messages}>
+          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        </I18nProvider>
       </body>
     </html>
   );

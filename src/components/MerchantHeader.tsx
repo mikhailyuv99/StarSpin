@@ -1,8 +1,10 @@
 "use client";
 
 import type { Merchant } from "@/lib/types";
+import { useTranslations } from "@/i18n/client";
 
 export function MerchantHeader({ merchant }: { merchant: Merchant }) {
+  const t = useTranslations();
   return (
     <header className="mb-5 text-center sm:mb-8">
       {merchant.logo_url && (
@@ -15,9 +17,7 @@ export function MerchantHeader({ merchant }: { merchant: Merchant }) {
       <h1 className="text-balance text-xl font-semibold leading-tight tracking-tight text-white sm:text-2xl">
         {merchant.name}
       </h1>
-      <p className="mt-1.5 text-sm text-white/85 sm:mt-2">
-        Suivez les étapes pour participer
-      </p>
+      <p className="mt-1.5 text-sm text-white/85 sm:mt-2">{t("public.headerSubtitle")}</p>
     </header>
   );
 }

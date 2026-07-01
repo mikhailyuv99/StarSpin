@@ -8,6 +8,9 @@ import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
 import { verifyReviewScreenshot } from "@/lib/ocr";
 import { prizeSliceAngles } from "@/lib/wheel";
+import { useI18n } from "@/i18n/client";
+import { localeHeaders } from "@/lib/locale-headers";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -38,6 +41,7 @@ function fireConfetti(accent: string) {
 }
 
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
+  const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<PublicStep>("phone");
   const [phone, setPhone] = useState("");
@@ -78,20 +82,20 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     try {
       const res = await fetch("/api/otp/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: localeHeaders(locale),
         body: JSON.stringify({ merchantId: merchant.id, phone }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
+      if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setOtpSent(true);
       if (data.devCode) {
         setOtp(data.devCode);
-        setOtpHint(`Code de test : ${data.devCode}`);
+        setOtpHint(t("public.otpTestCode", { code: data.devCode }));
       } else {
-        setOtpHint("Code envoyé par SMS ✓");
+        setOtpHint(t("public.otpSent"));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
       setLoading(false);
     }
@@ -103,15 +107,15 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     try {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: localeHeaders(locale),
         body: JSON.stringify({ merchantId: merchant.id, phone, code: otp }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
+      if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setPhone(data.phoneNumber);
       setStep("social");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
       setLoading(false);
     }
@@ -131,13 +135,17 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("merchantId", merchant.id);
-      const uploadRes = await fetch("/api/review/upload", { method: "POST", body: formData });
+      const uploadRes = await fetch("/api/review/upload", {
+        method: "POST",
+        headers: { "x-locale": locale },
+        body: formData,
+      });
       const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.error ?? "Upload échoué");
+      if (!uploadRes.ok) throw new Error(uploadData.error ?? t("api.uploadFailed"));
       setScreenshotUrl(uploadData.url);
       setStep("wheel");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
       setLoading(false);
     }
@@ -149,7 +157,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     try {
       const res = await fetch("/api/spin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: localeHeaders(locale),
         body: JSON.stringify({
           merchantId: merchant.id,
           phoneNumber: phone,
@@ -159,17 +167,17 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
+      if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setTargetPrizeId(data.prize.id);
       setSpinId(data.spinId);
       return data.prize as Prize;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(e instanceof Error ? e.message : t("public.error"));
       return null;
     } finally {
       setLoading(false);
     }
-  }, [merchant.id, phone, followedSocial, screenshotUrl, reviewStatus]);
+  }, [merchant.id, phone, followedSocial, screenshotUrl, reviewStatus, locale, t]);
 
   const onSpinComplete = (prize: Prize) => {
     setWonPrize(prize);
@@ -181,19 +189,22 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   };
 
   const socialLinks = [
-    { key: "instagram", label: "Instagram", emoji: "📸", url: merchant.social_links.instagram },
-    { key: "facebook", label: "Facebook", emoji: "👍", url: merchant.social_links.facebook },
-    { key: "tiktok", label: "TikTok", emoji: "🎵", url: merchant.social_links.tiktok },
+    { key: "instagram", label: t("public.followInstagram"), emoji: "📸", url: merchant.social_links.instagram },
+    { key: "facebook", label: t("public.followFacebook"), emoji: "👍", url: merchant.social_links.facebook },
+    { key: "tiktok", label: t("public.followTiktok"), emoji: "🎵", url: merchant.social_links.tiktok },
   ].filter((l) => l.url);
 
   return (
     <div className="public-flow w-full" style={bgStyle}>
       <div className="mx-auto flex w-full max-w-lg flex-col">
+        <div className="mb-2 flex justify-end px-1">
+          <LocaleSwitcher variant="dark" />
+        </div>
         <MerchantHeader merchant={merchant} />
 
         <div className="mb-4 px-1">
           <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/80">
-            <span>Progression</span>
+            <span>{t("public.progress")}</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-white/20">
@@ -234,10 +245,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🎯
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">C&apos;est parti !</h2>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Entrez votre numéro pour débloquer la roue
-                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.phoneTitle")}</h2>
+                    <p className="mt-1 text-sm text-zinc-600">{t("public.phoneSubtitle")}</p>
                   </div>
 
                   <input
@@ -245,7 +254,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     inputMode="tel"
                     autoComplete="tel"
                     enterKeyHint="next"
-                    placeholder="0xx xxx xxxx"
+                    placeholder={t("public.phonePlaceholder")}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="public-input text-center text-lg font-semibold"
@@ -259,7 +268,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       className={btnPrimaryClass}
                       style={{ backgroundColor: accent }}
                     >
-                      {loading ? "Envoi…" : "Recevoir mon code →"}
+                      {loading ? t("public.sending") : t("public.sendCode")}
                     </button>
                   ) : (
                     <>
@@ -268,7 +277,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         enterKeyHint="done"
-                        placeholder="• • • • • •"
+                        placeholder={t("public.otpPlaceholder")}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         className="public-input text-center font-mono text-2xl tracking-[0.35em]"
@@ -283,7 +292,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         className={btnPrimaryClass}
                         style={{ backgroundColor: accent }}
                       >
-                        {loading ? "Vérification…" : "Valider & continuer 🚀"}
+                        {loading ? t("public.verifying") : t("public.verifyContinue")}
                       </button>
                       <button
                         type="button"
@@ -291,7 +300,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         disabled={loading}
                         className="w-full text-center text-sm font-medium text-zinc-500 underline-offset-2 hover:underline"
                       >
-                        Renvoyer le code
+                        {t("public.resendCode")}
                       </button>
                     </>
                   )}
@@ -312,10 +321,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       ⭐
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">+1 mission</h2>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Suivez-nous — ça prend 10 secondes
-                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.socialTitle")}</h2>
+                    <p className="mt-1 text-sm text-zinc-600">{t("public.socialSubtitle")}</p>
                   </div>
 
                   <div className="space-y-2.5">
@@ -327,11 +334,11 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         className={`${btnOutlineClass} flex items-center justify-center gap-2 text-left`}
                       >
                         <span className="text-xl">{link.emoji}</span>
-                        Suivre sur {link.label}
+                        {link.label}
                       </button>
                     ))}
                     {socialLinks.length === 0 && (
-                      <p className="text-center text-sm text-zinc-500">Aucun réseau configuré.</p>
+                      <p className="text-center text-sm text-zinc-500">{t("public.noSocial")}</p>
                     )}
                   </div>
 
@@ -342,7 +349,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     className={btnPrimaryClass}
                     style={{ backgroundColor: accent }}
                   >
-                    Mission accomplie ✓
+                    {t("public.missionDone")}
                   </button>
                 </motion.div>
               )}
@@ -361,10 +368,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🏆
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">Dernière étape !</h2>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Un avis Google = accès à la roue
-                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.reviewTitle")}</h2>
+                    <p className="mt-1 text-sm text-zinc-600">{t("public.reviewSubtitle")}</p>
                   </div>
 
                   {merchant.google_review_link && (
@@ -375,7 +380,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       className={`${btnPrimaryClass} flex items-center justify-center gap-2`}
                       style={{ backgroundColor: "#18181b" }}
                     >
-                      Ouvrir Google Avis ↗
+                      {t("public.openGoogle")}
                     </a>
                   )}
 
@@ -396,11 +401,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     disabled={loading}
                     className={btnOutlineClass}
                   >
-                    {loading ? "Analyse…" : "📷 Envoyer ma capture"}
+                    {loading ? t("public.uploadAnalyzing") : t("public.uploadScreenshot")}
                   </button>
-                  <p className="text-center text-xs text-zinc-500">
-                    Faites une capture de votre avis publié
-                  </p>
+                  <p className="text-center text-xs text-zinc-500">{t("public.reviewHint")}</p>
                 </motion.div>
               )}
 
@@ -418,8 +421,8 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🎰
                     </p>
-                    <h2 className="mt-2 text-xl font-bold text-zinc-900">À vous de jouer !</h2>
-                    <p className="mt-1 text-sm text-zinc-600">Touchez le bouton — la roue décide</p>
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900">{t("public.wheelTitle")}</h2>
+                    <p className="mt-1 text-sm text-zinc-600">{t("public.wheelSubtitle")}</p>
                   </div>
 
                   {activePrizes.length > 0 && (
@@ -454,7 +457,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       className={`${btnPrimaryClass} text-lg`}
                       style={{ backgroundColor: accent }}
                     >
-                      {loading ? "Préparation…" : "🎲 TOURNER LA ROUE"}
+                      {loading ? t("public.spinPreparing") : t("public.spinButton")}
                     </button>
                   )}
                 </motion.div>
@@ -476,21 +479,19 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   >
                     🎉
                   </motion.p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Vous avez gagné</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">{t("public.youWon")}</p>
                   <p className="text-balance text-2xl font-bold leading-tight text-zinc-900 sm:text-3xl">
                     {wonPrize.label}
                   </p>
                   <div className="rounded-sm border-2 border-dashed border-zinc-300 bg-gradient-to-b from-zinc-50 to-white px-4 py-6">
                     <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                      Code caisse
+                      {t("public.checkoutCode")}
                     </p>
                     <p className="mt-3 font-mono text-4xl font-bold tracking-wider text-zinc-900">
                       {spinId?.slice(0, 8).toUpperCase()}
                     </p>
                   </div>
-                  <p className="text-sm leading-relaxed text-zinc-600">
-                    Montrez cet écran en caisse pour récupérer votre prix.
-                  </p>
+                  <p className="text-sm leading-relaxed text-zinc-600">{t("public.showScreen")}</p>
                 </motion.div>
               )}
             </AnimatePresence>

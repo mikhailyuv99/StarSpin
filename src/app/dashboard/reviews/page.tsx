@@ -3,9 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { ReviewsManager } from "./ReviewsManager";
 import type { Spin } from "@/lib/types";
 import { ui } from "@/components/ui/styles";
+import { getTranslations } from "@/i18n/server";
 
 export default async function ReviewsPage() {
   const merchant = await requireMerchant();
+  const t = await getTranslations();
   const supabase = await createClient();
   const { data: spins } = await supabase
     .from("spins")
@@ -18,8 +20,8 @@ export default async function ReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className={ui.h1}>Captures d&apos;avis</h1>
-        <p className={ui.muted}>Modération des preuves soumises par vos clients.</p>
+        <h1 className={ui.h1}>{t("dashboard.reviewsTitle")}</h1>
+        <p className={ui.muted}>{t("dashboard.reviewsSubtitle")}</p>
       </div>
       <ReviewsManager spins={(spins ?? []) as Spin[]} />
     </div>

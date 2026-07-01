@@ -5,8 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { RESERVED_SLUGS } from "@/lib/app-url";
+import { useTranslations } from "@/i18n/client";
 
 export function SetupForm() {
+  const t = useTranslations();
   const router = useRouter();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -24,7 +26,7 @@ export function SetupForm() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Non connecté");
+      setError(t("setup.notSignedIn"));
       setLoading(false);
       return;
     }
@@ -36,7 +38,7 @@ export function SetupForm() {
       .replace(/^-|-$/g, "");
 
     if (RESERVED_SLUGS.has(cleanSlug)) {
-      setError("Ce nom d'URL est réservé. Choisissez-en un autre.");
+      setError(t("setup.slugReserved"));
       setLoading(false);
       return;
     }
@@ -54,10 +56,10 @@ export function SetupForm() {
     }
 
     const defaultPrizes = [
-      { label: "10% de réduction", probability_weight: 40, stock_remaining: null },
-      { label: "Boisson offerte", probability_weight: 30, stock_remaining: 50 },
-      { label: "Dessert offert", probability_weight: 20, stock_remaining: 30 },
-      { label: "Perdu — réessayez !", probability_weight: 10, stock_remaining: null },
+      { label: t("setup.defaultPrize1"), probability_weight: 40, stock_remaining: null },
+      { label: t("setup.defaultPrize2"), probability_weight: 30, stock_remaining: 50 },
+      { label: t("setup.defaultPrize3"), probability_weight: 20, stock_remaining: 30 },
+      { label: t("setup.defaultPrize4"), probability_weight: 10, stock_remaining: null },
     ];
 
     const { data: merchant } = await supabase
@@ -80,7 +82,7 @@ export function SetupForm() {
     <form onSubmit={handleSubmit} className={`${ui.card} space-y-5`}>
       {error && <p className={ui.alertError}>{error}</p>}
       <div>
-        <label className={ui.label}>Nom du commerce</label>
+        <label className={ui.label}>{t("setup.businessName")}</label>
         <input
           value={name}
           onChange={(e) => {
@@ -99,7 +101,7 @@ export function SetupForm() {
         />
       </div>
       <div>
-        <label className={ui.label}>URL publique</label>
+        <label className={ui.label}>{t("setup.publicUrl")}</label>
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm text-muted">/</span>
           <input
@@ -112,7 +114,7 @@ export function SetupForm() {
         </div>
       </div>
       <button type="submit" disabled={loading} className={`w-full ${ui.btn}`}>
-        {loading ? "Création…" : "Créer mon commerce"}
+        {loading ? t("setup.creating") : t("setup.create")}
       </button>
     </form>
   );

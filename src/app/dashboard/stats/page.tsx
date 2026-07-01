@@ -1,9 +1,14 @@
 import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { ui } from "@/components/ui/styles";
+import { getLocale, getTranslations } from "@/i18n/server";
+import { localeToIntl } from "@/i18n/config";
 
 export default async function StatsPage() {
   const merchant = await requireMerchant();
+  const t = await getTranslations();
+  const locale = await getLocale();
+  const intl = localeToIntl(locale);
   const supabase = await createClient();
 
   const { count: spinCount } = await supabase
@@ -34,32 +39,34 @@ export default async function StatsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className={ui.h1}>Statistiques</h1>
-        <p className={ui.muted}>Participations et tendances.</p>
+        <h1 className={ui.h1}>{t("dashboard.statsTitle")}</h1>
+        <p className={ui.muted}>{t("dashboard.statsSubtitle")}</p>
       </div>
 
       <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
         <div className={ui.stat}>
-          <p className={ui.statLabel}>Total spins</p>
+          <p className={ui.statLabel}>{t("dashboard.totalSpins")}</p>
           <p className={ui.statValue}>{spinCount ?? 0}</p>
         </div>
         <div className={ui.stat}>
-          <p className={ui.statLabel}>Follows sociaux</p>
+          <p className={ui.statLabel}>{t("dashboard.socialFollows")}</p>
           <p className={ui.statValue}>{followCount ?? 0}</p>
         </div>
         <div className={ui.stat}>
-          <p className={ui.statLabel}>Avis Google</p>
+          <p className={ui.statLabel}>{t("dashboard.googleReviews")}</p>
           <p className={ui.statValue}>{reviewHistory?.[0]?.count ?? "—"}</p>
         </div>
       </div>
 
       {reviewHistory && reviewHistory.length > 0 && (
         <div className={ui.card}>
-          <h2 className={ui.h2}>Historique avis Google</h2>
+          <h2 className={ui.h2}>{t("dashboard.reviewHistory")}</h2>
           <div className="mt-4 divide-y divide-border border border-border">
             {reviewHistory.map((row) => (
               <div key={row.id} className="flex justify-between bg-white px-4 py-2.5 font-mono text-xs">
-                <span className="text-muted">{new Date(row.checked_at).toLocaleDateString("fr-FR")}</span>
+                <span className="text-muted">
+                  {new Date(row.checked_at).toLocaleDateString(intl)}
+                </span>
                 <span className="text-ink">{row.count}</span>
               </div>
             ))}
@@ -68,12 +75,12 @@ export default async function StatsPage() {
       )}
 
       <div className={ui.card}>
-        <h2 className={ui.h2}>Derniers spins</h2>
+        <h2 className={ui.h2}>{t("dashboard.recentSpins")}</h2>
         <div className="mt-4 divide-y divide-border border border-border">
           {(recentSpins ?? []).map((spin, i) => (
             <div key={i} className="flex justify-between bg-white px-4 py-2.5 text-sm">
               <span className="font-mono text-xs text-muted">
-                {new Date(spin.created_at).toLocaleString("fr-FR")}
+                {new Date(spin.created_at).toLocaleString(intl)}
               </span>
               <span className="text-ink">
                 {(() => {

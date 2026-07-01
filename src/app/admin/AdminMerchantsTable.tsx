@@ -4,11 +4,15 @@ import { createClient } from "@/lib/supabase/client";
 import type { Merchant, SubscriptionStatus } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { useI18n } from "@/i18n/client";
+import { localeToIntl } from "@/i18n/config";
 
 const STATUSES: SubscriptionStatus[] = ["active", "trial", "past_due", "cancelled"];
 
 export function AdminMerchantsTable({ merchants }: { merchants: Merchant[] }) {
   const router = useRouter();
+  const { t, locale } = useI18n();
+  const intl = localeToIntl(locale);
 
   const updateStatus = async (id: string, status: SubscriptionStatus) => {
     const supabase = createClient();
@@ -21,11 +25,11 @@ export function AdminMerchantsTable({ merchants }: { merchants: Merchant[] }) {
       <table className={ui.table}>
         <thead>
           <tr>
-            <th className={ui.th}>Commerce</th>
-            <th className={ui.th}>Slug</th>
-            <th className={ui.th}>Statut</th>
-            <th className={ui.th}>Créé</th>
-            <th className={ui.th}>Action</th>
+            <th className={ui.th}>{t("admin.colBusiness")}</th>
+            <th className={ui.th}>{t("admin.colSlug")}</th>
+            <th className={ui.th}>{t("admin.colStatus")}</th>
+            <th className={ui.th}>{t("admin.colCreated")}</th>
+            <th className={ui.th}>{t("admin.colAction")}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +43,7 @@ export function AdminMerchantsTable({ merchants }: { merchants: Merchant[] }) {
               </td>
               <td className={`${ui.td} font-mono text-xs uppercase`}>{m.subscription_status}</td>
               <td className={`${ui.td} font-mono text-xs text-muted`}>
-                {new Date(m.created_at).toLocaleDateString("fr-FR")}
+                {new Date(m.created_at).toLocaleDateString(intl)}
               </td>
               <td className={ui.td}>
                 <select

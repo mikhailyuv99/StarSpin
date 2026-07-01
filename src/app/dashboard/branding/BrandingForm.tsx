@@ -4,12 +4,14 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { useTranslations } from "@/i18n/client";
 
 export function BrandingForm({
   merchant,
 }: {
   merchant: import("@/lib/types").Merchant;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const [form, setForm] = useState({
     name: merchant.name,
@@ -77,7 +79,7 @@ export function BrandingForm({
       setMessage(error.message);
       return;
     }
-    setMessage("Enregistré.");
+    setMessage(t("common.saved"));
     router.refresh();
   };
 
@@ -86,7 +88,7 @@ export function BrandingForm({
       {message && <p className={ui.alertSuccess}>{message}</p>}
 
       <div>
-        <label className={ui.label}>Nom du commerce</label>
+        <label className={ui.label}>{t("setup.businessName")}</label>
         <input
           value={form.name}
           onChange={(e) => update("name", e.target.value)}
@@ -96,7 +98,7 @@ export function BrandingForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={ui.label}>Couleur principale</label>
+          <label className={ui.label}>{t("dashboard.primaryColor")}</label>
           <input
             type="color"
             value={form.primary_color}
@@ -105,7 +107,7 @@ export function BrandingForm({
           />
         </div>
         <div>
-          <label className={ui.label}>Couleur secondaire</label>
+          <label className={ui.label}>{t("dashboard.secondaryColor")}</label>
           <input
             type="color"
             value={form.secondary_color}
@@ -116,7 +118,7 @@ export function BrandingForm({
       </div>
 
       <div>
-        <label className={ui.label}>Logo</label>
+        <label className={ui.label}>{t("dashboard.logo")}</label>
         <input
           type="file"
           accept="image/*"
@@ -136,11 +138,11 @@ export function BrandingForm({
       </div>
 
       {[
-        { key: "instagram", label: "Instagram URL" },
-        { key: "facebook", label: "Facebook URL" },
-        { key: "tiktok", label: "TikTok URL" },
-        { key: "google_review_link", label: "Lien avis Google" },
-        { key: "google_place_id", label: "Google Place ID" },
+        { key: "instagram", label: t("dashboard.instagramUrl") },
+        { key: "facebook", label: t("dashboard.facebookUrl") },
+        { key: "tiktok", label: t("dashboard.tiktokUrl") },
+        { key: "google_review_link", label: t("dashboard.googleReviewLink") },
+        { key: "google_place_id", label: t("dashboard.googlePlaceId") },
       ].map((field) => (
         <div key={field.key}>
           <label className={ui.label}>{field.label}</label>
@@ -153,7 +155,7 @@ export function BrandingForm({
       ))}
 
       <button type="submit" disabled={loading} className={ui.btn}>
-        {loading ? "Enregistrement…" : "Enregistrer"}
+        {loading ? t("common.saving") : t("common.save")}
       </button>
     </form>
   );

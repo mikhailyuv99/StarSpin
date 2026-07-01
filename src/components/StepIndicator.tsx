@@ -1,14 +1,7 @@
 "use client";
 
 import type { PublicStep } from "@/lib/types";
-
-const STEPS: { key: PublicStep; label: string; short: string }[] = [
-  { key: "phone", label: "Téléphone", short: "Tel" },
-  { key: "social", label: "Réseaux", short: "Social" },
-  { key: "review", label: "Avis", short: "Avis" },
-  { key: "wheel", label: "Roue", short: "Roue" },
-  { key: "result", label: "Prix", short: "Prix" },
-];
+import { useTranslations } from "@/i18n/client";
 
 const ORDER: PublicStep[] = ["phone", "social", "review", "wheel", "result"];
 
@@ -19,13 +12,22 @@ export function StepIndicator({
   current: PublicStep;
   accent: string;
 }) {
+  const t = useTranslations();
+  const STEPS: { key: PublicStep; label: string; short: string }[] = [
+    { key: "phone", label: t("public.stepPhone"), short: t("public.stepPhone") },
+    { key: "social", label: t("public.stepSocial"), short: t("public.stepSocial") },
+    { key: "review", label: t("public.stepReview"), short: t("public.stepReview") },
+    { key: "wheel", label: t("public.stepWheel"), short: t("public.stepWheel") },
+    { key: "result", label: t("public.stepPrize"), short: t("public.stepPrize") },
+  ];
+
   const currentIndex = ORDER.indexOf(current);
   const currentStep = STEPS[currentIndex];
 
   return (
     <div className="mb-5 sm:mb-8">
       <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-white/90">
-        Étape {currentIndex + 1}/5 · {currentStep?.label}
+        {t("public.stepOf", { current: currentIndex + 1, label: currentStep?.label ?? "" })}
       </p>
       <div className="flex justify-center gap-1.5 sm:gap-2">
         {STEPS.map((step, i) => {

@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { apiT, resolveRequestLocale } from "@/i18n/api";
 
 export async function POST(request: Request) {
+  const locale = resolveRequestLocale(request);
+  const t = apiT(locale);
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const merchantId = formData.get("merchantId") as string | null;
 
     if (!file || !merchantId) {
-      return NextResponse.json({ error: "Fichier et merchantId requis" }, { status: 400 });
+      return NextResponse.json({ error: t("api.fileMerchantRequired") }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -29,6 +33,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: urlData.publicUrl, path });
   } catch (err) {
     console.error("Upload error:", err);
-    return NextResponse.json({ error: "Erreur upload" }, { status: 500 });
+    return NextResponse.json({ error: t("api.uploadFailed") }, { status: 500 });
   }
 }

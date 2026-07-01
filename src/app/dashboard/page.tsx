@@ -2,32 +2,34 @@ import Link from "next/link";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
 import { ui } from "@/components/ui/styles";
+import { getTranslations } from "@/i18n/server";
 
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
   if (!merchant) redirect("/setup");
+  const t = await getTranslations();
 
   const links = [
-    { href: "/dashboard/branding", title: "Branding", desc: "Logo, couleurs, liens sociaux" },
-    { href: "/dashboard/prizes", title: "Prix", desc: "Roue, probabilités et stocks" },
-    { href: "/dashboard/qr", title: "QR Code", desc: "Télécharger pour vos tables" },
-    { href: "/dashboard/stats", title: "Statistiques", desc: "Spins, follows, avis" },
+    { href: "/dashboard/branding", title: t("dashboard.brandingCard"), desc: t("dashboard.brandingDesc") },
+    { href: "/dashboard/prizes", title: t("dashboard.prizesCard"), desc: t("dashboard.prizesDesc") },
+    { href: "/dashboard/qr", title: t("dashboard.qrCard"), desc: t("dashboard.qrDesc") },
+    { href: "/dashboard/stats", title: t("dashboard.statsCard"), desc: t("dashboard.statsDesc") },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className={ui.h1}>Accueil</h1>
-        <p className={ui.muted}>Vue d&apos;ensemble de votre programme.</p>
+        <h1 className={ui.h1}>{t("dashboard.homeTitle")}</h1>
+        <p className={ui.muted}>{t("dashboard.homeSubtitle")}</p>
       </div>
 
       <div className={ui.card}>
-        <p className={ui.statLabel}>Page publique</p>
+        <p className={ui.statLabel}>{t("dashboard.publicPage")}</p>
         <Link href={`/${merchant.slug}`} className={`mt-2 inline-block font-mono text-sm ${ui.link}`}>
           /{merchant.slug}
         </Link>
         <p className="mt-4 text-sm text-muted">
-          Abonnement ·{" "}
+          {t("common.subscription")} ·{" "}
           <span className="font-mono text-xs uppercase text-ink">{merchant.subscription_status}</span>
         </p>
       </div>

@@ -3,9 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { PrizesManager } from "./PrizesManager";
 import type { Prize } from "@/lib/types";
 import { ui } from "@/components/ui/styles";
+import { getTranslations } from "@/i18n/server";
 
 export default async function PrizesPage() {
   const merchant = await requireMerchant();
+  const t = await getTranslations();
   const supabase = await createClient();
   const { data: prizes } = await supabase
     .from("prizes")
@@ -16,8 +18,8 @@ export default async function PrizesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className={ui.h1}>Prix de la roue</h1>
-        <p className={ui.muted}>Probabilités, stocks et libellés des récompenses.</p>
+        <h1 className={ui.h1}>{t("dashboard.prizesTitle")}</h1>
+        <p className={ui.muted}>{t("dashboard.prizesSubtitle")}</p>
       </div>
       <PrizesManager merchantId={merchant.id} initialPrizes={(prizes ?? []) as Prize[]} />
     </div>
