@@ -7,7 +7,6 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
-import { VisitsScrollLock, type VisitCard } from "@/components/marketing/VisitsScrollLock";
 import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
@@ -100,7 +99,7 @@ function Hero() {
                 <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
                   <div className={`cadeo-stat-badge ${b.cls}`}>
                     <span className="cadeo-stat-badge-icon">
-                      <SocialIcon brand={b.brand} size={16} />
+                      <SocialIcon brand={b.brand} size={18} />
                     </span>
                     <span>{b.text}</span>
                   </div>
@@ -250,7 +249,7 @@ function PhoneScene() {
 
 function VisitsFlow() {
   const { t } = useI18n();
-  const visits: VisitCard[] = [
+  const visits: { label: string; action: string; pill: string; brand: SocialBrand }[] = [
     { label: t("marketing.visit1"), action: t("marketing.visit1Action"), pill: "cadeo-visit-pill--google", brand: "google" },
     { label: t("marketing.visit2"), action: t("marketing.visit2Action"), pill: "cadeo-visit-pill--insta", brand: "instagram" },
     { label: t("marketing.visit3"), action: t("marketing.visit3Action"), pill: "cadeo-visit-pill--tiktok", brand: "tiktok" },
@@ -259,10 +258,7 @@ function VisitsFlow() {
 
   return (
     <div className="cadeo-visits-block">
-      <div className="cadeo-visits-scroll-desktop">
-        <VisitsScrollLock visits={visits} />
-      </div>
-      <RevealStagger className="cadeo-visits cadeo-visits-grid-mobile">
+      <RevealStagger className="cadeo-visits">
         {visits.map((v, i) => (
           <RevealItem key={v.label} className="cadeo-visit-item">
             <div className="cadeo-visit-card">
@@ -273,7 +269,7 @@ function VisitsFlow() {
               </div>
               <span className={`cadeo-visit-pill ${v.pill}`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={22} />
+                  <SocialIcon brand={v.brand} size={26} />
                 </span>
                 <span className="cadeo-visit-pill-text">{v.action}</span>
               </span>
@@ -326,7 +322,7 @@ function GiftScene() {
           🎁
         </span>
         <div className="cadeo-gift-wheel">
-          <MarketingSpinWheel size={72} animate />
+          <MarketingSpinWheel size={104} animate />
         </div>
       </div>
     </div>

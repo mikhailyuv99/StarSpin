@@ -6,7 +6,7 @@ export function SocialIconRow({ size = 18, className = "" }: { size?: number; cl
   return (
     <span className={`inline-flex items-center gap-1.5 ${className}`} aria-hidden>
       {SOCIAL_BRANDS.map((brand) => (
-        <span key={brand} className="inline-flex shrink-0 items-center justify-center">
+        <span key={brand} className="cadeo-social-icon-box">
           <SocialIcon brand={brand} size={size} />
         </span>
       ))}
