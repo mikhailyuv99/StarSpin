@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
+import { VisitsScrollLock, type VisitCard } from "@/components/marketing/VisitsScrollLock";
 import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
@@ -93,7 +94,6 @@ function Hero() {
         </Reveal>
 
         <Reveal className="cadeo-hero-visual" y={40} delay={0.08}>
-          <div className="cadeo-hero-glow" />
           <div className="cadeo-hero-scene">
             <div className="cadeo-hero-badges">
               {badges.map((b, i) => (
@@ -250,7 +250,7 @@ function PhoneScene() {
 
 function VisitsFlow() {
   const { t } = useI18n();
-  const visits: { label: string; action: string; pill: string; brand: SocialBrand }[] = [
+  const visits: VisitCard[] = [
     { label: t("marketing.visit1"), action: t("marketing.visit1Action"), pill: "cadeo-visit-pill--google", brand: "google" },
     { label: t("marketing.visit2"), action: t("marketing.visit2Action"), pill: "cadeo-visit-pill--insta", brand: "instagram" },
     { label: t("marketing.visit3"), action: t("marketing.visit3Action"), pill: "cadeo-visit-pill--tiktok", brand: "tiktok" },
@@ -259,7 +259,10 @@ function VisitsFlow() {
 
   return (
     <div className="cadeo-visits-block">
-      <RevealStagger className="cadeo-visits">
+      <div className="cadeo-visits-scroll-desktop">
+        <VisitsScrollLock visits={visits} />
+      </div>
+      <RevealStagger className="cadeo-visits cadeo-visits-grid-mobile">
         {visits.map((v, i) => (
           <RevealItem key={v.label} className="cadeo-visit-item">
             <div className="cadeo-visit-card">

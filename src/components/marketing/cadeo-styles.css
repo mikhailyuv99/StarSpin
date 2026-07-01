@@ -245,21 +245,6 @@
   overflow-x: hidden;
 }
 
-.cadeo-hero::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background-image:
-    linear-gradient(var(--c-black) 1px, transparent 1px),
-    linear-gradient(90deg, var(--c-black) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.04;
-  pointer-events: none;
-}
-
 .cadeo-hero-inner {
   max-width: 72rem;
   margin: 0 auto;
@@ -374,16 +359,6 @@
   }
 }
 
-.cadeo-hero-glow {
-  position: absolute;
-  inset: -12% -8%;
-  background:
-    radial-gradient(ellipse 55% 45% at 70% 40%, rgb(245 224 142 / 0.45), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 30% 70%, rgb(183 148 244 / 0.35), transparent 72%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 .cadeo-hero-scene {
   position: relative;
   z-index: 1;
@@ -459,21 +434,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.65rem;
+  height: 1.65rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 6px;
   background: #fff;
-  padding: 2px;
+  padding: 3px;
+  box-sizing: border-box;
 }
 
 .cadeo-stat-badge-icon svg,
 .cadeo-visit-pill-icon svg,
 .cadeo-review-btn-icon svg {
   display: block;
-  width: 100%;
+  width: auto;
   height: 100%;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .cadeo-stat-badge--white { background: #fff; }
@@ -1202,6 +1180,48 @@
   margin-top: 1.5rem;
 }
 
+.cadeo-visits-scroll-desktop {
+  display: none;
+}
+
+.cadeo-visits-grid-mobile {
+  display: grid;
+}
+
+.cadeo-visits-scroll-track {
+  position: relative;
+}
+
+.cadeo-visits-scroll-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem var(--c-page-pad);
+}
+
+.cadeo-visits-scroll-stage {
+  position: relative;
+  width: min(100%, 24rem);
+  height: min(78vh, 26rem);
+}
+
+.cadeo-visits-scroll-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  will-change: transform, opacity;
+}
+
+.cadeo-visit-card--scroll {
+  width: 100%;
+  height: 100%;
+}
+
 .cadeo-visits {
   display: grid;
   gap: 1.15rem;
@@ -1322,13 +1342,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
   border: 2px solid var(--c-black);
   border-radius: 8px;
   background: #fff;
-  padding: 3px;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .cadeo-visit-pill--google { background: var(--c-lavender-dark); }
@@ -1525,8 +1546,8 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  padding: 4rem 2.5rem 3.5rem;
-  min-height: 360px;
+  padding: 2rem 1rem 1.5rem;
+  min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1535,7 +1556,7 @@
 
 .cadeo-gift-box {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1576,10 +1597,10 @@
   z-index: 4;
 }
 
-.cadeo-gift-tag--purple { background: var(--c-lavender-dark); top: 4%; left: -6%; transform: rotate(-4deg); }
-.cadeo-gift-tag--white { background: #fff; top: 2%; right: -8%; transform: rotate(3deg); }
-.cadeo-gift-tag--yellow { background: var(--c-yellow); bottom: 10%; left: -8%; transform: rotate(-2deg); }
-.cadeo-gift-tag--pink { background: var(--c-pink); bottom: 6%; right: -6%; transform: rotate(4deg); }
+.cadeo-gift-tag--purple { background: var(--c-lavender-dark); top: 14%; left: 4%; transform: rotate(-4deg); }
+.cadeo-gift-tag--white { background: #fff; top: 12%; right: 4%; transform: rotate(3deg); }
+.cadeo-gift-tag--yellow { background: var(--c-yellow); bottom: 16%; left: 4%; transform: rotate(-2deg); }
+.cadeo-gift-tag--pink { background: var(--c-pink); bottom: 12%; right: 4%; transform: rotate(4deg); }
 
 @media (max-width: 480px) {
   .cadeo-gift-scene {
@@ -2154,8 +2175,121 @@
   z-index: 1;
 }
 
+@media (min-width: 1024px) {
+  .cadeo-visits-scroll-desktop {
+    display: block;
+  }
+
+  .cadeo-visits-grid-mobile {
+    display: none !important;
+  }
+
+  .cadeo-visits-scroll-stage {
+    width: min(100%, 28rem);
+    height: min(72vh, 28rem);
+  }
+
+  .cadeo-h2 {
+    font-size: clamp(2.1rem, 3.2vw, 2.95rem);
+  }
+
+  .cadeo-sub {
+    font-size: clamp(1.12rem, 1.8vw, 1.32rem);
+  }
+
+  .cadeo-pillar {
+    min-height: 19rem;
+    padding: 1.75rem 1.5rem 1.65rem;
+    gap: 1rem;
+  }
+
+  .cadeo-pillar-text {
+    font-size: 1.14rem;
+    min-height: 3.75rem;
+    line-height: 1.45;
+  }
+
+  .cadeo-pillar-icon-game {
+    font-size: 2.85rem;
+  }
+
+  .cadeo-pillar-num {
+    font-size: 2.35rem;
+  }
+
+  .cadeo-visit-card {
+    min-height: 21rem;
+    padding: 2rem 1.45rem 1.65rem;
+  }
+
+  .cadeo-visit-label {
+    font-size: 1rem;
+  }
+
+  .cadeo-visit-pill {
+    min-height: 4.25rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .cadeo-feature-title {
+    font-size: clamp(1.75rem, 2.6vw, 2.45rem);
+  }
+
+  .cadeo-feature-body {
+    font-size: 1.14rem;
+    line-height: 1.6;
+  }
+
+  .cadeo-feature-label {
+    font-size: 1.1rem;
+  }
+
+  .cadeo-adv-item {
+    padding: 1.55rem 1.45rem;
+    font-size: 1.12rem;
+  }
+
+  .cadeo-adv-num {
+    width: 2.65rem;
+    height: 2.65rem;
+    font-size: 1rem;
+  }
+
+  .cadeo-gift-box {
+    width: 14.5rem;
+    height: 14.5rem;
+  }
+
+  .cadeo-gift-tag {
+    font-size: 0.88rem;
+    max-width: 168px;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .cadeo-stat-badge {
+    font-size: 0.85rem;
+    max-width: 200px;
+    padding: 0.7rem 1rem;
+  }
+
+  .cadeo-stat-badge-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 4px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cadeo-testimonial-track {
     animation: none;
+  }
+
+  .cadeo-visits-scroll-desktop {
+    display: none !important;
+  }
+
+  .cadeo-visits-grid-mobile {
+    display: grid !important;
   }
 }

@@ -35,11 +35,6 @@ export function describeSlice(
   return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
 }
 
-export function truncateLabel(label: string, max = 14): string {
-  if (label.length <= max) return label;
-  return `${label.slice(0, max - 1)}…`;
-}
-
 export function contrastTextColor(bg: string): string {
   const hex = bg.replace("#", "");
   if (hex.length !== 6) return "#0a0a0a";
@@ -50,45 +45,32 @@ export function contrastTextColor(bg: string): string {
   return luminance > 0.58 ? "#0a0a0a" : "#ffffff";
 }
 
-export function labelFontSize(sliceAngle: number, sliceCount: number): number {
-  const byAngle = sliceAngle * 0.18;
-  const byCount = sliceCount > 8 ? 7.5 : sliceCount > 5 ? 9 : 10.5;
-  return Math.min(12, Math.max(7, Math.min(byAngle, byCount)));
+/** Minimum slice angle (degrees) before we draw a label on the wheel. */
+export function shouldShowSliceLabel(sliceAngle: number): boolean {
+  return sliceAngle >= 32;
 }
 
-/** Keep slice labels right-side up on the wheel */
+export function labelFontSize(sliceAngle: number): number {
+  return Math.min(11, Math.max(7.5, sliceAngle * 0.19));
+}
+
+export function sliceLabelRadius(r: number): number {
+  return r * 0.62;
+}
+
+/** Tangential label rotation — readable on every slice without flipping mid-slice. */
 export function sliceLabelRotation(mid: number): number {
-  return mid > 90 && mid < 270 ? mid + 180 : mid;
+  let rot = mid + 90;
+  if (mid > 90 && mid < 270) rot += 180;
+  return rot;
 }
 
-export function splitSliceLabel(label: string, sliceAngle: number): string[] {
-  const maxChars = sliceAngle < 35 ? 9 : sliceAngle < 55 ? 12 : sliceAngle < 90 ? 16 : 22;
-  const maxLines = sliceAngle < 40 ? 2 : 3;
-  const words = label.trim().split(/\s+/);
-  const lines: string[] = [];
-  let current = "";
-
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length > maxChars && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = candidate;
-    }
-  }
-  if (current) lines.push(current);
-
-  if (lines.length <= maxLines) return lines;
-  const merged = lines.slice(0, maxLines - 1);
-  merged.push(lines.slice(maxLines - 1).join(" "));
-  return merged;
-}
-
-export function sliceLabelRadius(r: number, sliceAngle: number): number {
-  const hubClearance = 0.34;
-  const outerBias = Math.min(sliceAngle, 140) / 360;
-  return r * (hubClearance + outerBias * 0.34);
+export function wheelSliceLabel(label: string, sliceAngle: number): string {
+  const maxChars =
+    sliceAngle < 40 ? 7 : sliceAngle < 55 ? 10 : sliceAngle < 90 ? 14 : sliceAngle < 140 ? 18 : 24;
+  const trimmed = label.trim();
+  if (trimmed.length <= maxChars) return trimmed;
+  return `${trimmed.slice(0, Math.max(4, maxChars - 1))}…`;
 }
 
 export function prizeSliceAngles(prizes: Prize[]): { prize: Prize; start: number; end: number }[] {

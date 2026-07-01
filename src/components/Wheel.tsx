@@ -9,9 +9,10 @@ import {
   labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
+  shouldShowSliceLabel,
   sliceLabelRadius,
   sliceLabelRotation,
-  splitSliceLabel,
+  wheelSliceLabel,
 } from "@/lib/wheel";
 
 interface WheelProps {
@@ -118,12 +119,12 @@ export function Wheel({
             {slices.map((slice, i) => {
               const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
-              const labelR = sliceLabelRadius(r, sliceAngle);
+              const labelR = sliceLabelRadius(r);
               const textPos = polarToCartesian(cx, cy, labelR, mid);
               const fill = colors[i % colors.length]!;
-              const fontSize = labelFontSize(sliceAngle, slices.length);
-              const lines = splitSliceLabel(slice.prize.label, sliceAngle);
-              const lineHeight = fontSize * 1.12;
+              const showLabel = shouldShowSliceLabel(sliceAngle);
+              const fontSize = labelFontSize(sliceAngle);
+              const label = wheelSliceLabel(slice.prize.label, sliceAngle);
               const rotation = sliceLabelRotation(mid);
               const textFill = contrastTextColor(fill);
 
@@ -135,25 +136,21 @@ export function Wheel({
                     stroke="#0a0a0a"
                     strokeWidth={2}
                   />
-                  <text
-                    transform={`rotate(${rotation}, ${textPos.x}, ${textPos.y})`}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill={textFill}
-                    fontSize={fontSize}
-                    fontWeight={800}
-                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
-                  >
-                    {lines.map((line, lineIndex) => (
-                      <tspan
-                        key={lineIndex}
-                        x={textPos.x}
-                        dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
-                      >
-                        {line}
-                      </tspan>
-                    ))}
-                  </text>
+                  {showLabel && (
+                    <text
+                      x={textPos.x}
+                      y={textPos.y}
+                      transform={`rotate(${rotation}, ${textPos.x}, ${textPos.y})`}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill={textFill}
+                      fontSize={fontSize}
+                      fontWeight={800}
+                      style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
+                    >
+                      {label}
+                    </text>
+                  )}
                 </g>
               );
             })}
