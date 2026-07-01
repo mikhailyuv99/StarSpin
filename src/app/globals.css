@@ -70,6 +70,91 @@ body {
   text-shadow: none;
 }
 
+/* STARSPIN logo */
+.starspin-logo-link {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.starspin-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--c-black);
+}
+
+.starspin-logo--light {
+  color: var(--c-black);
+}
+
+.starspin-logo--light .starspin-logo__word {
+  color: #fff;
+  text-shadow:
+    2px 2px 0 var(--c-black),
+    -1px -1px 0 var(--c-black),
+    1px -1px 0 var(--c-black),
+    -1px 1px 0 var(--c-black);
+}
+
+.starspin-logo--dark .starspin-logo__word {
+  color: var(--c-black);
+  text-shadow: none;
+}
+
+.starspin-logo__word {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.starspin-logo--sm .starspin-logo__word {
+  font-size: 0.85rem;
+}
+
+.starspin-logo--md .starspin-logo__word {
+  font-size: clamp(0.85rem, 2.5vw, 1.15rem);
+}
+
+.starspin-logo--lg .starspin-logo__word {
+  font-size: 1.35rem;
+}
+
+.starspin-mark {
+  flex-shrink: 0;
+  display: block;
+}
+
+.starspin-mark__orbit {
+  transform-origin: 20px 20px;
+  animation: starspin-orbit 2.8s linear infinite;
+}
+
+.starspin-mark__star {
+  transform-origin: 20px 20px;
+  animation: starspin-star 1.6s linear infinite;
+}
+
+@keyframes starspin-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes starspin-star {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starspin-mark__orbit,
+  .starspin-mark__star {
+    animation: none;
+  }
+}
+
 .brutal-logo {
   font-family: var(--font-display), system-ui, sans-serif;
   font-size: 1.1rem;

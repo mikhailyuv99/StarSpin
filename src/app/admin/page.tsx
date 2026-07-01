@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminMerchantsTable } from "./AdminMerchantsTable";
 import type { Merchant } from "@/lib/types";
 import { ui } from "@/components/ui/styles";
+import { StarspinLogo } from "@/components/StarspinLogo";
 import { getTranslations } from "@/i18n/server";
 
 export default async function AdminPage() {
@@ -32,6 +33,7 @@ export default async function AdminPage() {
     <div className={ui.page}>
       <div className="brutal-nav-wrap">
         <header className="brutal-nav">
+          <StarspinLogo href="/" variant="light" size="sm" />
           <h1 className="text-sm font-extrabold uppercase">{t("admin.title")}</h1>
           <Link href="/dashboard" className="brutal-btn brutal-btn-yellow text-sm">
             {t("common.dashboard")}

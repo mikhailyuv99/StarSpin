@@ -1,12 +1,12 @@
 {
   "meta": {
-    "title": "Roue Fidélité — Reseñas de Google y ruleta de premios",
+    "title": "STARSPIN — Reseñas de Google y ruleta de premios",
     "description": "Convierte a cada cliente en jugador. Escaneo QR → reseña → girar → ganar. Diseñado para restaurantes y tiendas.",
     "merchantTitle": "Juego de fidelización",
     "merchantDescription": "Escanea, juega y gana recompensas"
   },
   "common": {
-    "brand": "Roue Fidélité",
+    "brand": "STARSPIN",
     "loading": "Cargando…",
     "save": "Guardar",
     "saving": "Guardando…",
@@ -73,7 +73,7 @@
     "prizeTitle": "Ofrece un premio… y una razón para volver",
     "prizeBody": "Define tus propias reglas de canje: próxima visita, gasto mínimo, tiempo limitado… Convierte cada juego en un impulsor de fidelización.",
     "easyTitle": "La interacción con clientes se vuelve pan comido",
-    "easyBody": "Sin compromiso a largo plazo. Sin costes de configuración. Bienvenido a Roue Fidélité.",
+    "easyBody": "Sin compromiso a largo plazo. Sin costes de configuración. Bienvenido a STARSPIN.",
     "advantagesTitle": "Las ventajas",
     "adv1": "Acceso multiusuario — gestiona campañas en equipo",
     "adv2": "Centro de ayuda en línea — recursos a tu alcance",
@@ -118,7 +118,7 @@
     "cookieAccept": "Aceptar",
     "footerSocial": "Síguenos",
     "footerDemo": "Reservar una demo",
-    "footerRights": "© {year} Roue Fidélité — Da Nang, Vietnam",
+    "footerRights": "© {year} STARSPIN — Da Nang, Vietnam",
     "wheelSlice1": "10% de descuento",
     "wheelSlice2": "Bebida gratis",
     "wheelSlice3": "Postre gratis",
@@ -175,7 +175,7 @@
     "merchantSpace": "Espacio comerciante",
     "tagline": "Gestiona tu programa de fidelización desde un solo panel.",
     "location": "Da Nang · Vietnam",
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "signupTitle": "Crear cuenta",
     "signinTitle": "Iniciar sesión",
     "signupSubtitle": "Acceso de comerciante a la plataforma",
@@ -187,7 +187,7 @@
     "toggleSignin": "Sin cuenta — registrarse"
   },
   "setup": {
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "title": "Configura tu negocio",
     "subtitle": "Crea tu página pública y ruleta de fidelización.",
     "businessName": "Nombre del negocio",
@@ -283,7 +283,7 @@
     "otpVerified": "Teléfono verificado",
     "uploadFailed": "Error al subir",
     "fileRequired": "Archivo requerido",
-    "smsBody": "Tu código Roue Fidélité: {code}. Válido {minutes} min.",
+    "smsBody": "Tu código STARSPIN: {code}. Válido {minutes} min.",
     "verifyError": "Error de verificación",
     "fileMerchantRequired": "Se requieren file y merchantId"
   }

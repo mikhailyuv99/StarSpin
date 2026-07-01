@@ -1,12 +1,12 @@
 {
   "meta": {
-    "title": "Roue Fidélité — Google Reviews & Prize Wheel",
+    "title": "STARSPIN — Google Reviews & Prize Wheel",
     "description": "Turn every customer into a player. QR scan → review → spin → win. Built for restaurants and shops.",
     "merchantTitle": "Loyalty game",
     "merchantDescription": "Scan, play, and win rewards"
   },
   "common": {
-    "brand": "Roue Fidélité",
+    "brand": "STARSPIN",
     "loading": "Loading…",
     "save": "Save",
     "saving": "Saving…",
@@ -73,7 +73,7 @@
     "prizeTitle": "Offer a prize… and a reason to come back",
     "prizeBody": "Set your own redemption rules: next visit, minimum spend, limited time… Turn every game into a loyalty booster.",
     "easyTitle": "Customer interaction becomes child's play",
-    "easyBody": "No long-term lock-in. No setup fees. Welcome to Roue Fidélité.",
+    "easyBody": "No long-term lock-in. No setup fees. Welcome to STARSPIN.",
     "advantagesTitle": "The advantages",
     "adv1": "Multi-user access — manage campaigns as a team",
     "adv2": "Online help center — resources at your fingertips",
@@ -118,7 +118,7 @@
     "cookieAccept": "Accept",
     "footerSocial": "Follow us",
     "footerDemo": "Book a demo",
-    "footerRights": "© {year} Roue Fidélité — Da Nang, Vietnam",
+    "footerRights": "© {year} STARSPIN — Da Nang, Vietnam",
     "wheelSlice1": "10% off",
     "wheelSlice2": "Free drink",
     "wheelSlice3": "Free dessert",
@@ -175,7 +175,7 @@
     "merchantSpace": "Merchant space",
     "tagline": "Manage your loyalty program from one dashboard.",
     "location": "Da Nang · Vietnam",
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "signupTitle": "Create account",
     "signinTitle": "Sign in",
     "signupSubtitle": "Merchant access to the platform",
@@ -187,7 +187,7 @@
     "toggleSignin": "No account — sign up"
   },
   "setup": {
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "title": "Set up your business",
     "subtitle": "Create your public page and loyalty wheel.",
     "businessName": "Business name",
@@ -283,7 +283,7 @@
     "otpVerified": "Phone verified",
     "uploadFailed": "Upload failed",
     "fileRequired": "File required",
-    "smsBody": "Your Roue Fidélité code: {code}. Valid {minutes} min.",
+    "smsBody": "Your STARSPIN code: {code}. Valid {minutes} min.",
     "verifyError": "Verification error",
     "fileMerchantRequired": "File and merchantId required"
   }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/SignOutButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { StarspinLogo } from "@/components/StarspinLogo";
 import { getTranslations } from "@/i18n/server";
 
 type NavItem = { href: string; label: string };
@@ -20,9 +21,7 @@ export async function DashboardShell({
     <div className="brutal-page pb-10">
       <div className="brutal-nav-wrap">
         <header className="brutal-nav">
-          <Link href="/" className="brutal-logo">
-            {t("common.brand").toUpperCase().replace(/\s/g, "")}
-          </Link>
+          <StarspinLogo href="/" variant="light" size="md" />
           <nav className="brutal-nav-links" aria-label="Dashboard">
             {nav.map((item) => (
               <Link key={item.href} href={item.href} className="brutal-nav-link">

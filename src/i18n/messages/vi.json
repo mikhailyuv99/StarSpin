@@ -1,12 +1,12 @@
 {
   "meta": {
-    "title": "Roue Fidélité — Đánh giá Google & Vòng quay may mắn",
+    "title": "STARSPIN — Đánh giá Google & Vòng quay may mắn",
     "description": "Biến mỗi khách hàng thành người chơi. Quét QR → đánh giá → quay → trúng thưởng. Dành cho nhà hàng và cửa hàng.",
     "merchantTitle": "Trò chơi khách hàng thân thiết",
     "merchantDescription": "Quét, chơi và nhận phần thưởng"
   },
   "common": {
-    "brand": "Roue Fidélité",
+    "brand": "STARSPIN",
     "loading": "Đang tải…",
     "save": "Lưu",
     "saving": "Đang lưu…",
@@ -73,7 +73,7 @@
     "prizeTitle": "Tặng phần thưởng… và lý do quay lại",
     "prizeBody": "Đặt quy tắc đổi thưởng của riêng bạn: lần ghé tiếp theo, chi tiêu tối thiểu, thời gian giới hạn… Biến mỗi trò chơi thành đòn bẩy lòng trung thành.",
     "easyTitle": "Tương tác khách hàng trở nên dễ như chơi",
-    "easyBody": "Không ràng buộc dài hạn. Không phí thiết lập. Chào mừng đến với Roue Fidélité.",
+    "easyBody": "Không ràng buộc dài hạn. Không phí thiết lập. Chào mừng đến với STARSPIN.",
     "advantagesTitle": "Ưu điểm",
     "adv1": "Truy cập đa người dùng — quản lý chiến dịch theo nhóm",
     "adv2": "Trung tâm trợ giúp trực tuyến — tài nguyên trong tầm tay",
@@ -118,7 +118,7 @@
     "cookieAccept": "Chấp nhận",
     "footerSocial": "Theo dõi chúng tôi",
     "footerDemo": "Đặt lịch demo",
-    "footerRights": "© {year} Roue Fidélité — Đà Nẵng, Việt Nam",
+    "footerRights": "© {year} STARSPIN — Đà Nẵng, Việt Nam",
     "wheelSlice1": "Giảm 10%",
     "wheelSlice2": "Đồ uống miễn phí",
     "wheelSlice3": "Tráng miệng miễn phí",
@@ -175,7 +175,7 @@
     "merchantSpace": "Không gian thương nhân",
     "tagline": "Quản lý chương trình khách hàng thân thiết từ một bảng điều khiển.",
     "location": "Đà Nẵng · Việt Nam",
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "signupTitle": "Tạo tài khoản",
     "signinTitle": "Đăng nhập",
     "signupSubtitle": "Truy cập thương nhân vào nền tảng",
@@ -187,7 +187,7 @@
     "toggleSignin": "Chưa có tài khoản — đăng ký"
   },
   "setup": {
-    "back": "← Roue Fidélité",
+    "back": "← STARSPIN",
     "title": "Thiết lập doanh nghiệp",
     "subtitle": "Tạo trang công khai và vòng quay khách hàng thân thiết.",
     "businessName": "Tên doanh nghiệp",
@@ -283,7 +283,7 @@
     "otpVerified": "Số điện thoại đã xác minh",
     "uploadFailed": "Tải lên thất bại",
     "fileRequired": "Cần tệp",
-    "smsBody": "Mã Roue Fidélité của bạn: {code}. Có hiệu lực {minutes} phút.",
+    "smsBody": "Mã STARSPIN của bạn: {code}. Có hiệu lực {minutes} phút.",
     "verifyError": "Lỗi xác minh",
     "fileMerchantRequired": "Cần file và merchantId"
   }

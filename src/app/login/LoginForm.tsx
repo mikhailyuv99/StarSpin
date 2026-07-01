@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { StarspinLogo } from "@/components/StarspinLogo";
 import { ui } from "@/components/ui/styles";
 
 export default function LoginPage() {
@@ -61,9 +62,7 @@ export default function LoginPage() {
   return (
     <div className="brutal-page flex min-h-screen flex-col lg:flex-row">
       <div className="marketing-grid hidden flex-1 flex-col justify-between border-r-[2.5px] border-black bg-[var(--c-lavender)] p-10 lg:flex">
-        <Link href="/" className="brutal-logo text-2xl">
-          {t("common.brand").toUpperCase().replace(/\s/g, "")}
-        </Link>
+        <StarspinLogo href="/" variant="light" size="lg" />
         <div className="brutal-card-lg max-w-md p-8">
           <p className="section-label text-muted">{t("login.merchantSpace")}</p>
           <p className="mt-4 font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-snug">
@@ -76,9 +75,7 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-md">
           <div className="mb-6 flex items-center justify-between lg:hidden">
-            <Link href="/" className="brutal-logo brutal-logo-dark !text-lg">
-              {t("common.brand").toUpperCase().replace(/\s/g, "")}
-            </Link>
+            <StarspinLogo href="/" variant="dark" size="sm" />
             <LocaleSwitcher variant="brutal" />
           </div>
           <div className="brutal-card-lg p-6 sm:p-8">

@@ -4,15 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { StarspinLogo } from "@/components/StarspinLogo";
 import "./cadeo-styles.css";
 
 function Logo() {
-  const { t } = useI18n();
-  return (
-    <Link href="/" className="cadeo-logo">
-      {t("common.brand").toUpperCase().replace(" ", "")}
-    </Link>
-  );
+  return <StarspinLogo href="/" variant="light" size="md" />;
 }
 
 function Nav() {
@@ -498,7 +494,7 @@ function Footer() {
             <span className="cadeo-footer-sticker cadeo-footer-sticker--2">{t("marketing.navFaq")}</span>
             <ul className="cadeo-footer-links">
               <li><Link href="/login">{t("marketing.navLogin")}</Link></li>
-              <li><a href="mailto:hello@rouefidelite.com">Contact</a></li>
+              <li><a href="mailto:hello@starspin.com">Contact</a></li>
             </ul>
           </div>
         </div>

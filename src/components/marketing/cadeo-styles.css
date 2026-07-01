@@ -65,19 +65,10 @@
   }
 }
 
-.cadeo-logo {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-size: clamp(0.85rem, 2.5vw, 1.25rem);
-  font-weight: 900;
-  color: #fff;
-  text-shadow:
-    2px 2px 0 var(--c-black),
-    -1px -1px 0 var(--c-black),
-    1px -1px 0 var(--c-black),
-    -1px 1px 0 var(--c-black);
-  letter-spacing: 0.03em;
-  text-decoration: none;
+.cadeo-logo,
+.starspin-logo-link {
   flex-shrink: 0;
+  text-decoration: none;
 }
 
 .cadeo-nav-actions {
