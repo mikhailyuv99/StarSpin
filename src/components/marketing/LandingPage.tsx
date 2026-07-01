@@ -260,7 +260,7 @@ function VisitsFlow() {
     <div className="cadeo-visits-block">
       <RevealStagger className="cadeo-visits">
         {visits.map((v, i) => (
-          <RevealItem key={v.label}>
+          <RevealItem key={v.label} className="cadeo-visit-item">
             <div className="cadeo-visit-card">
             <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
             <p className="cadeo-visit-label">{v.label}</p>
@@ -360,20 +360,13 @@ function Features() {
           </Reveal>
         </div>
 
-        <SectionShell
-          as="div"
-          className="cadeo-visits-shell"
-          fallers={[...FALLER_POOLS.visits]}
-          fallerCount={10}
-        >
-          <div className="cadeo-visits-intro">
-            <Reveal>
-              <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
-              <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
-            </Reveal>
-            <VisitsFlow />
-          </div>
-        </SectionShell>
+        <div className="cadeo-visits-intro">
+          <Reveal>
+            <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
+            <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
+          </Reveal>
+          <VisitsFlow />
+        </div>
 
         <Reveal className="cadeo-quote" y={28}>
           <p className="cadeo-quote-title">{t("marketing.quote")}</p>

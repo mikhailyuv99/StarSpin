@@ -1124,6 +1124,12 @@
   max-width: 56rem;
   margin: 0 auto;
   padding: 0 0.25rem;
+  align-items: stretch;
+}
+
+.cadeo-visit-item {
+  display: flex;
+  height: 100%;
 }
 
 @media (min-width: 768px) {
@@ -1142,6 +1148,12 @@
 
 .cadeo-visit-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 12.5rem;
   border: var(--c-border);
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow);
@@ -1198,18 +1210,21 @@
 }
 
 .cadeo-visit-pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.55rem 0.85rem;
+  margin-top: auto;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.55rem 0.65rem;
   border: var(--c-border);
   border-radius: 999px;
-  font-size: clamp(0.68rem, 1.8vw, 0.78rem);
+  font-size: clamp(0.62rem, 1.6vw, 0.76rem);
   font-weight: 800;
   box-shadow: 3px 3px 0 0 var(--c-black);
-  max-width: 100%;
-  line-height: 1.25;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .cadeo-visit-pill-icon {
@@ -1982,15 +1997,17 @@
 
 .cadeo-fallers-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: -4%;
+  bottom: 0;
+  left: -4%;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .cadeo-faller-sticker {
   position: absolute;
-  top: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
