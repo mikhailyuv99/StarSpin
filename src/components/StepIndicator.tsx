@@ -31,9 +31,10 @@ export function StepIndicator({
       </p>
       <div className="flex justify-center gap-1 sm:gap-1.5">
         {STEPS.map((step, i) => {
-          const done = i < currentIndex;
-          const active = i === currentIndex;
-          const state = done || active ? (active ? "active" : "done") : "idle";
+          const onResult = current === "result";
+          const done = onResult ? true : i < currentIndex;
+          const active = !onResult && i === currentIndex;
+          const state = done ? (active ? "active" : "done") : "idle";
           return (
             <div key={step.key} className="flex min-w-0 max-w-[3.5rem] flex-1 flex-col items-center gap-1">
               <div

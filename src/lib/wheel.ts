@@ -36,25 +36,41 @@ export function describeSlice(
 }
 
 export function contrastTextColor(bg: string): string {
-  const hex = bg.replace("#", "");
-  if (hex.length !== 6) return "#0a0a0a";
-  const r = Number.parseInt(hex.slice(0, 2), 16);
-  const g = Number.parseInt(hex.slice(2, 4), 16);
-  const b = Number.parseInt(hex.slice(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  const rgb = parseColorRgb(bg);
+  if (!rgb) return "#0a0a0a";
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
   return luminance > 0.55 ? "#0a0a0a" : "#ffffff";
 }
 
-/** Hide labels on slices too narrow to read */
+function parseColorRgb(input: string): { r: number; g: number; b: number } | null {
+  const value = input.trim();
+  if (value.startsWith("#")) {
+    let hex = value.slice(1);
+    if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+    if (hex.length !== 6) return null;
+    return {
+      r: Number.parseInt(hex.slice(0, 2), 16),
+      g: Number.parseInt(hex.slice(2, 4), 16),
+      b: Number.parseInt(hex.slice(4, 6), 16),
+    };
+  }
+  const rgbMatch = value.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+  if (rgbMatch) {
+    return { r: Number(rgbMatch[1]), g: Number(rgbMatch[2]), b: Number(rgbMatch[3]) };
+  }
+  return null;
+}
+
+/** Always try to show a label; hide only on extremely thin slices */
 export function shouldShowSliceLabel(sliceAngle: number): boolean {
-  return sliceAngle >= 18;
+  return sliceAngle >= 10;
 }
 
 export function labelFontSize(sliceAngle: number, sliceCount: number): number {
-  const byAngle = sliceAngle * 0.14;
-  const byCount = sliceCount > 8 ? 7 : sliceCount > 5 ? 8.5 : 10;
-  const cap = sliceAngle < 35 ? 8 : sliceAngle < 60 ? 10 : 12;
-  return Math.min(cap, Math.max(6.5, Math.min(byAngle, byCount)));
+  const byAngle = sliceAngle * 0.16;
+  const byCount = sliceCount > 8 ? 8 : sliceCount > 5 ? 9.5 : 11;
+  const cap = sliceAngle < 30 ? 9 : sliceAngle < 55 ? 11 : 13;
+  return Math.min(cap, Math.max(7.5, Math.min(byAngle, byCount)));
 }
 
 export function sliceLabelRotation(mid: number): number {
@@ -62,8 +78,8 @@ export function sliceLabelRotation(mid: number): number {
 }
 
 export function splitSliceLabel(label: string, sliceAngle: number): string[] {
-  const maxChars = sliceAngle < 25 ? 7 : sliceAngle < 40 ? 10 : sliceAngle < 70 ? 14 : 20;
-  const maxLines = sliceAngle < 30 ? 1 : sliceAngle < 55 ? 2 : 3;
+  const maxChars = sliceAngle < 20 ? 8 : sliceAngle < 35 ? 11 : sliceAngle < 70 ? 15 : 22;
+  const maxLines = sliceAngle < 25 ? 1 : sliceAngle < 50 ? 2 : 3;
   const words = label.trim().split(/\s+/);
   const lines: string[] = [];
   let current = "";
@@ -88,10 +104,10 @@ export function splitSliceLabel(label: string, sliceAngle: number): string[] {
   return merged;
 }
 
-/** Place label near the visual center of each slice arc */
+/** Place label in the readable zone of each slice */
 export function sliceLabelRadius(r: number, sliceAngle: number): number {
-  const t = Math.min(Math.max(sliceAngle / 360, 0.08), 0.35);
-  return r * (0.48 + t * 0.55);
+  const t = Math.min(Math.max(sliceAngle / 360, 0.1), 0.38);
+  return r * (0.52 + t * 0.42);
 }
 
 export function prizeSliceAngles(prizes: Prize[]): { prize: Prize; start: number; end: number }[] {

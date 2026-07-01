@@ -24,36 +24,19 @@ const BRAND_ICONS: Record<Exclude<SocialBrand, "google" | "instagram" | "tiktok"
   tripadvisor: siTripadvisor,
 };
 
-/** Official TikTok logomark — cyan / red / black (color brand asset). */
+/** Official TikTok logomark — color SVG asset (no clipping at small sizes). */
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
   return (
-    <svg
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/icons/tiktok-color.svg"
       width={size}
       height={size}
-      viewBox="0 0 48 48"
       className={className}
-      role="img"
-      aria-label={label}
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <title>{label}</title>
-      <g transform="translate(5, 6) scale(0.8)">
-        <path
-          fill="#25F4EE"
-          d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
-        />
-        <path
-          fill="#FE2C55"
-          d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
-          transform="translate(2.2, 2.2)"
-        />
-        <path
-          fill="#000000"
-          d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
-        />
-      </g>
-    </svg>
+      alt={label}
+      draggable={false}
+      style={{ display: "block", objectFit: "contain" }}
+    />
   );
 }
 
