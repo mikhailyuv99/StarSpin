@@ -23,11 +23,11 @@ export const FALLER_POOLS = {
     { glyph: "★", kind: "text" },
   ],
   visits: [
-    { glyph: "G", kind: "text" },
-    { glyph: "◎", kind: "text" },
-    { glyph: "♪", kind: "text" },
-    { glyph: "★", kind: "text" },
     { glyph: "⭐" },
+    { glyph: "✨" },
+    { glyph: "🎁" },
+    { glyph: "★", kind: "text" },
+    { glyph: "🎯" },
   ],
   advantages: [
     { glyph: "🎮" },

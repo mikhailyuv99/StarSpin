@@ -465,8 +465,7 @@
   border: 2px solid var(--c-black);
   border-radius: 6px;
   background: #fff;
-  overflow: hidden;
-  padding: 1px;
+  padding: 2px;
 }
 
 .cadeo-stat-badge-icon svg,
@@ -1329,8 +1328,7 @@
   border: 2px solid var(--c-black);
   border-radius: 8px;
   background: #fff;
-  overflow: hidden;
-  padding: 2px;
+  padding: 3px;
 }
 
 .cadeo-visit-pill--google { background: var(--c-lavender-dark); }
