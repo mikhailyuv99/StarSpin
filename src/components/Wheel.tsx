@@ -7,13 +7,9 @@ import { WheelPointer } from "@/components/WheelPointer";
 import {
   contrastTextColor,
   describeSlice,
-  labelFontSize,
   polarToCartesian,
   prizeSliceAngles,
-  shouldShowSliceLabel,
-  sliceLabelRadius,
   sliceLabelRotation,
-  splitSliceLabel,
 } from "@/lib/wheel";
 
 interface WheelProps {
@@ -28,6 +24,12 @@ interface WheelProps {
 }
 
 const FALLBACK_SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#b8cfe8", "#a8e6cf", "#f4a89a"];
+
+function truncateLabel(label: string, sliceAngle: number): string {
+  const maxChars = sliceAngle < 20 ? 5 : sliceAngle < 35 ? 8 : sliceAngle < 55 ? 12 : 16;
+  if (label.length <= maxChars) return label;
+  return `${label.slice(0, maxChars - 1)}…`;
+}
 
 export function Wheel({
   prizes,
@@ -46,6 +48,12 @@ export function Wheel({
   const slices = prizeSliceAngles(prizes);
 
   const colors = [primaryColor, secondaryColor, ...FALLBACK_SLICE_COLORS];
+  const cx = 50;
+  const cy = 50;
+  const r = 44;
+  const hubSize = Math.round(wheelSize * 0.18);
+  const pointerW = Math.round(wheelSize * 0.22);
+  const pointerH = Math.round(wheelSize * 0.17);
 
   useEffect(() => {
     const update = () => {
@@ -87,45 +95,30 @@ export function Wheel({
     return <p className="text-center text-sm font-semibold text-muted">{t("public.wheelEmpty")}</p>;
   }
 
-  const cx = wheelSize / 2;
-  const cy = wheelSize / 2;
-  const r = wheelSize / 2 - 10;
-  const hubSize = Math.round(wheelSize * 0.2);
-
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
-        <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 translate-y-0.5" aria-hidden>
-          <WheelPointer width={30} height={24} />
+      <div className="marketing-wheel-wrap" style={{ width: wheelSize, height: wheelSize }}>
+        <div className="marketing-wheel-pointer" aria-hidden>
+          <WheelPointer width={pointerW} height={pointerH} />
         </div>
 
         <div
-          className="rounded-full border-[3px] border-black transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
+          className="marketing-wheel transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
           style={{
             width: wheelSize,
             height: wheelSize,
             transform: `rotate(${rotation}deg)`,
           }}
         >
-          <svg
-            width={wheelSize}
-            height={wheelSize}
-            viewBox={`0 0 ${wheelSize} ${wheelSize}`}
-            className="block"
-          >
+          <svg viewBox="0 0 100 100" width="100%" height="100%" className="block" aria-hidden>
+            <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
             {slices.map((slice, i) => {
               const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
-              const labelR = sliceLabelRadius(r, sliceAngle);
-              const textPos = polarToCartesian(cx, cy, labelR, mid);
-              const fill = colors[i % colors.length]!;
-              const fontSize = labelFontSize(sliceAngle, slices.length);
-              const lines = splitSliceLabel(slice.prize.label, sliceAngle);
-              const lineHeight = fontSize * 1.1;
+              const labelPos = polarToCartesian(cx, cy, 26, mid);
               const labelRotation = sliceLabelRotation(mid);
-              const textFill = contrastTextColor(fill);
-              const showLabel = shouldShowSliceLabel(sliceAngle);
-              const textStroke = textFill === "#ffffff" ? "#0a0a0a" : "#ffffff";
+              const fill = colors[i % colors.length]!;
+              const label = truncateLabel(slice.prize.label, sliceAngle);
 
               return (
                 <g key={slice.prize.id}>
@@ -133,37 +126,27 @@ export function Wheel({
                     d={describeSlice(cx, cy, r, slice.start, slice.end)}
                     fill={fill}
                     stroke="#0a0a0a"
-                    strokeWidth={2}
+                    strokeWidth="1.25"
                   />
-                  {showLabel && (
+                  {sliceAngle >= 14 && (
                     <text
-                      transform={`rotate(${labelRotation}, ${textPos.x}, ${textPos.y})`}
+                      x={labelPos.x}
+                      y={labelPos.y}
+                      fill="#0a0a0a"
+                      fontSize={sliceAngle < 25 ? "4.2" : sliceAngle < 40 ? "4.8" : "5.5"}
+                      fontWeight="800"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fill={textFill}
-                      stroke={textStroke}
-                      strokeWidth={0.4}
-                      paintOrder="stroke fill"
-                      fontSize={fontSize}
-                      fontWeight={800}
+                      transform={`rotate(${labelRotation}, ${labelPos.x}, ${labelPos.y})`}
                       style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
                     >
-                      {lines.map((line, lineIndex) => (
-                        <tspan
-                          key={lineIndex}
-                          x={textPos.x}
-                          dy={lineIndex === 0 ? -((lines.length - 1) * lineHeight) / 2 : lineHeight}
-                        >
-                          {line}
-                        </tspan>
-                      ))}
+                      {label}
                     </text>
                   )}
                 </g>
               );
             })}
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0a0a0a" strokeWidth={2.5} />
-            <circle cx={cx} cy={cy} r={hubSize / 2 + 2} fill="#fff" stroke="#0a0a0a" strokeWidth={2.5} />
+            <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
           </svg>
         </div>
 

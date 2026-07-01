@@ -48,7 +48,7 @@ function HeroWheelPhone() {
         <div className="cadeo-hero-phone-screen">
           <p className="cadeo-hero-phone-label">Scan · Review · Spin</p>
           <div className="cadeo-hero-phone-wheel-wrap">
-            <MarketingSpinWheel size={108} animate />
+            <MarketingSpinWheel size={72} animate />
           </div>
           <div className="cadeo-hero-phone-cta">SPIN!</div>
         </div>

@@ -7,10 +7,9 @@ const ORDER: PublicStep[] = ["social", "review", "wheel", "claim", "result"];
 
 export function StepIndicator({
   current,
-  accent,
 }: {
   current: PublicStep;
-  accent: string;
+  accent?: string;
 }) {
   const t = useTranslations();
   const STEPS: { key: PublicStep; label: string; short: string }[] = [
@@ -41,7 +40,11 @@ export function StepIndicator({
                 className={`public-step-pill public-step-pill--${state}`}
                 style={
                   done || active
-                    ? { backgroundColor: accent, borderWidth: active ? 3 : 2 }
+                    ? {
+                        backgroundColor: "#0a0a0a",
+                        color: "#ffffff",
+                        borderWidth: active ? 3 : 2,
+                      }
                     : undefined
                 }
                 aria-current={active ? "step" : undefined}

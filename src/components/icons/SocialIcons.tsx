@@ -24,19 +24,24 @@ const BRAND_ICONS: Record<Exclude<SocialBrand, "google" | "instagram" | "tiktok"
   tripadvisor: siTripadvisor,
 };
 
-/** Official TikTok logomark — color SVG asset (no clipping at small sizes). */
+/** Official TikTok logomark — cyan / red chromatic aberration layers. */
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
+  const d = siTiktok.path;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/icons/tiktok-color.svg"
+    <svg
       width={size}
       height={size}
+      viewBox="0 0 24 24"
       className={className}
-      alt={label}
-      draggable={false}
-      style={{ display: "block", objectFit: "contain" }}
-    />
+      role="img"
+      aria-label={label}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>{label}</title>
+      <path d={d} fill="#25F4EE" transform="translate(-0.7 -0.7)" />
+      <path d={d} fill="#FE2C55" transform="translate(0.7 0.7)" />
+      <path d={d} fill="#000000" />
+    </svg>
   );
 }
 

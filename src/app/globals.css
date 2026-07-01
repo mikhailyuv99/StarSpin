@@ -392,7 +392,7 @@ body {
 /* Custom locale dropdown */
 .locale-switcher {
   position: relative;
-  z-index: 60;
+  z-index: 110;
 }
 
 .locale-switcher-trigger {
@@ -449,6 +449,7 @@ body {
   position: absolute;
   top: calc(100% + 0.45rem);
   right: 0;
+  z-index: 120;
   min-width: 11.5rem;
   margin: 0;
   padding: 0.35rem;
@@ -636,7 +637,7 @@ body {
 
 .public-step-pill--done,
 .public-step-pill--active {
-  color: #fff;
+  color: #fff !important;
 }
 
 .public-step-pill--idle {
