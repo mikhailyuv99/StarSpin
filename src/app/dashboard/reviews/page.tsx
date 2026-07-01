@@ -2,6 +2,7 @@ import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewsManager } from "./ReviewsManager";
 import type { Spin } from "@/lib/types";
+import { ui } from "@/components/ui/styles";
 
 export default async function ReviewsPage() {
   const merchant = await requireMerchant();
@@ -15,8 +16,11 @@ export default async function ReviewsPage() {
     .limit(50);
 
   return (
-    <div>
-      <h2 className="mb-6 text-xl font-bold">Captures d&apos;avis</h2>
+    <div className="space-y-8">
+      <div>
+        <h1 className={ui.h1}>Captures d&apos;avis</h1>
+        <p className={ui.muted}>Modération des preuves soumises par vos clients.</p>
+      </div>
       <ReviewsManager spins={(spins ?? []) as Spin[]} />
     </div>
   );

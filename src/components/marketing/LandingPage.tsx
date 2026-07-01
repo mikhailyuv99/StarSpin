@@ -10,7 +10,7 @@ import {
 } from "./icons";
 
 const btnPrimary =
-  "inline-flex items-center justify-center rounded-sm bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover";
+  "inline-flex items-center justify-center rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800";
 const btnSecondary =
   "inline-flex items-center justify-center rounded-sm border border-border bg-white px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface";
 const btnGhostDark =
@@ -57,7 +57,7 @@ function Hero() {
     <section className="marketing-grid border-b border-zinc-800 bg-ink text-white">
       <div className="mx-auto grid max-w-6xl gap-16 px-5 py-20 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
         <div>
-          <p className="section-label text-cyan-400">Infrastructure fidélisation · Da Nang</p>
+          <p className="section-label text-zinc-400">Infrastructure fidélisation · Da Nang</p>
           <h1 className="mt-5 text-[2.5rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem]">
             Chaque scan QR devient une relation client mesurable
           </h1>
@@ -116,7 +116,7 @@ function Hero() {
               <div
                 key={row.id}
                 className={`flex items-center gap-4 px-3 py-3 ${
-                  row.status === "active" ? "bg-cyan-950/40" : ""
+                  row.status === "active" ? "bg-zinc-800" : ""
                 }`}
               >
                 <span className="font-mono text-xs text-zinc-500">{row.id}</span>
@@ -125,7 +125,7 @@ function Hero() {
                   className={`rounded-sm px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
                     row.status === "complete"
                       ? "bg-zinc-800 text-zinc-400"
-                      : "bg-cyan-900 text-cyan-300"
+                      : "bg-zinc-700 text-white"
                   }`}
                 >
                   {row.status === "complete" ? "ok" : "live"}
@@ -136,7 +136,7 @@ function Hero() {
           <div className="border-t border-zinc-800 bg-zinc-900/80 p-5">
             <p className="section-label text-zinc-500">Récompense émise</p>
             <p className="mt-2 text-lg font-semibold text-white">Boisson offerte</p>
-            <p className="mt-2 font-mono text-sm text-cyan-400">REF · A7F2-B9C1</p>
+            <p className="mt-2 font-mono text-sm text-zinc-300">REF · A7F2-B9C1</p>
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@ function Features() {
     <section id="fonctionnalites" className="border-b border-border bg-white py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="max-w-2xl">
-          <p className="section-label text-accent">Plateforme</p>
+          <p className="section-label text-muted">Plateforme</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
             Infrastructure complète, interface épurée
           </h2>
@@ -200,7 +200,7 @@ function Features() {
         <div className="mt-14 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ title, description, Icon }) => (
             <article key={title} className="bg-white p-7">
-              <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-border text-accent">
+              <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-border text-ink">
                 <Icon />
               </div>
               <h3 className="mt-5 text-[17px] font-semibold text-ink">{title}</h3>
@@ -241,7 +241,7 @@ function HowItWorks() {
     <section id="comment-ca-marche" className="border-b border-border bg-surface py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="max-w-2xl">
-          <p className="section-label text-accent">Processus</p>
+          <p className="section-label text-muted">Processus</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
             Quatre étapes, un flux maîtrisé
           </h2>
@@ -253,7 +253,7 @@ function HowItWorks() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((step) => (
             <div key={step.num} className={`${card} p-6`}>
-              <p className="font-mono text-2xl font-medium text-accent">{step.num}</p>
+              <p className="font-mono text-2xl font-medium text-ink">{step.num}</p>
               <h3 className="mt-4 text-[15px] font-semibold text-ink">{step.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">{step.text}</p>
             </div>
@@ -270,7 +270,7 @@ function ForMerchants() {
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="grid items-start gap-16 lg:grid-cols-2">
           <div>
-            <p className="section-label text-accent">Opérations</p>
+            <p className="section-label text-muted">Opérations</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               Pilotage centralisé
             </h2>
@@ -286,7 +286,7 @@ function ForMerchants() {
                 "Suivi agrégé des avis Google",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm text-ink">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-accent-subtle text-accent">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-ink">
                     <IconCheck />
                   </span>
                   {item}
@@ -325,7 +325,7 @@ function ForMerchants() {
                       </div>
                       <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-zinc-800">
                         <div
-                          className="h-full rounded-sm bg-cyan-600"
+                          className="h-full rounded-sm bg-ink"
                           style={{ width: `${row.pct}%` }}
                         />
                       </div>
@@ -345,7 +345,7 @@ function CTA() {
   return (
     <section className="bg-ink py-24">
       <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
-        <p className="section-label text-cyan-400">Démarrage</p>
+        <p className="section-label text-zinc-400">Démarrage</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           Mettez votre programme en production
         </h2>
@@ -354,10 +354,7 @@ function CTA() {
           moins d&apos;une minute.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center rounded-sm bg-cyan-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500"
-          >
+          <Link href="/login" className={btnPrimary}>
             Accéder à la plateforme
           </Link>
           <a href="mailto:contact@example.com" className={btnGhostDark}>

@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AdminMerchantsTable } from "./AdminMerchantsTable";
 import type { Merchant } from "@/lib/types";
+import { ui } from "@/components/ui/styles";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -25,16 +27,20 @@ export default async function AdminPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white px-4 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <h1 className="text-xl font-bold">Admin — Roue Fidélité</h1>
-          <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+    <div className={ui.page}>
+      <header className="border-b border-border">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5 sm:px-8">
+          <h1 className="text-sm font-semibold text-ink">Administration</h1>
+          <Link href="/dashboard" className="text-[13px] font-medium text-muted hover:text-ink">
             Dashboard
-          </a>
+          </Link>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className={`${ui.shell} space-y-8`}>
+        <div>
+          <h2 className={ui.h1}>Commerces</h2>
+          <p className={ui.muted}>Gestion des abonnements et accès.</p>
+        </div>
         <AdminMerchantsTable merchants={(merchants ?? []) as Merchant[]} />
       </main>
     </div>

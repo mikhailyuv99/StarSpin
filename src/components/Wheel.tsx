@@ -27,16 +27,7 @@ export function Wheel({
   const [rotation, setRotation] = useState(0);
   const slices = prizeSliceAngles(prizes);
 
-  const colors = [
-    primaryColor,
-    secondaryColor,
-    "#FFD166",
-    "#06D6A0",
-    "#118AB2",
-    "#EF476F",
-    "#8338EC",
-    "#FFBE0B",
-  ];
+  const colors = [primaryColor, secondaryColor, "#3f3f46", "#52525b", "#71717a", "#a1a1aa"];
 
   const spin = useCallback(() => {
     if (spinning || slices.length === 0) return;
@@ -58,15 +49,11 @@ export function Wheel({
   }, [spinning, slices, targetPrizeId, setSpinning, onSpinComplete]);
 
   useEffect(() => {
-    if (targetPrizeId && !spinning) {
-      spin();
-    }
+    if (targetPrizeId && !spinning) spin();
   }, [targetPrizeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (slices.length === 0) {
-    return (
-      <p className="text-center text-gray-500">Aucun prix configuré pour le moment.</p>
-    );
+    return <p className="text-center text-sm text-zinc-500">Aucun prix configuré.</p>;
   }
 
   const gradientStops = slices
@@ -77,20 +64,20 @@ export function Wheel({
     .join(", ");
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-5">
       <div className="relative">
-        <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 text-2xl">▼</div>
+        <div className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 text-lg text-zinc-900">▼</div>
         <div
           ref={wheelRef}
-          className="h-72 w-72 rounded-full border-4 border-white shadow-xl transition-transform duration-[4500ms] ease-out sm:h-80 sm:w-80"
+          className="h-64 w-64 rounded-full border-2 border-zinc-200 transition-transform duration-[4500ms] ease-out sm:h-72 sm:w-72"
           style={{
             transform: `rotate(${rotation}deg)`,
             background: `conic-gradient(from 0deg, ${gradientStops})`,
           }}
         />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-sm font-bold shadow-md">
-            SPIN
+          <div className="flex h-12 w-12 items-center justify-center rounded-sm border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-wide text-zinc-700">
+            Spin
           </div>
         </div>
       </div>
@@ -99,10 +86,10 @@ export function Wheel({
         type="button"
         onClick={spin}
         disabled={spinning}
-        className="rounded-full px-8 py-3 text-lg font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50"
+        className="rounded-sm px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
         style={{ backgroundColor: primaryColor }}
       >
-        {spinning ? "En cours..." : "Tourner la roue !"}
+        {spinning ? "En cours…" : "Tourner"}
       </button>
     </div>
   );

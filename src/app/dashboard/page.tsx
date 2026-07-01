@@ -1,43 +1,44 @@
+import Link from "next/link";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { ui } from "@/components/ui/styles";
 
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
   if (!merchant) redirect("/setup");
 
+  const links = [
+    { href: "/dashboard/branding", title: "Branding", desc: "Logo, couleurs, liens sociaux" },
+    { href: "/dashboard/prizes", title: "Prix", desc: "Roue, probabilités et stocks" },
+    { href: "/dashboard/qr", title: "QR Code", desc: "Télécharger pour vos tables" },
+    { href: "/dashboard/stats", title: "Statistiques", desc: "Spins, follows, avis" },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold">Bienvenue, {merchant.name}</h2>
-        <p className="mt-2 text-gray-600">
-          Votre page publique :{" "}
-          <Link href={`/r/${merchant.slug}`} className="text-orange-600 underline">
-            /r/{merchant.slug}
-          </Link>
-        </p>
-        <p className="mt-1 text-sm text-gray-500">
-          Statut abonnement : <span className="font-medium">{merchant.subscription_status}</span>
+    <div className="space-y-8">
+      <div>
+        <h1 className={ui.h1}>Accueil</h1>
+        <p className={ui.muted}>Vue d&apos;ensemble de votre programme.</p>
+      </div>
+
+      <div className={ui.card}>
+        <p className={ui.statLabel}>Page publique</p>
+        <Link href={`/r/${merchant.slug}`} className={`mt-2 inline-block font-mono text-sm ${ui.link}`}>
+          /r/{merchant.slug}
+        </Link>
+        <p className="mt-4 text-sm text-muted">
+          Abonnement ·{" "}
+          <span className="font-mono text-xs uppercase text-ink">{merchant.subscription_status}</span>
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/dashboard/branding" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md">
-          <h3 className="font-semibold">Branding</h3>
-          <p className="text-sm text-gray-600">Logo, couleurs, liens sociaux</p>
-        </Link>
-        <Link href="/dashboard/prizes" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md">
-          <h3 className="font-semibold">Prix</h3>
-          <p className="text-sm text-gray-600">Gérer la roue et les stocks</p>
-        </Link>
-        <Link href="/dashboard/qr" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md">
-          <h3 className="font-semibold">QR Code</h3>
-          <p className="text-sm text-gray-600">Télécharger pour vos tables</p>
-        </Link>
-        <Link href="/dashboard/stats" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md">
-          <h3 className="font-semibold">Statistiques</h3>
-          <p className="text-sm text-gray-600">Spins, follows, avis Google</p>
-        </Link>
+      <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+        {links.map((item) => (
+          <Link key={item.href} href={item.href} className="bg-white p-6 hover:bg-surface">
+            <h2 className="text-[15px] font-semibold text-ink">{item.title}</h2>
+            <p className="mt-1 text-sm text-muted">{item.desc}</p>
+          </Link>
+        ))}
       </div>
     </div>
   );

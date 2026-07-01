@@ -1,5 +1,6 @@
 import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
+import { ui } from "@/components/ui/styles";
 
 export default async function StatsPage() {
   const merchant = await requireMerchant();
@@ -31,45 +32,50 @@ export default async function StatsPage() {
     .limit(10);
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold">Statistiques</h2>
+    <div className="space-y-8">
+      <div>
+        <h1 className={ui.h1}>Statistiques</h1>
+        <p className={ui.muted}>Participations et tendances.</p>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Total spins</p>
-          <p className="text-3xl font-bold">{spinCount ?? 0}</p>
+      <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
+        <div className={ui.stat}>
+          <p className={ui.statLabel}>Total spins</p>
+          <p className={ui.statValue}>{spinCount ?? 0}</p>
         </div>
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Follows sociaux</p>
-          <p className="text-3xl font-bold">{followCount ?? 0}</p>
+        <div className={ui.stat}>
+          <p className={ui.statLabel}>Follows sociaux</p>
+          <p className={ui.statValue}>{followCount ?? 0}</p>
         </div>
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Dernier count avis Google</p>
-          <p className="text-3xl font-bold">{reviewHistory?.[0]?.count ?? "—"}</p>
+        <div className={ui.stat}>
+          <p className={ui.statLabel}>Avis Google</p>
+          <p className={ui.statValue}>{reviewHistory?.[0]?.count ?? "—"}</p>
         </div>
       </div>
 
       {reviewHistory && reviewHistory.length > 0 && (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h3 className="mb-4 font-semibold">Historique avis Google (cron)</h3>
-          <div className="space-y-2">
+        <div className={ui.card}>
+          <h2 className={ui.h2}>Historique avis Google</h2>
+          <div className="mt-4 divide-y divide-border border border-border">
             {reviewHistory.map((row) => (
-              <div key={row.id} className="flex justify-between text-sm">
-                <span>{new Date(row.checked_at).toLocaleDateString("fr-FR")}</span>
-                <span className="font-medium">{row.count} avis</span>
+              <div key={row.id} className="flex justify-between bg-white px-4 py-2.5 font-mono text-xs">
+                <span className="text-muted">{new Date(row.checked_at).toLocaleDateString("fr-FR")}</span>
+                <span className="text-ink">{row.count}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h3 className="mb-4 font-semibold">Derniers spins</h3>
-        <div className="space-y-2">
+      <div className={ui.card}>
+        <h2 className={ui.h2}>Derniers spins</h2>
+        <div className="mt-4 divide-y divide-border border border-border">
           {(recentSpins ?? []).map((spin, i) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span>{new Date(spin.created_at).toLocaleString("fr-FR")}</span>
-              <span>
+            <div key={i} className="flex justify-between bg-white px-4 py-2.5 text-sm">
+              <span className="font-mono text-xs text-muted">
+                {new Date(spin.created_at).toLocaleString("fr-FR")}
+              </span>
+              <span className="text-ink">
                 {(() => {
                   const prize = spin.prize;
                   if (Array.isArray(prize)) return prize[0]?.label ?? "—";

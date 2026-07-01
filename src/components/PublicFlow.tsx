@@ -7,6 +7,9 @@ import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
 import { verifyReviewScreenshot } from "@/lib/ocr";
 
+const inputClass =
+  "w-full rounded-sm border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900";
+
 interface PublicFlowProps {
   merchant: Merchant;
   prizes: Prize[];
@@ -27,9 +30,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
 
+  const accent = merchant.primary_color;
+
   const bgStyle = {
-    background: `linear-gradient(135deg, ${merchant.primary_color}, ${merchant.secondary_color})`,
+    background: `linear-gradient(160deg, ${merchant.primary_color} 0%, ${merchant.secondary_color} 100%)`,
   };
+
+  const btnPrimary = (disabled?: boolean) =>
+    `w-full rounded-sm py-2.5 text-sm font-semibold text-white disabled:opacity-40 ${disabled ? "" : ""}`;
 
   const sendOtp = async () => {
     setLoading(true);
@@ -43,7 +51,6 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
       if (data.devCode) setOtp(data.devCode);
-      setStep("phone");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -83,18 +90,12 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     try {
       const status = await verifyReviewScreenshot(file, merchant.name);
       setReviewStatus(status);
-
       const formData = new FormData();
       formData.append("file", file);
       formData.append("merchantId", merchant.id);
-
-      const uploadRes = await fetch("/api/review/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const uploadRes = await fetch("/api/review/upload", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(uploadData.error ?? "Upload échoué");
-
       setScreenshotUrl(uploadData.url);
       setStep("wheel");
     } catch (e) {
@@ -139,30 +140,28 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
   const handleWheelSpin = async () => {
     const prize = await executeSpin();
-    if (prize) {
-      setTargetPrizeId(prize.id);
-    }
+    if (prize) setTargetPrizeId(prize.id);
   };
 
   return (
-    <div className="min-h-screen px-4 py-8" style={bgStyle}>
+    <div className="min-h-screen px-4 py-10" style={bgStyle}>
       <div className="mx-auto max-w-md">
         <MerchantHeader merchant={merchant} />
-        <StepIndicator current={step} />
+        <StepIndicator current={step} accent={accent} />
 
-        <div className="rounded-2xl bg-white/95 p-6 shadow-xl backdrop-blur">
+        <div className="rounded-sm border border-white/20 bg-white p-6 shadow-2xl">
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
               {error}
             </div>
           )}
 
           {step === "phone" && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Vérification téléphone</h2>
-              <p className="text-sm text-gray-600">
-                Un numéro = un spin tous les 30 jours par commerce.
-              </p>
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Vérification téléphone</h2>
+                <p className="mt-1 text-sm text-zinc-500">Un numéro · un spin / 30 jours</p>
+              </div>
               {!phoneVerified ? (
                 <>
                   <input
@@ -170,40 +169,39 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     placeholder="0xx xxx xxxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border px-4 py-3"
+                    className={inputClass}
                   />
                   <button
                     type="button"
                     onClick={sendOtp}
                     disabled={loading || !phone}
-                    className="w-full rounded-lg py-3 font-semibold text-white disabled:opacity-50"
-                    style={{ backgroundColor: merchant.primary_color }}
+                    className={btnPrimary()}
+                    style={{ backgroundColor: accent }}
                   >
-                    Recevoir le code SMS
+                    Recevoir le code
                   </button>
                   <input
                     type="text"
                     placeholder="Code OTP"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="w-full rounded-lg border px-4 py-3"
+                    className={inputClass}
                   />
                   <button
                     type="button"
                     onClick={verifyOtp}
                     disabled={loading || !otp}
-                    className="w-full rounded-lg border-2 py-3 font-semibold"
-                    style={{ borderColor: merchant.primary_color, color: merchant.primary_color }}
+                    className="w-full rounded-sm border border-zinc-900 bg-white py-2.5 text-sm font-semibold text-zinc-900 disabled:opacity-40"
                   >
-                    Vérifier le code
+                    Vérifier
                   </button>
                 </>
               ) : (
                 <button
                   type="button"
                   onClick={() => setStep("social")}
-                  className="w-full rounded-lg py-3 font-semibold text-white"
-                  style={{ backgroundColor: merchant.primary_color }}
+                  className={btnPrimary()}
+                  style={{ backgroundColor: accent }}
                 >
                   Continuer
                 </button>
@@ -213,16 +211,16 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
           {step === "social" && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Suivez-nous</h2>
-              <p className="text-sm text-gray-600">
-                Cliquez sur un réseau social puis revenez ici.
-              </p>
-              <div className="flex flex-col gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Réseaux sociaux</h2>
+                <p className="mt-1 text-sm text-zinc-500">Ouvrez un lien puis revenez ici.</p>
+              </div>
+              <div className="space-y-2">
                 {merchant.social_links.instagram && (
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.instagram!)}
-                    className="rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 py-3 font-semibold text-white"
+                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
                   >
                     Instagram
                   </button>
@@ -231,7 +229,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.facebook!)}
-                    className="rounded-lg bg-blue-600 py-3 font-semibold text-white"
+                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
                   >
                     Facebook
                   </button>
@@ -240,7 +238,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <button
                     type="button"
                     onClick={() => handleSocialClick(merchant.social_links.tiktok!)}
-                    className="rounded-lg bg-black py-3 font-semibold text-white"
+                    className="w-full rounded-sm border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
                   >
                     TikTok
                   </button>
@@ -250,30 +248,30 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                 type="button"
                 onClick={() => setStep("review")}
                 disabled={!followedSocial}
-                className="w-full rounded-lg py-3 font-semibold text-white disabled:opacity-50"
-                style={{ backgroundColor: merchant.primary_color }}
+                className={btnPrimary(!followedSocial)}
+                style={{ backgroundColor: accent }}
               >
-                J&apos;ai suivi — continuer
+                Continuer
               </button>
             </div>
           )}
 
           {step === "review" && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Laisser un avis Google</h2>
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Avis Google</h2>
+                <p className="mt-1 text-sm text-zinc-500">Publiez un avis puis uploadez une capture.</p>
+              </div>
               {merchant.google_review_link && (
                 <a
                   href={merchant.google_review_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full rounded-lg bg-green-600 py-3 text-center font-semibold text-white"
+                  className="block w-full rounded-sm border border-zinc-900 bg-zinc-900 py-2.5 text-center text-sm font-semibold text-white"
                 >
                   Ouvrir Google Avis
                 </a>
               )}
-              <p className="text-sm text-gray-600">
-                Puis uploadez une capture d&apos;écran de votre avis publié.
-              </p>
               <input
                 type="file"
                 accept="image/*"
@@ -281,24 +279,24 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   const file = e.target.files?.[0];
                   if (file) handleReviewUpload(file);
                 }}
-                className="w-full text-sm"
+                className="w-full text-sm text-zinc-600 file:mr-3 file:rounded-sm file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
               />
-              {loading && <p className="text-sm text-gray-500">Analyse en cours...</p>}
+              {loading && <p className="text-sm text-zinc-500">Analyse en cours…</p>}
             </div>
           )}
 
           {step === "wheel" && (
             <div className="space-y-4">
-              <h2 className="text-center text-lg font-semibold">Tournez la roue !</h2>
+              <h2 className="text-center text-base font-semibold text-zinc-900">Roue de la fortune</h2>
               {!spinning && !targetPrizeId ? (
                 <button
                   type="button"
                   onClick={handleWheelSpin}
                   disabled={loading}
-                  className="mx-auto block rounded-full px-8 py-3 font-semibold text-white disabled:opacity-50"
-                  style={{ backgroundColor: merchant.primary_color }}
+                  className="mx-auto block rounded-sm px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+                  style={{ backgroundColor: accent }}
                 >
-                  {loading ? "Préparation..." : "Lancer le tirage"}
+                  {loading ? "Préparation…" : "Lancer le tirage"}
                 </button>
               ) : (
                 <Wheel
@@ -316,16 +314,19 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
           {step === "result" && wonPrize && (
             <div className="space-y-4 text-center">
-              <div className="text-5xl">🎉</div>
-              <h2 className="text-xl font-bold">Félicitations !</h2>
-              <p className="text-lg">{wonPrize.label}</p>
-              <div className="rounded-lg bg-gray-100 px-4 py-3">
-                <p className="text-sm text-gray-600">Code à montrer en caisse</p>
-                <p className="font-mono text-lg font-bold">{spinId?.slice(0, 8).toUpperCase()}</p>
-              </div>
-              <p className="text-xs text-gray-500">
-                Conservez cet écran pour récupérer votre prix.
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                Félicitations
               </p>
+              <p className="text-xl font-semibold text-zinc-900">{wonPrize.label}</p>
+              <div className="rounded-sm border border-zinc-200 bg-zinc-50 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                  Code caisse
+                </p>
+                <p className="mt-2 font-mono text-lg font-semibold text-zinc-900">
+                  {spinId?.slice(0, 8).toUpperCase()}
+                </p>
+              </div>
+              <p className="text-xs text-zinc-500">Conservez cet écran pour récupérer votre prix.</p>
             </div>
           )}
         </div>

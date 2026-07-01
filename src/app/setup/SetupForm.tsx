@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { ui } from "@/components/ui/styles";
 
 export function SetupForm() {
   const router = useRouter();
@@ -69,10 +70,10 @@ export function SetupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-6 shadow-sm">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <form onSubmit={handleSubmit} className={`${ui.card} space-y-5`}>
+      {error && <p className={ui.alertError}>{error}</p>}
       <div>
-        <label className="mb-1 block text-sm font-medium">Nom du commerce</label>
+        <label className={ui.label}>Nom du commerce</label>
         <input
           value={name}
           onChange={(e) => {
@@ -87,28 +88,24 @@ export function SetupForm() {
             }
           }}
           required
-          className="w-full rounded-lg border px-4 py-2"
+          className={ui.input}
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">URL (slug)</label>
+        <label className={ui.label}>URL publique</label>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">/r/</span>
+          <span className="font-mono text-sm text-muted">/r/</span>
           <input
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             required
             pattern="[a-z0-9-]+"
-            className="w-full rounded-lg border px-4 py-2"
+            className={ui.input}
           />
         </div>
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-orange-600 py-3 font-semibold text-white disabled:opacity-50"
-      >
-        {loading ? "Création..." : "Créer mon commerce"}
+      <button type="submit" disabled={loading} className={`w-full ${ui.btn}`}>
+        {loading ? "Création…" : "Créer mon commerce"}
       </button>
     </form>
   );

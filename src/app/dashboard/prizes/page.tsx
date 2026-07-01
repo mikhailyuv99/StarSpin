@@ -2,6 +2,7 @@ import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { PrizesManager } from "./PrizesManager";
 import type { Prize } from "@/lib/types";
+import { ui } from "@/components/ui/styles";
 
 export default async function PrizesPage() {
   const merchant = await requireMerchant();
@@ -13,8 +14,11 @@ export default async function PrizesPage() {
     .order("created_at");
 
   return (
-    <div>
-      <h2 className="mb-6 text-xl font-bold">Prix de la roue</h2>
+    <div className="space-y-8">
+      <div>
+        <h1 className={ui.h1}>Prix de la roue</h1>
+        <p className={ui.muted}>Probabilités, stocks et libellés des récompenses.</p>
+      </div>
       <PrizesManager merchantId={merchant.id} initialPrizes={(prizes ?? []) as Prize[]} />
     </div>
   );

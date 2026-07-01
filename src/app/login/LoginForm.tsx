@@ -55,7 +55,7 @@ export default function LoginPage() {
   };
 
   const inputClass =
-    "w-full rounded-sm border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-zinc-400 focus:border-accent focus:ring-1 focus:ring-accent";
+    "w-full rounded-sm border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-zinc-400 focus:border-ink focus:ring-1 focus:ring-ink";
 
   return (
     <div className="flex min-h-screen bg-surface">
@@ -67,7 +67,7 @@ export default function LoginPage() {
           <span className="text-[15px] font-semibold text-white">Roue Fidélité</span>
         </Link>
         <div>
-          <p className="section-label text-cyan-400">Espace commerçant</p>
+          <p className="section-label text-zinc-400">Espace commerçant</p>
           <p className="mt-4 max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white">
             Gérez votre programme de fidélisation depuis un tableau de bord unique.
           </p>
@@ -129,7 +129,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-sm bg-accent py-2.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+              className="w-full rounded-sm bg-ink py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
             >
               {loading ? "Chargement…" : isSignup ? "Créer le compte" : "Se connecter"}
             </button>

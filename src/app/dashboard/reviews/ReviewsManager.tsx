@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Spin } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { ui } from "@/components/ui/styles";
 
 export function ReviewsManager({ spins }: { spins: Spin[] }) {
   const router = useRouter();
@@ -17,29 +18,19 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
   };
 
   if (spins.length === 0) {
-    return <p className="text-gray-500">Aucune capture pour le moment.</p>;
+    return <p className={ui.muted}>Aucune capture pour le moment.</p>;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="divide-y divide-border border border-border">
       {spins.map((spin) => (
-        <div key={spin.id} className="rounded-xl bg-white p-4 shadow-sm">
+        <div key={spin.id} className="bg-white p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-medium">{spin.phone_number}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-mono text-sm text-ink">{spin.phone_number}</p>
+              <p className="mt-1 text-xs text-muted">
                 {new Date(spin.created_at).toLocaleString("fr-FR")} ·{" "}
-                <span
-                  className={
-                    spin.review_screenshot_status === "verified"
-                      ? "text-green-600"
-                      : spin.review_screenshot_status === "rejected"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                  }
-                >
-                  {spin.review_screenshot_status}
-                </span>
+                <span className="uppercase tracking-wide">{spin.review_screenshot_status}</span>
               </p>
             </div>
             <div className="flex gap-2">
@@ -47,7 +38,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
                 <button
                   type="button"
                   onClick={() => updateStatus(spin.id, "verified")}
-                  className="rounded border border-green-200 px-3 py-1 text-sm text-green-700"
+                  className={ui.btnSuccess}
                 >
                   Valider
                 </button>
@@ -56,7 +47,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
                 <button
                   type="button"
                   onClick={() => updateStatus(spin.id, "rejected")}
-                  className="rounded border border-red-200 px-3 py-1 text-sm text-red-700"
+                  className={ui.btnDanger}
                 >
                   Rejeter
                 </button>
@@ -68,7 +59,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
               href={spin.review_screenshot_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm text-orange-600 underline"
+              className={`mt-3 inline-block text-sm ${ui.link}`}
             >
               Voir la capture
             </a>
