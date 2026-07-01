@@ -99,7 +99,7 @@ function Hero() {
                 <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
                   <div className={`cadeo-stat-badge ${b.cls}`}>
                     <span className="cadeo-stat-badge-icon">
-                      <SocialIcon brand={b.brand} size={18} />
+                      <SocialIcon brand={b.brand} size={16} />
                     </span>
                     <span>{b.text}</span>
                   </div>
@@ -269,7 +269,7 @@ function VisitsFlow() {
               </div>
               <span className={`cadeo-visit-pill ${v.pill}`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={26} />
+                  <SocialIcon brand={v.brand} size={22} />
                 </span>
                 <span className="cadeo-visit-pill-text">{v.action}</span>
               </span>
@@ -515,7 +515,7 @@ function Pricing() {
                     {f === t("marketing.priceF2") ? (
                       <span className="cadeo-check-social">
                         <span>{t("marketing.priceF2")}</span>
-                        <SocialIconRow size={16} />
+                        <SocialIconRow size={14} />
                       </span>
                     ) : (
                       f
@@ -584,13 +584,13 @@ function Footer() {
           <Logo />
           <div className="cadeo-footer-social">
             <a href="#" className="cadeo-social-btn" aria-label="Facebook">
-              <SocialIcon brand="facebook" size={16} />
+              <SocialIcon brand="facebook" size={14} />
             </a>
             <a href="#" className="cadeo-social-btn" aria-label="Instagram">
-              <SocialIcon brand="instagram" size={16} />
+              <SocialIcon brand="instagram" size={14} />
             </a>
             <a href="#" className="cadeo-social-btn" aria-label="TikTok">
-              <SocialIcon brand="tiktok" size={16} />
+              <SocialIcon brand="tiktok" size={14} />
             </a>
           </div>
         </div>
