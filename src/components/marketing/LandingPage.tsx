@@ -322,7 +322,7 @@ function GiftScene() {
           🎁
         </span>
         <div className="cadeo-gift-wheel">
-          <MarketingSpinWheel size={104} animate />
+          <MarketingSpinWheel size={150} animate className="cadeo-gift-wheel-svg" />
         </div>
       </div>
     </div>

@@ -325,9 +325,11 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         key={link.key}
                         type="button"
                         onClick={() => handleSocialClick(link.url!)}
-                      className={`public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2 text-left`}
+                      className={`public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2.5 text-left`}
                       >
-                        <SocialIcon brand={link.key} size={20} />
+                        <span className="public-social-icon-box">
+                          <SocialIcon brand={link.key} size={22} />
+                        </span>
                         {link.label}
                       </button>
                     ))}

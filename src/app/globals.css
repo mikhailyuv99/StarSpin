@@ -583,6 +583,26 @@ body {
   color: var(--c-black);
 }
 
+.public-social-icon-box {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 4px;
+  border: 2px solid var(--c-black);
+  border-radius: 8px;
+  background: #b8b8b8;
+  box-sizing: border-box;
+}
+
+.public-social-icon-box svg {
+  display: block;
+  width: 86%;
+  height: 86%;
+}
+
 .public-progress-track {
   height: 0.65rem;
   overflow: hidden;

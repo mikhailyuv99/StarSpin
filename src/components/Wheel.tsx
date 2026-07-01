@@ -49,7 +49,7 @@ export function Wheel({
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      setWheelSize(Math.min(Math.max(w * 0.78, 260), 340));
+      setWheelSize(Math.min(Math.max(w * 0.88, 300), 400));
     };
     update();
     window.addEventListener("resize", update);
@@ -119,7 +119,7 @@ export function Wheel({
             {slices.map((slice, i) => {
               const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
-              const labelR = sliceLabelRadius(r);
+              const labelR = sliceLabelRadius(r, sliceAngle);
               const textPos = polarToCartesian(cx, cy, labelR, mid);
               const fill = colors[i % colors.length]!;
               const showLabel = shouldShowSliceLabel(sliceAngle);

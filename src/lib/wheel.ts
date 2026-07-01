@@ -47,30 +47,33 @@ export function contrastTextColor(bg: string): string {
 
 /** Minimum slice angle (degrees) before we draw a label on the wheel. */
 export function shouldShowSliceLabel(sliceAngle: number): boolean {
-  return sliceAngle >= 32;
+  return sliceAngle >= 14;
 }
 
 export function labelFontSize(sliceAngle: number): number {
-  return Math.min(11, Math.max(7.5, sliceAngle * 0.19));
+  if (sliceAngle < 22) return 6.5;
+  if (sliceAngle < 35) return 7.5;
+  return Math.min(12, Math.max(8, sliceAngle * 0.17));
 }
 
-export function sliceLabelRadius(r: number): number {
-  return r * 0.62;
+export function sliceLabelRadius(r: number, sliceAngle: number): number {
+  const hub = 0.38;
+  const outer = 0.24;
+  const t = Math.min(1, sliceAngle / 120);
+  return r * (hub + outer * t);
 }
 
-/** Tangential label rotation — readable on every slice without flipping mid-slice. */
+/** Tangential text aligned to slice — always upright to the reader. */
 export function sliceLabelRotation(mid: number): number {
-  let rot = mid + 90;
-  if (mid > 90 && mid < 270) rot += 180;
-  return rot;
+  return mid > 90 && mid < 270 ? mid + 180 : mid;
 }
 
 export function wheelSliceLabel(label: string, sliceAngle: number): string {
   const maxChars =
-    sliceAngle < 40 ? 7 : sliceAngle < 55 ? 10 : sliceAngle < 90 ? 14 : sliceAngle < 140 ? 18 : 24;
+    sliceAngle < 22 ? 5 : sliceAngle < 35 ? 8 : sliceAngle < 55 ? 11 : sliceAngle < 90 ? 15 : 22;
   const trimmed = label.trim();
   if (trimmed.length <= maxChars) return trimmed;
-  return `${trimmed.slice(0, Math.max(4, maxChars - 1))}…`;
+  return `${trimmed.slice(0, Math.max(3, maxChars - 1))}…`;
 }
 
 export function prizeSliceAngles(prizes: Prize[]): { prize: Prize; start: number; end: number }[] {

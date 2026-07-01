@@ -55,25 +55,32 @@ function InstagramIcon({ size, className, label }: { size: number; className: st
   );
 }
 
-/** Official TikTok note — white glyph with cyan/red chromatic offset (brand style). */
-const TIKTOK_NOTE_PATH =
-  "M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743 2.895 2.895 0 0 1 2.311-4.644 2.933 2.933 0 0 1 .881.135V9.31a6.844 6.844 0 0 0-1.005-.058 6.33 6.33 0 0 0-6.333 6.334 6.33 6.33 0 0 0 10.864-4.429v-6.89a8.213 8.213 0 0 0 4.773 1.529V6.686a4.793 4.793 0 0 1-1.12-.001z";
-
+/** Official TikTok logomark (48×48 viewBox — cyan/red/black, no clipping). */
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 48 48"
       className={className}
       role="img"
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
     >
       <title>{label}</title>
-      <path fill="#25F4EE" d={TIKTOK_NOTE_PATH} transform="translate(-0.8, -0.8)" />
-      <path fill="#FE2C55" d={TIKTOK_NOTE_PATH} transform="translate(0.8, 0.8)" />
-      <path fill="#FFFFFF" d={TIKTOK_NOTE_PATH} />
+      <path
+        fill="#25F4EE"
+        d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
+      />
+      <path
+        fill="#FE2C55"
+        d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
+        transform="translate(2.2, 2.2)"
+      />
+      <path
+        fill="#000000"
+        d="M32.912 10.772a7.586 7.586 0 0 1-5.954-6.708V0h-5.445v21.008a4.344 4.344 0 0 1-8.202 2.615 4.343 4.343 0 0 1 3.467-6.966 4.4 4.4 0 0 1 1.322.207v-2.42a8.766 8.766 0 0 0-1.51-.09 9.495 9.495 0 0 0-9.495 9.495 9.495 9.495 0 0 0 16.296 6.572V10.302a12.613 12.613 0 0 0 7.545 2.348V8.102a7.586 7.586 0 0 1-1.768-.002z"
+      />
     </svg>
   );
 }

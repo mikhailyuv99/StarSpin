@@ -1,4 +1,4 @@
-import { describeSlice, polarToCartesian } from "@/lib/wheel";
+import { describeSlice, polarToCartesian, sliceLabelRotation } from "@/lib/wheel";
 
 const SLICES = [
   { color: "#f5e08e", label: "10%" },
@@ -38,6 +38,7 @@ export function MarketingSpinWheel({
           const end = (i + 1) * sliceAngle;
           const mid = start + sliceAngle / 2;
           const labelPos = polarToCartesian(cx, cy, 26, mid);
+          const rotation = sliceLabelRotation(mid);
           return (
             <g key={slice.label}>
               <path
@@ -54,7 +55,7 @@ export function MarketingSpinWheel({
                 fontWeight="800"
                 textAnchor="middle"
                 dominantBaseline="middle"
-                transform={`rotate(${mid + 90}, ${labelPos.x}, ${labelPos.y})`}
+                transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
               >
                 {slice.label}
               </text>
