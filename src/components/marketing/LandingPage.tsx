@@ -7,6 +7,9 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
 import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
+import { FALLER_POOLS } from "@/components/marketing/faller-pools";
+import { SectionShell } from "@/components/marketing/SectionShell";
+import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { marketingImages } from "@/lib/marketing-images";
 import "./cadeo-styles.css";
 
@@ -63,9 +66,9 @@ function Hero() {
   ];
 
   return (
-    <section className="cadeo-hero">
+    <SectionShell className="cadeo-hero" fallers={[...FALLER_POOLS.hero]} fallerCount={10}>
       <div className="cadeo-hero-inner">
-        <div className="cadeo-hero-copy">
+        <Reveal className="cadeo-hero-copy" y={36}>
           <p className="cadeo-hero-eyebrow">
             <span className="cadeo-hero-eyebrow-star" aria-hidden>
               ★
@@ -86,17 +89,19 @@ function Hero() {
               {t("marketing.heroDemo")}
             </a>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="cadeo-hero-visual">
+        <Reveal className="cadeo-hero-visual" y={40} delay={0.08}>
           <div className="cadeo-hero-glow" />
           <div className="cadeo-hero-scene">
             <div className="cadeo-hero-badges">
-              {badges.map((b) => (
-                <div key={b.text} className={`cadeo-stat-badge ${b.cls}`}>
-                  <span className="cadeo-stat-badge-icon">{b.icon}</span>
-                  <span>{b.text}</span>
-                </div>
+              {badges.map((b, i) => (
+                <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
+                  <div className={`cadeo-stat-badge ${b.cls}`}>
+                    <span className="cadeo-stat-badge-icon">{b.icon}</span>
+                    <span>{b.text}</span>
+                  </div>
+                </Reveal>
               ))}
             </div>
             <div className="cadeo-hero-photo">
@@ -113,46 +118,58 @@ function Hero() {
             </div>
             <HeroWheelPhone />
           </div>
-        </div>
+        </Reveal>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
 function Pillars() {
   const { t } = useI18n();
   const items = [
-    { cls: "cadeo-pillar--purple", num: "01", img: marketingImages.pillarCuriosity, text: t("marketing.pillar1") },
-    { cls: "cadeo-pillar--pink", num: "02", img: marketingImages.pillarConnection, text: t("marketing.pillar2") },
-    { cls: "cadeo-pillar--blue", num: "03", img: marketingImages.pillarData, text: t("marketing.pillar3") },
-    { cls: "cadeo-pillar--yellow", num: "04", img: marketingImages.pillarLoyalty, text: t("marketing.pillar4") },
+    { cls: "cadeo-pillar--purple", num: "01", icon: "✨", text: t("marketing.pillar1") },
+    { cls: "cadeo-pillar--pink", num: "02", icon: "🤝", text: t("marketing.pillar2") },
+    { cls: "cadeo-pillar--blue", num: "03", icon: "📊", text: t("marketing.pillar3") },
+    { cls: "cadeo-pillar--yellow", num: "04", icon: "🏆", text: t("marketing.pillar4") },
   ];
 
   return (
-    <section className="cadeo-section cadeo-pillars-section">
+    <SectionShell
+      className="cadeo-section cadeo-pillars-section"
+      fallers={[...FALLER_POOLS.pillars]}
+      fallerCount={12}
+    >
       <div className="cadeo-section-inner">
-        <div className="cadeo-section-head">
+        <Reveal className="cadeo-section-head">
           <p className="cadeo-section-eyebrow">{t("marketing.pillarsEyebrow")}</p>
           <h2 className="cadeo-h2 text-center">{t("marketing.pillarsTitle")}</h2>
-        </div>
-        <div className="cadeo-pillars-grid">
+        </Reveal>
+        <RevealStagger className="cadeo-pillars-grid">
           {items.map((item) => (
-            <article key={item.text} className={`cadeo-pillar ${item.cls}`}>
-              <span className="cadeo-pillar-num">{item.num}</span>
-              <div className="cadeo-pillar-photo">
-                <Image src={item.img} alt="" width={280} height={140} className="h-full w-full object-cover" />
-              </div>
-              <p className="cadeo-pillar-text">{item.text}</p>
-            </article>
+            <RevealItem key={item.text}>
+              <article className={`cadeo-pillar ${item.cls}`}>
+                <div className="cadeo-pillar-top">
+                  <span className="cadeo-pillar-level">LVL {item.num}</span>
+                  <span className="cadeo-pillar-num">{item.num}</span>
+                </div>
+                <div className="cadeo-pillar-icon-game" aria-hidden>
+                  {item.icon}
+                </div>
+                <div className="cadeo-pillar-xp" aria-hidden>
+                  <div className="cadeo-pillar-xp-fill" style={{ width: `${Number(item.num) * 25}%` }} />
+                </div>
+                <p className="cadeo-pillar-text">{item.text}</p>
+              </article>
+            </RevealItem>
           ))}
-        </div>
-        <div className="cadeo-pillars-cta">
+        </RevealStagger>
+        <Reveal className="cadeo-pillars-cta">
           <a href="#features" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
             {t("marketing.allFeatures")}
           </a>
-        </div>
+        </Reveal>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
@@ -164,8 +181,9 @@ function WheelFlyer() {
           <StarspinMark size={22} />
           <span className="cadeo-flyer-brand-name">STARSPIN</span>
         </div>
-        <div className="cadeo-flyer-photo">
-          <Image src={marketingImages.flyerVenue} alt="" width={280} height={110} className="h-full w-full object-cover" />
+        <div className="cadeo-flyer-venue-strip">
+          <span>YOUR VENUE</span>
+          <span className="cadeo-flyer-venue-tag">SCAN ME</span>
         </div>
         <div className="cadeo-flyer-wheel-wrap">
           <MarketingSpinWheel size={168} />
@@ -198,9 +216,7 @@ function PhoneScene() {
       <div className="cadeo-phone-scene-inner">
         <div className="cadeo-phone">
           <div className="cadeo-phone-screen">
-            <div className="cadeo-phone-screen-bg">
-              <Image src={marketingImages.phoneGame} alt="" fill sizes="170px" className="object-cover" />
-            </div>
+            <div className="cadeo-phone-screen-bg cadeo-phone-screen-bg--game" />
             <div className="cadeo-phone-notch" />
             <div className="cadeo-phone-screen-content">
               <p className="cadeo-phone-title">Play &amp; win a prize!</p>
@@ -242,18 +258,23 @@ function VisitsFlow() {
 
   return (
     <div className="cadeo-visits-block">
-      <div className="cadeo-visits">
+      <RevealStagger className="cadeo-visits">
         {visits.map((v, i) => (
-          <div key={v.label} className="cadeo-visit-card">
+          <RevealItem key={v.label}>
+            <div className="cadeo-visit-card">
             <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
             <p className="cadeo-visit-label">{v.label}</p>
+            <div className="cadeo-visit-xp" aria-hidden>
+              <div className="cadeo-visit-xp-fill" style={{ width: `${(i + 1) * 25}%` }} />
+            </div>
             <span className={`cadeo-visit-pill ${v.pill}`}>
               <span className="cadeo-visit-pill-icon">{v.icon}</span>
               {v.action}
             </span>
-          </div>
+            </div>
+          </RevealItem>
         ))}
-      </div>
+      </RevealStagger>
     </div>
   );
 }
@@ -266,9 +287,6 @@ function DataScene() {
       <div className="cadeo-poll-card cadeo-poll-card--3">Your opinion matters</div>
       <div className="cadeo-win-phone">
         <div className="cadeo-win-screen">
-          <div className="cadeo-win-screen-bg">
-            <Image src={marketingImages.crmScene} alt="" fill sizes="175px" className="object-cover opacity-25" />
-          </div>
           <div className="cadeo-win-screen-content">
             <p className="cadeo-win-title">YOU WON!<br />1 FREE DRINK</p>
             <div className="cadeo-form-field">First name</div>
@@ -298,7 +316,12 @@ function GiftScene() {
         </div>
       ))}
       <div className="cadeo-gift-box">
-        <Image src={marketingImages.giftRewards} alt="" fill sizes="220px" className="object-cover" />
+        <span className="cadeo-gift-emoji" aria-hidden>
+          🎁
+        </span>
+        <div className="cadeo-gift-wheel">
+          <MarketingSpinWheel size={72} animate />
+        </div>
       </div>
     </div>
   );
@@ -308,41 +331,55 @@ function Features() {
   const { t } = useI18n();
 
   return (
-    <section id="features" className="cadeo-section">
+    <SectionShell
+      id="features"
+      className="cadeo-section"
+      fallers={[...FALLER_POOLS.features]}
+      fallerCount={16}
+    >
       <div className="cadeo-section-inner">
         <div className="cadeo-feature">
-          <div className="cadeo-feature-visual">
+          <Reveal className="cadeo-feature-visual" y={32}>
             <WheelFlyer />
-          </div>
-          <div className="cadeo-feature-copy">
+          </Reveal>
+          <Reveal className="cadeo-feature-copy" delay={0.06}>
             <p className="cadeo-feature-label">{t("marketing.scanSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.scanTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.scanBody")}</p>
-          </div>
+          </Reveal>
         </div>
 
         <div className="cadeo-feature cadeo-feature--reverse">
-          <div className="cadeo-feature-visual">
+          <Reveal className="cadeo-feature-visual" y={32}>
             <PhoneScene />
-          </div>
-          <div className="cadeo-feature-copy">
+          </Reveal>
+          <Reveal className="cadeo-feature-copy" delay={0.06}>
             <p className="cadeo-feature-label">{t("marketing.funSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.funTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.funBody")}</p>
+          </Reveal>
+        </div>
+
+        <SectionShell
+          as="div"
+          className="cadeo-visits-shell"
+          fallers={[...FALLER_POOLS.visits]}
+          fallerCount={10}
+        >
+          <div className="cadeo-visits-intro">
+            <Reveal>
+              <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
+              <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
+            </Reveal>
+            <VisitsFlow />
           </div>
-        </div>
+        </SectionShell>
 
-        <div className="cadeo-visits-intro">
-          <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
-          <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
-          <VisitsFlow />
-        </div>
-
-        <div className="cadeo-quote">
+        <Reveal className="cadeo-quote" y={28}>
           <p className="cadeo-quote-title">{t("marketing.quote")}</p>
           <p className="mt-4 text-sm leading-relaxed opacity-85">{t("marketing.quoteBody")}</p>
           <div className="cadeo-quote-author">
-            <div className="cadeo-quote-avatar">🍟</div>
+            <div className="cadeo-quote-avatar">★</div>
             <div>
               <p className="text-sm font-extrabold">{t("marketing.quoteAuthor")}</p>
               <p className="text-xs font-semibold opacity-60">Marketing Manager</p>
@@ -353,36 +390,36 @@ function Features() {
               {t("marketing.footerDemo")}
             </Link>
           </div>
-        </div>
+        </Reveal>
 
         <div className="cadeo-feature">
-          <div className="cadeo-feature-visual">
+          <Reveal className="cadeo-feature-visual" y={32}>
             <DataScene />
-          </div>
-          <div className="cadeo-feature-copy">
+          </Reveal>
+          <Reveal className="cadeo-feature-copy" delay={0.06}>
             <p className="cadeo-feature-label">CRM</p>
             <h3 className="cadeo-feature-title">{t("marketing.dataTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.dataBody")}</p>
-          </div>
+          </Reveal>
         </div>
 
         <div className="cadeo-feature cadeo-feature--reverse">
-          <div className="cadeo-feature-visual">
+          <Reveal className="cadeo-feature-visual" y={32}>
             <GiftScene />
-          </div>
-          <div className="cadeo-feature-copy">
+          </Reveal>
+          <Reveal className="cadeo-feature-copy" delay={0.06}>
             <p className="cadeo-feature-label">{t("marketing.prizeSubtitle")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.prizeTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.prizeBody")}</p>
-          </div>
+          </Reveal>
         </div>
 
-        <div className="text-center">
+        <Reveal className="text-center">
           <h3 className="cadeo-h2">{t("marketing.easyTitle")}</h3>
           <p className="cadeo-sub mx-auto max-w-lg">{t("marketing.easyBody")}</p>
-        </div>
+        </Reveal>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
@@ -396,19 +433,27 @@ function Advantages() {
   ];
 
   return (
-    <section className="cadeo-section cadeo-section--tight-top">
+    <SectionShell
+      className="cadeo-section cadeo-section--tight-top"
+      fallers={[...FALLER_POOLS.advantages]}
+      fallerCount={10}
+    >
       <div className="cadeo-section-inner">
-        <h2 className="cadeo-h2 text-center">{t("marketing.advantagesTitle")}</h2>
-        <div className="cadeo-adv-grid">
+        <Reveal>
+          <h2 className="cadeo-h2 text-center">{t("marketing.advantagesTitle")}</h2>
+        </Reveal>
+        <RevealStagger className="cadeo-adv-grid">
           {items.map((item) => (
-            <div key={item.text} className="cadeo-adv-item">
-              <span className="cadeo-adv-num">{item.num}</span>
-              <span>{item.text}</span>
-            </div>
+            <RevealItem key={item.text}>
+              <div className="cadeo-adv-item">
+                <span className="cadeo-adv-num">{item.num}</span>
+                <span>{item.text}</span>
+              </div>
+            </RevealItem>
           ))}
-        </div>
+        </RevealStagger>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
@@ -431,9 +476,15 @@ function Pricing() {
   const sideAdv = [t("marketing.adv1"), t("marketing.adv2"), t("marketing.adv3"), t("marketing.adv4")];
 
   return (
-    <section id="pricing" className="cadeo-section">
+    <SectionShell
+      id="pricing"
+      className="cadeo-section"
+      fallers={[...FALLER_POOLS.pricing]}
+      fallerCount={14}
+    >
       <div className="cadeo-section-inner" style={{ maxWidth: "56rem" }}>
-        <div className="cadeo-pricing-wrap">
+        <Reveal y={30}>
+          <div className="cadeo-pricing-wrap">
           <div className="cadeo-pricing-inner">
             <div className="cadeo-pricing-side">
               <h3>{t("marketing.advantagesTitle")}</h3>
@@ -475,9 +526,10 @@ function Pricing() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </Reveal>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 
@@ -492,34 +544,40 @@ function FAQ() {
   ];
 
   return (
-    <section id="faq" className="cadeo-section cadeo-faq-section">
+    <SectionShell
+      id="faq"
+      className="cadeo-section cadeo-faq-section"
+      fallers={[...FALLER_POOLS.faq]}
+      fallerCount={18}
+    >
       <div className="cadeo-faq-glow" />
-      <span className="cadeo-faq-mascot" aria-hidden>☕</span>
       <div className="cadeo-section-inner">
-        <div className="cadeo-faq-header">
+        <Reveal className="cadeo-faq-header">
           <h2 className="cadeo-h2">{t("marketing.faqTitle")}</h2>
           <p className="cadeo-sub">
             <span className="cadeo-faq-highlight">{t("marketing.faqSub")}</span>
           </p>
-        </div>
-        <div className="cadeo-faq-list">
+        </Reveal>
+        <RevealStagger className="cadeo-faq-list">
           {items.map((item, i) => (
-            <div key={item.q} className="cadeo-faq-item">
-              <button
-                type="button"
-                className="cadeo-faq-btn"
-                onClick={() => setOpen(open === i ? null : i)}
-                aria-expanded={open === i}
-              >
-                {item.q}
-                <span className="cadeo-faq-plus">{open === i ? "−" : "+"}</span>
-              </button>
-              {open === i && <div className="cadeo-faq-answer">{item.a}</div>}
-            </div>
+            <RevealItem key={item.q}>
+              <div className="cadeo-faq-item">
+                <button
+                  type="button"
+                  className="cadeo-faq-btn"
+                  onClick={() => setOpen(open === i ? null : i)}
+                  aria-expanded={open === i}
+                >
+                  {item.q}
+                  <span className="cadeo-faq-plus">{open === i ? "−" : "+"}</span>
+                </button>
+                {open === i && <div className="cadeo-faq-answer">{item.a}</div>}
+              </div>
+            </RevealItem>
           ))}
-        </div>
+        </RevealStagger>
       </div>
-    </section>
+    </SectionShell>
   );
 }
 

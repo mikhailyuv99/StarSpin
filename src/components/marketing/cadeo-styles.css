@@ -648,13 +648,53 @@
   letter-spacing: 0.08em;
 }
 
-.cadeo-pillar-photo {
-  height: 5.5rem;
+.cadeo-pillar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.cadeo-pillar-level {
+  font-size: 0.58rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.45rem;
+  background: #fff;
+  border: 2px solid var(--c-black);
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.cadeo-pillar-icon-game {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 4.5rem;
+  font-size: 2.25rem;
+  line-height: 1;
   border: var(--c-border);
   border-radius: var(--c-radius);
-  box-shadow: 3px 3px 0 0 var(--c-black);
+  box-shadow: 4px 4px 0 0 var(--c-black);
+  background: rgb(255 255 255 / 0.55);
+}
+
+.cadeo-pillar-xp {
+  width: 100%;
+  height: 0.45rem;
+  border: 2px solid var(--c-black);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.45);
   overflow: hidden;
-  background: #fff;
+}
+
+.cadeo-pillar-xp-fill {
+  height: 100%;
+  background: var(--c-yellow);
+  border-right: 2px solid var(--c-black);
 }
 
 .cadeo-pillar-text {
@@ -762,13 +802,30 @@
   letter-spacing: 0.06em;
 }
 
-.cadeo-flyer-photo {
-  height: 4.5rem;
+.cadeo-flyer-venue-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 3.25rem;
+  padding: 0 0.85rem;
+  margin-bottom: 0.85rem;
   border: var(--c-border);
   border-radius: var(--c-radius);
-  overflow: hidden;
-  margin-bottom: 0.85rem;
   box-shadow: 3px 3px 0 0 var(--c-black);
+  background: linear-gradient(135deg, var(--c-lavender) 0%, var(--c-yellow) 100%);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cadeo-flyer-venue-tag {
+  padding: 0.25rem 0.5rem;
+  background: #fff;
+  border: 2px solid var(--c-black);
+  border-radius: 999px;
+  font-size: 0.52rem;
 }
 
 .cadeo-flyer-wheel-wrap {
@@ -901,6 +958,13 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+
+.cadeo-phone-screen-bg--game {
+  background:
+    radial-gradient(circle at 30% 20%, rgb(244 143 177 / 0.55), transparent 45%),
+    radial-gradient(circle at 70% 80%, rgb(155 127 232 / 0.5), transparent 50%),
+    linear-gradient(165deg, #2a1a4a 0%, #5b3bb8 45%, #f48fb1 100%);
 }
 
 .cadeo-phone-screen-content {
@@ -1046,8 +1110,12 @@
   text-align: center;
 }
 
+.cadeo-visits-shell {
+  margin-bottom: 0;
+}
+
 .cadeo-visits-block {
-  margin-top: 1.75rem;
+  margin-top: 0;
 }
 
 .cadeo-visits {
@@ -1109,7 +1177,24 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.5;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.45rem;
+}
+
+.cadeo-visit-xp {
+  width: 100%;
+  max-width: 10rem;
+  height: 0.4rem;
+  margin: 0 auto 0.65rem;
+  border: 2px solid var(--c-black);
+  border-radius: 999px;
+  background: var(--c-gray);
+  overflow: hidden;
+}
+
+.cadeo-visit-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-mint), var(--c-yellow));
+  border-right: 2px solid var(--c-black);
 }
 
 .cadeo-visit-pill {
@@ -1305,13 +1390,31 @@
 .cadeo-gift-box {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   width: 9.5rem;
   height: 9.5rem;
   border: var(--c-border);
   border-radius: var(--c-radius-lg);
   box-shadow: var(--c-shadow-lg);
-  overflow: hidden;
+  background: linear-gradient(145deg, var(--c-yellow) 0%, #fff 55%, var(--c-lavender) 100%);
+}
+
+.cadeo-gift-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(2px 2px 0 var(--c-black));
+}
+
+.cadeo-gift-wheel {
+  padding: 0.15rem;
   background: #fff;
+  border: 2px solid var(--c-black);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
 .cadeo-gift-tag {
@@ -1861,6 +1964,54 @@
   .marketing-wheel--spin .marketing-wheel__disc {
     animation: none;
   }
+
+  .cadeo-fallers-layer {
+    display: none;
+  }
+}
+
+/* Scroll fallers + section shell */
+.cadeo-section-shell {
+  position: relative;
+}
+
+.cadeo-section-shell__content {
+  position: relative;
+  z-index: 1;
+}
+
+.cadeo-fallers-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cadeo-faller-sticker {
+  position: absolute;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  padding: 0.2rem 0.4rem;
+  background: #fff;
+  border: 2.5px solid var(--c-black);
+  border-radius: 11px;
+  box-shadow: 3px 3px 0 0 var(--c-black);
+  font-weight: 900;
+  line-height: 1;
+  will-change: transform, opacity;
+}
+
+.cadeo-faller-sticker--text {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.72rem !important;
+  background: var(--c-yellow-bright);
+  min-width: 1.85rem;
+  min-height: 1.85rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

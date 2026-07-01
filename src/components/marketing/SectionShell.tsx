@@ -1,0 +1,109 @@
+"use client";
+
+import { AnimatePresence, motion, useInView } from "framer-motion";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ElementType,
+  type ReactNode,
+} from "react";
+import type { FallerItem } from "./faller-pools";
+
+type FallerInstance = {
+  glyph: string;
+  kind: "emoji" | "text";
+  left: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+  size: number;
+  drift: number;
+};
+
+function buildFallers(pool: FallerItem[], count: number, wave: number): FallerInstance[] {
+  return Array.from({ length: count }, (_, i) => {
+    const n = (wave * 19 + i * 23) % 997;
+    const pick = pool[(wave + i) % pool.length]!;
+    return {
+      glyph: pick.glyph,
+      kind: pick.kind ?? "emoji",
+      left: 3 + ((n * 41) % 94),
+      delay: i * 0.11 + (n % 9) * 0.04,
+      duration: 2.6 + (n % 8) * 0.3,
+      rotate: -35 + (n % 70),
+      size: 0.9 + (n % 4) * 0.15,
+      drift: -28 + (n % 56),
+    };
+  });
+}
+
+export function SectionShell({
+  id,
+  className = "",
+  fallers,
+  fallerCount = 14,
+  children,
+  as = "section",
+}: {
+  id?: string;
+  className?: string;
+  fallers?: FallerItem[];
+  fallerCount?: number;
+  children: ReactNode;
+  as?: "section" | "div";
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { amount: 0.06, once: false });
+  const [wave, setWave] = useState(0);
+  const wasInView = useRef(false);
+
+  useEffect(() => {
+    if (inView && !wasInView.current) {
+      setWave((w) => w + 1);
+    }
+    wasInView.current = inView;
+  }, [inView]);
+
+  const items = useMemo(
+    () => (fallers ? buildFallers(fallers, fallerCount, wave) : []),
+    [fallers, fallerCount, wave],
+  );
+
+  const Tag = as as ElementType;
+
+  return (
+    <Tag ref={ref} id={id} className={`cadeo-section-shell ${className}`.trim()}>
+      {fallers && (
+        <div className="cadeo-fallers-layer" aria-hidden>
+          <AnimatePresence>
+            {inView &&
+              items.map((item, i) => (
+                <motion.span
+                  key={`${wave}-${i}`}
+                  className={`cadeo-faller-sticker ${item.kind === "text" ? "cadeo-faller-sticker--text" : ""}`}
+                  style={{ left: `${item.left}%`, fontSize: `${item.size}rem` }}
+                  initial={{ y: "-12%", opacity: 0, x: 0, rotate: item.rotate }}
+                  animate={{
+                    y: "112%",
+                    opacity: [0, 1, 1, 0.9, 0],
+                    x: item.drift,
+                    rotate: item.rotate + 200,
+                  }}
+                  transition={{
+                    duration: item.duration,
+                    delay: item.delay,
+                    ease: [0.15, 0.05, 0.2, 1],
+                  }}
+                >
+                  {item.glyph}
+                </motion.span>
+              ))}
+          </AnimatePresence>
+        </div>
+      )}
+      <div className="cadeo-section-shell__content">{children}</div>
+    </Tag>
+  );
+}
