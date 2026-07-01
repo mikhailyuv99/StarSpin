@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Cron: daily review count sync (configure in Netlify UI with CRON_SECRET header)
+# Schedule: 0 2 * * *  ->  GET /.netlify/functions/... or use Netlify scheduled functions
