@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
@@ -27,7 +27,6 @@ function PaymentUpdateForm({ onUpdated }: { onUpdated: () => void }) {
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -66,17 +65,12 @@ function PaymentUpdateForm({ onUpdated }: { onUpdated: () => void }) {
       return;
     }
 
-    setDone(true);
     setSubmitting(false);
     onUpdated();
   };
 
-  if (done) {
-    return <p className={ui.alertSuccess}>{t("billing.managePaymentUpdated")}</p>;
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 border-t-2 border-black/10 pt-4">
       <PaymentElement
         options={{
           layout: "tabs",
@@ -85,9 +79,12 @@ function PaymentUpdateForm({ onUpdated }: { onUpdated: () => void }) {
         }}
       />
       {error && <p className={ui.alertError}>{error}</p>}
-      <button type="submit" disabled={!stripe || submitting} className={`${ui.btn} !w-auto px-5`}>
-        {submitting ? t("billing.managePaymentSaving") : t("billing.managePaymentSave")}
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button type="submit" disabled={!stripe || submitting} className={`${ui.btn} !w-auto px-5`}>
+          {submitting ? t("billing.managePaymentSaving") : t("billing.managePaymentSave")}
+        </button>
+      </div>
+      <p className="text-xs font-medium text-muted">{t("billing.checkoutFootnote")}</p>
     </form>
   );
 }
@@ -105,29 +102,15 @@ export function BillingManagePage({
   const router = useRouter();
   const stripePromise = useMemo(() => loadStripe(publishableKey), [publishableKey]);
   const [live, setLive] = useState(summary);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [setupSecret, setSetupSecret] = useState<string | null>(null);
+  const [setupLoading, setSetupLoading] = useState(false);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [actionLoading, setActionLoading] = useState<"cancel" | "resume" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const refresh = () => router.refresh();
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const res = await fetch("/api/stripe/billing/setup-payment", { method: "POST" });
-      const data = (await res.json()) as { clientSecret?: string; error?: string };
-      if (cancelled) return;
-      if (!res.ok || !data.clientSecret) {
-        setSetupError(data.error ?? t("billing.managePaymentError"));
-        return;
-      }
-      setSetupSecret(data.clientSecret);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [t]);
 
   const planLabel =
     live.plan === "annual"
@@ -175,6 +158,36 @@ export function BillingManagePage({
         })
       : t("billing.manageNoCard");
 
+  const handleOpenPaymentForm = async () => {
+    setShowPaymentForm(true);
+    setPaymentSuccess(false);
+    setSetupError(null);
+
+    if (setupSecret) return;
+
+    setSetupLoading(true);
+    try {
+      const res = await fetch("/api/stripe/billing/setup-payment", { method: "POST" });
+      const data = (await res.json()) as { clientSecret?: string; error?: string };
+      if (!res.ok || !data.clientSecret) {
+        setSetupError(data.error ?? t("billing.managePaymentError"));
+        return;
+      }
+      setSetupSecret(data.clientSecret);
+    } catch {
+      setSetupError(t("billing.managePaymentError"));
+    } finally {
+      setSetupLoading(false);
+    }
+  };
+
+  const handlePaymentUpdated = () => {
+    setPaymentSuccess(true);
+    setShowPaymentForm(false);
+    setSetupSecret(null);
+    refresh();
+  };
+
   const handleCancel = async () => {
     if (!window.confirm(t("billing.manageCancelConfirm"))) return;
     setActionLoading("cancel");
@@ -220,32 +233,73 @@ export function BillingManagePage({
         </Link>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className={`${ui.card} space-y-4`}>
-          <h2 className={ui.h2}>{t("billing.managePlanTitle")}</h2>
-          <div className="space-y-2 text-sm">
+      <section className={`${ui.card} mx-auto max-w-2xl space-y-5`}>
+        <h2 className={ui.h2}>{t("billing.managePlanTitle")}</h2>
+
+        <div className="space-y-2 text-sm">
+          <p>
+            <span className="font-extrabold text-ink">{t("billing.managePlanLabel")}</span>{" "}
+            <span className="text-muted">{priceLabel}</span>
+          </p>
+          <p>
+            <span className="font-extrabold text-ink">{t("billing.manageStatusLabel")}</span>{" "}
+            <span className="text-muted">{statusLabel}</span>
+          </p>
+          {renewalLabel && (
             <p>
-              <span className="font-extrabold text-ink">{t("billing.managePlanLabel")}</span>{" "}
-              <span className="text-muted">{priceLabel}</span>
+              <span className="font-extrabold text-ink">{t("billing.manageRenewalLabel")}</span>{" "}
+              <span className="text-muted">{renewalLabel}</span>
             </p>
-            <p>
-              <span className="font-extrabold text-ink">{t("billing.manageStatusLabel")}</span>{" "}
-              <span className="text-muted">{statusLabel}</span>
-            </p>
-            {renewalLabel && (
-              <p>
-                <span className="font-extrabold text-ink">{t("billing.manageRenewalLabel")}</span>{" "}
-                <span className="text-muted">{renewalLabel}</span>
-              </p>
+          )}
+          <p>
+            <span className="font-extrabold text-ink">{t("billing.managePaymentLabel")}</span>{" "}
+            <span className="text-muted">{paymentLabel}</span>
+          </p>
+        </div>
+
+        {paymentSuccess && <p className={ui.alertSuccess}>{t("billing.managePaymentUpdated")}</p>}
+
+        {live.hasAccount && !showPaymentForm && (
+          <button
+            type="button"
+            onClick={handleOpenPaymentForm}
+            className={`${ui.btnOutline} !w-auto px-5`}
+          >
+            {t("billing.managePaymentUpdate")}
+          </button>
+        )}
+
+        {showPaymentForm && (
+          <div className="space-y-3">
+            {setupError && <p className={ui.alertError}>{setupError}</p>}
+            {setupLoading && (
+              <p className="text-sm font-medium text-muted">{t("billing.managePaymentLoading")}</p>
             )}
-            <p>
-              <span className="font-extrabold text-ink">{t("billing.managePaymentLabel")}</span>{" "}
-              <span className="text-muted">{paymentLabel}</span>
-            </p>
+            {setupSecret && (
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret: setupSecret,
+                  appearance: {
+                    theme: "stripe",
+                    variables: {
+                      colorPrimary: "#9b7fe8",
+                      colorBackground: "#ffffff",
+                      colorText: "#0a0a0a",
+                      borderRadius: "14px",
+                    },
+                  },
+                }}
+              >
+                <PaymentUpdateForm onUpdated={handlePaymentUpdated} />
+              </Elements>
+            )}
           </div>
+        )}
 
-          {actionError && <p className={ui.alertError}>{actionError}</p>}
+        {actionError && <p className={ui.alertError}>{actionError}</p>}
 
+        <div className="flex flex-wrap gap-3 border-t-2 border-black/10 pt-4">
           {canManageSubscription && !live.cancelAtPeriodEnd && (
             <button
               type="button"
@@ -273,41 +327,8 @@ export function BillingManagePage({
               {t("dashboard.subscribeCta")}
             </Link>
           )}
-        </section>
-
-        <section className={`${ui.card} space-y-4`}>
-          <h2 className={ui.h2}>{t("billing.managePaymentTitle")}</h2>
-          <p className="text-sm text-muted">{t("billing.managePaymentSubtitle")}</p>
-
-          {setupError && <p className={ui.alertError}>{setupError}</p>}
-
-          {!setupSecret && !setupError && (
-            <p className="text-sm font-medium text-muted">{t("billing.managePaymentLoading")}</p>
-          )}
-
-          {setupSecret && (
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret: setupSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    colorPrimary: "#9b7fe8",
-                    colorBackground: "#ffffff",
-                    colorText: "#0a0a0a",
-                    borderRadius: "14px",
-                  },
-                },
-              }}
-            >
-              <PaymentUpdateForm onUpdated={refresh} />
-            </Elements>
-          )}
-
-          <p className="text-xs font-medium text-muted">{t("billing.checkoutFootnote")}</p>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -271,6 +271,7 @@
     "manageResumeError": "No se pudo reactivar. Inténtalo de nuevo o escribe a hello@starspin.cc.",
     "managePaymentTitle": "Método de pago",
     "managePaymentSubtitle": "Actualiza la tarjeta, Apple Pay o Google Pay de STARSPIN.",
+    "managePaymentUpdate": "Actualizar método de pago",
     "managePaymentLoading": "Cargando formulario de pago seguro…",
     "managePaymentSave": "Guardar método de pago",
     "managePaymentSaving": "Guardando…",

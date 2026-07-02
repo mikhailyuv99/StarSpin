@@ -271,6 +271,7 @@
     "manageResumeError": "Không thể khôi phục. Thử lại hoặc liên hệ hello@starspin.cc.",
     "managePaymentTitle": "Phương thức thanh toán",
     "managePaymentSubtitle": "Cập nhật thẻ, Apple Pay hoặc Google Pay cho STARSPIN.",
+    "managePaymentUpdate": "Cập nhật phương thức thanh toán",
     "managePaymentLoading": "Đang tải form thanh toán bảo mật…",
     "managePaymentSave": "Lưu phương thức thanh toán",
     "managePaymentSaving": "Đang lưu…",

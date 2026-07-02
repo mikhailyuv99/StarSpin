@@ -271,6 +271,7 @@
     "manageResumeError": "Couldn't resume subscription. Try again or contact hello@starspin.cc.",
     "managePaymentTitle": "Payment method",
     "managePaymentSubtitle": "Update the card, Apple Pay, or Google Pay used for STARSPIN.",
+    "managePaymentUpdate": "Update payment method",
     "managePaymentLoading": "Loading secure payment form…",
     "managePaymentSave": "Save payment method",
     "managePaymentSaving": "Saving…",

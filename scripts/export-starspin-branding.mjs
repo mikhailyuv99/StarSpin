@@ -14,8 +14,8 @@ const OUT = path.join(process.env.USERPROFILE ?? "", "Desktop", "SpinStar Brandi
 /** Yellow star only — no orbit ring, no frame, no dot. */
 const STAR_PATH = `M20 7.5 22.4 14.8 30 14.8 23.8 19.2 26.2 26.5 20 22.2 13.8 26.5 16.2 19.2 10 14.8 17.6 14.8Z`;
 
-function starGroup(scale, x, y) {
-  return `<g transform="translate(${x}, ${y}) scale(${scale})">
+function starGroupAt(scale, cx, cy) {
+  return `<g transform="translate(${cx}, ${cy}) scale(${scale}) translate(-20, -20)">
     <path d="${STAR_PATH}" fill="${BRAND.yellow}" stroke="${BRAND.black}" stroke-width="2.25" stroke-linejoin="round"/>
   </g>`;
 }
@@ -24,35 +24,42 @@ function purpleBg(width, height) {
   return `<rect width="${width}" height="${height}" fill="${BRAND.purple}"/>`;
 }
 
+const PADDING = 0.1;
+
 /** Star centered on solid purple — nothing else. */
 function iconOnlySvg({ size = 1024, withBackground = true }) {
-  const starScale = (size * 0.72) / 40;
-  const offset = (size - 40 * starScale) / 2;
+  const inner = size * (1 - PADDING * 2);
+  const scale = inner / 40;
+  const cx = size / 2;
+  const cy = size / 2;
   const bg = withBackground ? purpleBg(size, size) : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   ${bg}
-  ${starGroup(starScale, offset, offset)}
+  ${starGroupAt(scale, cx, cy)}
 </svg>`;
 }
 
 function wordmarkElements(width, height) {
-  const starScale = (width * 0.56) / 40;
-  const starSize = 40 * starScale;
-  const fontSize = Math.round(width * 0.14);
+  const padX = width * PADDING;
+  const padY = height * PADDING;
+  const innerW = width - padX * 2;
+  const innerH = height - padY * 2;
+  const scale = innerW / 40;
+  const visualStarH = 19 * scale;
+  const fontSize = Math.round(innerW * 0.13);
   const gap = fontSize * 0.42;
-  const blockHeight = starSize + gap + fontSize;
-  const blockTop = (height - blockHeight) / 2;
-  const starX = (width - starSize) / 2;
-  const starY = blockTop;
-  const textY = blockTop + starSize + gap + fontSize * 0.88;
+  const blockHeight = visualStarH + gap + fontSize;
+  const blockTop = padY + (innerH - blockHeight) / 2;
+  const starCy = blockTop + visualStarH / 2;
+  const textY = blockTop + visualStarH + gap + fontSize * 0.88;
 
   return `
-  ${starGroup(starScale, starX, starY)}
+  ${starGroupAt(scale, width / 2, starCy)}
   <text x="${width / 2}" y="${textY}" text-anchor="middle"
     font-family="Arial Black, Impact, Haettenschweiler, sans-serif"
     font-size="${fontSize}" font-weight="900" fill="${BRAND.black}"
-    letter-spacing="${Math.round(fontSize * 0.14)}">STARSPIN</text>`;
+    letter-spacing="${Math.round(fontSize * 0.12)}">STARSPIN</text>`;
 }
 
 /** Star + STARSPIN on solid purple — no frame around the logo. */
@@ -71,11 +78,11 @@ function bannerSvg({ width, height }) {
   let logoH;
 
   if (aspect > 1.4) {
-    logoH = height * 0.9;
-    logoW = logoH * 0.8;
+    logoH = height * (1 - PADDING * 2);
+    logoW = logoH * 0.82;
   } else {
-    logoW = width * 0.56;
-    logoH = logoW * 1.25;
+    logoW = width * (1 - PADDING * 2);
+    logoH = logoW * 1.22;
   }
 
   const x = (width - logoW) / 2;

@@ -271,6 +271,7 @@
     "manageResumeError": "Не удалось возобновить. Попробуйте снова или напишите на hello@starspin.cc.",
     "managePaymentTitle": "Способ оплаты",
     "managePaymentSubtitle": "Обновите карту, Apple Pay или Google Pay для STARSPIN.",
+    "managePaymentUpdate": "Обновить способ оплаты",
     "managePaymentLoading": "Загрузка защищённой формы оплаты…",
     "managePaymentSave": "Сохранить способ оплаты",
     "managePaymentSaving": "Сохранение…",
