@@ -7,6 +7,7 @@ type PrizeEmailParams = {
   prizeCode: string;
   merchantName: string;
   locale?: string;
+  ruleLines?: string[];
 };
 
 function prizeEmailHtml({
@@ -14,7 +15,18 @@ function prizeEmailHtml({
   prizeLabel,
   prizeCode,
   merchantName,
+  ruleLines = [],
 }: Omit<PrizeEmailParams, "to" | "locale">): string {
+  const rulesHtml =
+    ruleLines.length > 0
+      ? `<div style="margin:0 0 20px;padding:16px;background:#faf6ee;border:2px solid #0a0a0a;border-radius:12px;">
+          <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#666;">Redemption conditions</p>
+          <ul style="margin:0;padding:0 0 0 18px;color:#333;font-size:14px;line-height:1.5;">
+            ${ruleLines.map((line) => `<li style="margin-bottom:6px;">${line}</li>`).join("")}
+          </ul>
+        </div>`
+      : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
@@ -35,7 +47,8 @@ function prizeEmailHtml({
             <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#666;">Your prize code</p>
             <p style="margin:0;font-family:ui-monospace,monospace;font-size:32px;font-weight:900;letter-spacing:0.08em;color:#0a0a0a;">${prizeCode}</p>
           </div>
-          <p style="margin:0;font-size:14px;line-height:1.5;color:#555;">Show this code at the counter to redeem your prize. Keep this email — you'll need the code.</p>
+          ${rulesHtml}
+          <p style="margin:0;font-size:14px;line-height:1.5;color:#555;">Show this code at the counter to redeem your prize. Keep this email - you'll need the code.</p>
         </td></tr>
         <tr><td style="padding:16px 24px 24px;border-top:2px solid #ececec;">
           <p style="margin:0;font-size:11px;color:#888;text-align:center;">Powered by STARSPIN · ${getAppUrl().replace(/^https?:\/\//, "")}</p>
@@ -52,11 +65,11 @@ export async function sendPrizeEmail(params: PrizeEmailParams): Promise<boolean>
   const from = process.env.RESEND_FROM_EMAIL ?? "STARSPIN <onboarding@resend.dev>";
 
   if (!apiKey) {
-    console.warn("[email] RESEND_API_KEY not set — prize email skipped (dev mode)");
+    console.warn("[email] RESEND_API_KEY not set - prize email skipped (dev mode)");
     return false;
   }
 
-  const subject = `STARSPIN — Your prize code: ${params.prizeCode}`;
+  const subject = `STARSPIN - Your prize code: ${params.prizeCode}`;
   const html = prizeEmailHtml(params);
 
   const res = await fetch("https://api.resend.com/emails", {

@@ -4,12 +4,29 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { generatePrizeCode } from "@/lib/prize-code";
 import { sendPrizeEmail } from "@/lib/email";
 import { sendSmsMessage } from "@/lib/sms";
+import {
+  formatRedemptionRuleLines,
+  snapshotFromPrize,
+  type RedemptionRulesSnapshot,
+} from "@/lib/redemption-rules";
 
 function normalizePhone(phone: string): string {
   const cleaned = phone.replace(/\s+/g, "");
   if (cleaned.startsWith("+")) return cleaned;
   if (cleaned.startsWith("0")) return `+84${cleaned.slice(1)}`;
   return `+84${cleaned}`;
+}
+
+function snapshotFromSpin(spin: {
+  redeem_next_visit?: boolean | null;
+  redeem_min_spend_cents?: number | null;
+  redeem_expires_at?: string | null;
+}): RedemptionRulesSnapshot {
+  return {
+    redeem_next_visit: Boolean(spin.redeem_next_visit),
+    redeem_min_spend_cents: spin.redeem_min_spend_cents ?? null,
+    redeem_expires_at: spin.redeem_expires_at ?? null,
+  };
 }
 
 export async function POST(request: Request) {
@@ -33,7 +50,7 @@ export async function POST(request: Request) {
 
     const { data: spin, error: spinError } = await supabase
       .from("spins")
-      .select("*, prize:prizes(label)")
+      .select("*, prize:prizes(*)")
       .eq("id", spinId)
       .maybeSingle();
 
@@ -41,11 +58,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.spinNotFound") }, { status: 404 });
     }
 
+    const prize = Array.isArray(spin.prize) ? spin.prize[0] : spin.prize;
+    const prizeLabel = prize?.label ?? "Prize";
+
     if (spin.prize_code) {
+      const redemptionRules = snapshotFromSpin(spin);
       return NextResponse.json({
         prizeCode: spin.prize_code,
         emailSent: Boolean(spin.claim_notified_at),
         alreadyClaimed: true,
+        redemptionRules,
       });
     }
 
@@ -55,38 +77,40 @@ export async function POST(request: Request) {
       .eq("id", spin.merchant_id)
       .maybeSingle();
 
-    const prizeLabel = Array.isArray(spin.prize)
-      ? spin.prize[0]?.label
-      : (spin.prize as { label: string } | null)?.label;
-
+    const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin({});
+    const ruleLines = formatRedemptionRuleLines(redemptionRules, t, locale);
     const prizeCode = generatePrizeCode();
     const merchantName = merchant?.name ?? "STARSPIN";
 
     const emailSent = await sendPrizeEmail({
       to: emailAddress,
       firstName: firstName.trim(),
-      prizeLabel: prizeLabel ?? "Prize",
+      prizeLabel,
       prizeCode,
       merchantName,
       locale,
+      ruleLines,
     });
 
     let smsSent = false;
     if (phoneNumber?.trim()) {
       const normalized = normalizePhone(String(phoneNumber));
       const smsBody = t("api.prizeSmsBody", {
-        prize: prizeLabel ?? "Prize",
+        prize: prizeLabel,
         code: prizeCode,
         merchant: merchantName,
       });
       smsSent = await sendSmsMessage(normalized, smsBody);
     }
 
-    const updatePayload: Record<string, string | null> = {
+    const updatePayload: Record<string, string | boolean | number | null> = {
       claim_first_name: firstName.trim(),
       claim_email: emailAddress,
       prize_code: prizeCode,
       claim_notified_at: new Date().toISOString(),
+      redeem_next_visit: redemptionRules.redeem_next_visit,
+      redeem_min_spend_cents: redemptionRules.redeem_min_spend_cents,
+      redeem_expires_at: redemptionRules.redeem_expires_at,
     };
 
     if (phoneNumber?.trim()) {
@@ -105,6 +129,7 @@ export async function POST(request: Request) {
       emailSent,
       smsSent,
       alreadyClaimed: false,
+      redemptionRules,
     });
   } catch (err) {
     console.error("Claim error:", err);

@@ -12,6 +12,8 @@ import { verifyReviewScreenshot } from "@/lib/ocr";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { PrizeCoupon } from "@/components/PrizeCoupon";
+import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -53,6 +55,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
   const [spinId, setSpinId] = useState<string | null>(null);
   const [prizeCode, setPrizeCode] = useState<string | null>(null);
+  const [redemptionRules, setRedemptionRules] = useState<RedemptionRulesSnapshot | null>(null);
   const [claimEmailSent, setClaimEmailSent] = useState(false);
   const [claimFirstName, setClaimFirstName] = useState("");
   const [claimEmail, setClaimEmail] = useState("");
@@ -153,6 +156,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
       setPrizeCode(data.prizeCode);
+      setRedemptionRules(data.redemptionRules ?? null);
       setClaimEmailSent(Boolean(data.emailSent));
       setStep("result");
     } catch (e) {
@@ -419,34 +423,27 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   initial={{ opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                  className="space-y-5 py-2 text-center"
+                  className="space-y-5 py-2"
                 >
                   <motion.p
-                    className="text-5xl"
+                    className="text-center text-5xl"
                     animate={{ rotate: [0, -8, 8, 0] }}
                     transition={{ repeat: 2, duration: 0.4 }}
                     aria-hidden
                   >
                     🎉
                   </motion.p>
-                  <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{t("public.youWon")}</p>
-                  <p className="text-balance font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-tight text-ink sm:text-3xl">
-                    {wonPrize.label}
-                  </p>
-                  <div className="brutal-card border-dashed bg-[var(--c-cream)] px-4 py-6">
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-                      {t("public.checkoutCode")}
-                    </p>
-                    <p className="mt-3 font-mono text-4xl font-extrabold tracking-wider text-ink">
-                      {prizeCode}
-                    </p>
-                  </div>
-                  <p className="text-sm font-medium leading-relaxed text-muted">
+                  <PrizeCoupon
+                    prizeLabel={wonPrize.label}
+                    prizeCode={prizeCode}
+                    rules={redemptionRules}
+                  />
+                  <p className="text-center text-sm font-medium leading-relaxed text-muted">
                     {claimEmailSent
                       ? t("public.codeSentEmail", { email: claimEmail })
                       : t("public.codeSentDev")}
                   </p>
-                  <p className="text-sm font-medium leading-relaxed text-muted">{t("public.showScreen")}</p>
+                  <p className="text-center text-sm font-medium leading-relaxed text-muted">{t("public.showScreen")}</p>
                 </motion.div>
               )}
             </AnimatePresence>

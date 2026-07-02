@@ -1,4 +1,4 @@
-import { requireMerchant } from "@/lib/merchant";
+﻿import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { ui } from "@/components/ui/styles";
 import { getLocale, getTranslations } from "@/i18n/server";
@@ -58,7 +58,7 @@ export default async function StatsPage() {
         </div>
         <div className={ui.stat}>
           <p className={ui.statLabel}>{t("dashboard.googleReviews")}</p>
-          <p className={ui.statValue}>{reviewHistory?.[0]?.count ?? "—"}</p>
+          <p className={ui.statValue}>{reviewHistory?.[0]?.count ?? "-"}</p>
         </div>
       </div>
 
@@ -89,8 +89,8 @@ export default async function StatsPage() {
               <span className="text-ink">
                 {(() => {
                   const prize = spin.prize;
-                  if (Array.isArray(prize)) return prize[0]?.label ?? "—";
-                  return (prize as { label: string } | null)?.label ?? "—";
+                  if (Array.isArray(prize)) return prize[0]?.label ?? "-";
+                  return (prize as { label: string } | null)?.label ?? "-";
                 })()}
               </span>
             </div>

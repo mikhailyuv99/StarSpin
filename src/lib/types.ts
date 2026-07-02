@@ -33,6 +33,9 @@ export interface Prize {
   probability_weight: number;
   stock_remaining: number | null;
   active: boolean;
+  redeem_next_visit?: boolean;
+  redeem_min_spend_cents?: number | null;
+  redeem_valid_days?: number | null;
   created_at: string;
 }
 
@@ -49,6 +52,9 @@ export interface Spin {
   claim_email?: string | null;
   prize_code?: string | null;
   claim_notified_at?: string | null;
+  redeem_next_visit?: boolean | null;
+  redeem_min_spend_cents?: number | null;
+  redeem_expires_at?: string | null;
   created_at: string;
   prize?: Prize;
 }
