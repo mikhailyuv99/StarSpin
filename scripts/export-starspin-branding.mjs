@@ -13,43 +13,63 @@ const OUT = path.join(process.env.USERPROFILE ?? "", "Desktop", "SpinStar Brandi
 
 /** Yellow star only — no orbit ring, no frame, no dot. */
 const STAR_PATH = `M20 7.5 22.4 14.8 30 14.8 23.8 19.2 26.2 26.5 20 22.2 13.8 26.5 16.2 19.2 10 14.8 17.6 14.8Z`;
+const STAR_STROKE = 1.85;
+
+/** Tight crop around the star path + stroke (not the full 40×40 mark viewBox). */
+const STAR_CROP = { x: 9, y: 6.5, width: 22, height: 20.5 };
+const ICON_BLEED = 0.01;
+
+function starPath(strokeWidth = STAR_STROKE) {
+  return `<path d="${STAR_PATH}" fill="${BRAND.yellow}" stroke="${BRAND.black}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>`;
+}
+
+function iconViewBox(bleed = ICON_BLEED) {
+  const padX = STAR_CROP.width * bleed;
+  const padY = STAR_CROP.height * bleed;
+  return {
+    x: STAR_CROP.x - padX,
+    y: STAR_CROP.y - padY,
+    width: STAR_CROP.width + padX * 2,
+    height: STAR_CROP.height + padY * 2,
+  };
+}
+
+function purpleBgRect(vb) {
+  return `<rect x="${vb.x}" y="${vb.y}" width="${vb.width}" height="${vb.height}" fill="${BRAND.purple}"/>`;
+}
 
 function starGroupAt(scale, cx, cy) {
   return `<g transform="translate(${cx}, ${cy}) scale(${scale}) translate(-20, -20)">
-    <path d="${STAR_PATH}" fill="${BRAND.yellow}" stroke="${BRAND.black}" stroke-width="2.25" stroke-linejoin="round"/>
+    ${starPath()}
   </g>`;
+}
+
+/** Star cropped tight on solid purple — fills favicon/tab icons. */
+function iconOnlySvg({ size = 1024, withBackground = true, bleed = ICON_BLEED }) {
+  const vb = iconViewBox(bleed);
+  const bg = withBackground ? purpleBgRect(vb) : "";
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${vb.x} ${vb.y} ${vb.width} ${vb.height}">
+  ${bg}
+  ${starPath()}
+</svg>`;
+}
+
+const WORDMARK_PADDING = 0.06;
+const STAR_VISUAL_WIDTH = 20;
+const STAR_VISUAL_HEIGHT = 19;
+
+function starScaleForInner(inner) {
+  return Math.min(inner / STAR_VISUAL_WIDTH, inner / STAR_VISUAL_HEIGHT);
 }
 
 function purpleBg(width, height) {
   return `<rect width="${width}" height="${height}" fill="${BRAND.purple}"/>`;
 }
 
-// Star path bounds inside the 40×40 viewBox (not the full viewBox).
-const STAR_VISUAL_WIDTH = 20;
-const STAR_VISUAL_HEIGHT = 19;
-const PADDING = 0.06;
-
-function starScaleForInner(inner) {
-  return Math.min(inner / STAR_VISUAL_WIDTH, inner / STAR_VISUAL_HEIGHT) * 0.98;
-}
-
-/** Star centered on solid purple — nothing else. */
-function iconOnlySvg({ size = 1024, withBackground = true }) {
-  const inner = size * (1 - PADDING * 2);
-  const scale = starScaleForInner(inner);
-  const cx = size / 2;
-  const cy = size / 2;
-  const bg = withBackground ? purpleBg(size, size) : "";
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  ${bg}
-  ${starGroupAt(scale, cx, cy)}
-</svg>`;
-}
-
 function wordmarkElements(width, height) {
-  const padX = width * PADDING;
-  const padY = height * PADDING;
+  const padX = width * WORDMARK_PADDING;
+  const padY = height * WORDMARK_PADDING;
   const innerW = width - padX * 2;
   const innerH = height - padY * 2;
   const scale = starScaleForInner(Math.min(innerW, innerH));
@@ -85,10 +105,10 @@ function bannerSvg({ width, height }) {
   let logoH;
 
   if (aspect > 1.4) {
-    logoH = height * (1 - PADDING * 2);
+    logoH = height * (1 - WORDMARK_PADDING * 2);
     logoW = logoH * 0.82;
   } else {
-    logoW = width * (1 - PADDING * 2);
+    logoW = width * (1 - WORDMARK_PADDING * 2);
     logoH = logoW * 1.22;
   }
 
@@ -104,6 +124,27 @@ function bannerSvg({ width, height }) {
 </svg>`;
 }
 
+const REPO_ROOT = path.resolve(import.meta.dirname, "..");
+const APP_ICON_PATHS = [
+  ["favicon/favicon.ico", "src/app/favicon.ico"],
+  ["favicon/apple-touch-icon.png", "src/app/apple-icon.png"],
+  ["png/icon-only-512.png", "src/app/icon.png"],
+  ["pwa/icon-192x192.png", "public/icon-192.png"],
+  ["pwa/icon-512x512.png", "public/icon-512.png"],
+  ["social/og-image.png", "src/app/opengraph-image.png"],
+  ["social/twitter-banner.png", "src/app/twitter-image.png"],
+];
+
+async function syncToApp(outDir) {
+  await Promise.all(
+    APP_ICON_PATHS.map(async ([from, to]) => {
+      const src = path.join(outDir, from);
+      const dest = path.join(REPO_ROOT, to);
+      await fs.mkdir(path.dirname(dest), { recursive: true });
+      await fs.copyFile(src, dest);
+    }),
+  );
+}
 async function writeSvg(filePath, svg) {
   await fs.writeFile(filePath, svg, "utf8");
 }
@@ -155,12 +196,14 @@ async function main() {
     await writePng(file, svg, w, h);
   }
 
-  const fav16 = await sharp(Buffer.from(iconSvg)).resize(16, 16).png().toBuffer();
-  const fav32 = await sharp(Buffer.from(iconSvg)).resize(32, 32).png().toBuffer();
-  const fav48 = await sharp(Buffer.from(iconSvg)).resize(48, 48).png().toBuffer();
+  const fav16 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(16, 16).png().toBuffer();
+  const fav32 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(32, 32).png().toBuffer();
+  const fav48 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(48, 48).png().toBuffer();
   const ico = await toIco([fav16, fav32, fav48]);
   await fs.writeFile(path.join(OUT, "favicon", "favicon.ico"), ico);
   await fs.copyFile(path.join(OUT, "favicon", "favicon.ico"), path.join(OUT, "favicon.ico"));
+
+  await syncToApp(OUT);
 
   const readme = `STARSPIN Branding Pack
 =====================
@@ -183,6 +226,7 @@ Generated for starspin.cc
 
   await fs.writeFile(path.join(OUT, "README.txt"), readme, "utf8");
   console.log(`Branding assets written to: ${OUT}`);
+  console.log("Synced favicon and app icons into src/app and public/");
 }
 
 main().catch((err) => {
