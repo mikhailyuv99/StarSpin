@@ -24,6 +24,7 @@ export function BrandingForm({
     instagram: merchant.social_links.instagram ?? "",
     facebook: merchant.social_links.facebook ?? "",
     tiktok: merchant.social_links.tiktok ?? "",
+    tripadvisor: merchant.social_links.tripadvisor ?? "",
     logo_url: merchant.logo_url ?? "",
   });
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ export function BrandingForm({
       instagram: form.instagram || undefined,
       facebook: form.facebook || undefined,
       tiktok: form.tiktok || undefined,
+      tripadvisor: form.tripadvisor || undefined,
     };
 
     const supabase = createClient();
@@ -172,6 +174,7 @@ export function BrandingForm({
           { key: "instagram", label: t("dashboard.instagramUrl"), brand: "instagram" as SocialBrand },
           { key: "facebook", label: t("dashboard.facebookUrl"), brand: "facebook" as SocialBrand },
           { key: "tiktok", label: t("dashboard.tiktokUrl"), brand: "tiktok" as SocialBrand },
+          { key: "tripadvisor", label: t("dashboard.tripadvisorUrl"), brand: "tripadvisor" as SocialBrand },
           { key: "google_review_link", label: t("dashboard.googleReviewLink"), brand: "google" as SocialBrand },
           { key: "google_place_id", label: t("dashboard.googlePlaceId") },
         ] as const

@@ -13,10 +13,11 @@ export default async function DashboardPage() {
   const t = await getTranslations();
 
   const links = [
+    { href: "/dashboard/flow", title: t("dashboard.flowCard"), desc: t("dashboard.flowCardDesc") },
     { href: "/dashboard/branding", title: t("dashboard.brandingCard"), desc: t("dashboard.brandingDesc") },
     { href: "/dashboard/prizes", title: t("dashboard.prizesCard"), desc: t("dashboard.prizesDesc") },
+    { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmCardDesc") },
     { href: "/dashboard/qr", title: t("dashboard.qrCard"), desc: t("dashboard.qrDesc") },
-    { href: "/dashboard/stats", title: t("dashboard.statsCard"), desc: t("dashboard.statsDesc") },
   ];
 
   const needsSubscribe = merchant.subscription_status === "trial" || merchant.subscription_status === "past_due";

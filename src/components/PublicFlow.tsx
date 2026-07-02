@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { contrastTextColor } from "@/lib/wheel";
-import type { Merchant, Prize, PublicStep } from "@/lib/types";
+import type { Merchant, Prize } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
@@ -14,13 +14,18 @@ import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { PrizeCoupon } from "@/components/PrizeCoupon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
+import {
+  buildPublicStepOrder,
+  isSocialFlowStep,
+  socialUrlForStep,
+  type FlowActionStep,
+  type PublicStep,
+} from "@/lib/flow-steps";
 
 interface PublicFlowProps {
   merchant: Merchant;
   prizes: Prize[];
 }
-
-const STEP_ORDER: PublicStep[] = ["social", "review", "wheel", "claim", "result"];
 
 const stepVariants = {
   enter: { opacity: 0, x: 24 },
@@ -43,11 +48,16 @@ function fireConfetti(accent: string) {
   });
 }
 
+function socialBrandForStep(step: FlowActionStep): SocialBrand {
+  return step === "google_review" ? "google" : step;
+}
+
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<PublicStep>("social");
-  const [followedSocial, setFollowedSocial] = useState(false);
+  const stepOrder = useMemo(() => buildPublicStepOrder(merchant), [merchant]);
+  const [step, setStep] = useState<PublicStep>(stepOrder[0]);
+  const [completedSteps, setCompletedSteps] = useState<FlowActionStep[]>([]);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [reviewStatus, setReviewStatus] = useState<"pending" | "verified" | "rejected">("pending");
   const [loading, setLoading] = useState(false);
@@ -64,17 +74,36 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
 
   const accent = merchant.primary_color;
-  const progress = ((STEP_ORDER.indexOf(step) + 1) / STEP_ORDER.length) * 100;
-
+  const stepIndex = stepOrder.indexOf(step);
+  const progress = ((stepIndex + 1) / stepOrder.length) * 100;
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
+  const followedSocial = completedSteps.some(isSocialFlowStep);
+
+  useEffect(() => {
+    if (!stepOrder.includes(step)) {
+      setStep(stepOrder[0]);
+    }
+  }, [step, stepOrder]);
 
   useEffect(() => {
     if (step === "result" && wonPrize) fireConfetti(accent);
   }, [step, wonPrize, accent]);
 
-  const handleSocialClick = (url: string) => {
+  const advance = useCallback(
+    (completed?: FlowActionStep) => {
+      const nextCompleted = completed ? [...completedSteps, completed] : completedSteps;
+      if (completed) setCompletedSteps(nextCompleted);
+
+      const currentIdx = stepOrder.indexOf(step);
+      const next = stepOrder[currentIdx + 1];
+      if (next) setStep(next);
+    },
+    [completedSteps, step, stepOrder],
+  );
+
+  const handleSocialStep = (actionStep: FlowActionStep, url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
-    setFollowedSocial(true);
+    advance(actionStep);
   };
 
   const handleReviewUpload = async (file: File) => {
@@ -94,7 +123,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(uploadData.error ?? t("api.uploadFailed"));
       setScreenshotUrl(uploadData.url);
-      setStep("wheel");
+      advance("google_review");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
@@ -114,6 +143,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           followedSocial,
           reviewScreenshotUrl: screenshotUrl,
           reviewScreenshotStatus: reviewStatus,
+          completedFlowSteps: completedSteps,
         }),
       });
       const data = await res.json();
@@ -127,7 +157,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     } finally {
       setLoading(false);
     }
-  }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, locale, t]);
+  }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, completedSteps, locale, t]);
 
   const onSpinComplete = (prize: Prize) => {
     setWonPrize(prize);
@@ -166,15 +196,110 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     }
   };
 
-  const handleWheelSpin = async () => {
-    await executeSpin();
-  };
+  const renderActionStep = (actionStep: FlowActionStep) => {
+    if (actionStep === "google_review") {
+      return (
+        <motion.div
+          key="google_review"
+          variants={stepVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.3 }}
+          className="space-y-4"
+        >
+          <div className="text-center">
+            <p className="text-3xl" aria-hidden>
+              🏆
+            </p>
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
+              {t("public.reviewTitle")}
+            </h2>
+            <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
+          </div>
 
-  const socialLinks = [
-    { key: "instagram" as SocialBrand, label: t("public.followInstagram"), url: merchant.social_links.instagram },
-    { key: "facebook" as SocialBrand, label: t("public.followFacebook"), url: merchant.social_links.facebook },
-    { key: "tiktok" as SocialBrand, label: t("public.followTiktok"), url: merchant.social_links.tiktok },
-  ].filter((l) => l.url) as { key: SocialBrand; label: string; url: string }[];
+          {merchant.google_review_link && (
+            <a
+              href={merchant.google_review_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="public-btn public-touch-target flex items-center justify-center gap-2"
+              style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
+            >
+              <SocialIcon brand="google" size={20} />
+              {t("public.openGoogle")}
+            </a>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,.heic"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleReviewUpload(file);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const input = fileInputRef.current;
+              if (!input) return;
+              input.value = "";
+              input.click();
+            }}
+            disabled={loading}
+            className="public-btn public-btn-outline public-touch-target"
+          >
+            {loading ? t("public.uploadAnalyzing") : t("public.uploadScreenshot")}
+          </button>
+          <p className="text-center text-xs font-medium text-muted">{t("public.reviewHint")}</p>
+        </motion.div>
+      );
+    }
+
+    const url = socialUrlForStep(actionStep, merchant.social_links);
+    const brand = socialBrandForStep(actionStep);
+    const labelKey = `public.follow_${actionStep}` as const;
+
+    return (
+      <motion.div
+        key={actionStep}
+        variants={stepVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
+        <div className="text-center">
+          <p className="text-3xl" aria-hidden>
+            ⭐
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
+            {t(labelKey)}
+          </h2>
+          <p className="mt-1 text-sm font-medium text-muted">{t("public.socialStepHint")}</p>
+        </div>
+
+        {url ? (
+          <button
+            type="button"
+            onClick={() => handleSocialStep(actionStep, url)}
+            className="public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2.5"
+          >
+            <span className="public-social-icon-box">
+              <SocialIcon brand={brand} size={22} />
+            </span>
+            {t(labelKey)}
+          </button>
+        ) : (
+          <p className="text-center text-sm font-medium text-muted">{t("public.stepNotConfigured")}</p>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
     <div className="public-flow w-full">
@@ -200,7 +325,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           </div>
         </div>
 
-        <StepIndicator current={step} accent={accent} />
+        <StepIndicator current={step} steps={stepOrder} accent={accent} />
 
         <div className="public-card">
           {error && (
@@ -211,112 +336,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
 
           <div className="p-4 sm:p-6">
             <AnimatePresence mode="wait">
-              {step === "social" && (
-                <motion.div
-                  key="social"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  <div className="text-center">
-                    <p className="text-3xl" aria-hidden>
-                      ⭐
-                    </p>
-                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.socialTitle")}</h2>
-                    <p className="mt-1 text-sm font-medium text-muted">{t("public.socialSubtitle")}</p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {socialLinks.map((link) => (
-                      <button
-                        key={link.key}
-                        type="button"
-                        onClick={() => handleSocialClick(link.url!)}
-                      className={`public-btn public-btn-outline public-touch-target flex items-center justify-center gap-2.5 text-left`}
-                      >
-                        <span className="public-social-icon-box">
-                          <SocialIcon brand={link.key} size={22} />
-                        </span>
-                        {link.label}
-                      </button>
-                    ))}
-                    {socialLinks.length === 0 && (
-                      <p className="text-center text-sm font-medium text-muted">{t("public.noSocial")}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setStep("review")}
-                    disabled={!followedSocial && socialLinks.length > 0}
-                    className="public-btn public-touch-target"
-                    style={btnStyle}
-                  >
-                    {t("public.missionDone")}
-                  </button>
-                </motion.div>
-              )}
-
-              {step === "review" && (
-                <motion.div
-                  key="review"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  <div className="text-center">
-                    <p className="text-3xl" aria-hidden>
-                      🏆
-                    </p>
-                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.reviewTitle")}</h2>
-                    <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
-                  </div>
-
-                  {merchant.google_review_link && (
-                    <a
-                      href={merchant.google_review_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="public-btn public-touch-target flex items-center justify-center gap-2"
-                      style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
-                    >
-                      <SocialIcon brand="google" size={20} />
-                      {t("public.openGoogle")}
-                    </a>
-                  )}
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,.heic"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleReviewUpload(file);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const input = fileInputRef.current;
-                      if (!input) return;
-                      input.value = "";
-                      input.click();
-                    }}
-                    disabled={loading}
-                    className="public-btn public-btn-outline public-touch-target"
-                  >
-                    {loading ? t("public.uploadAnalyzing") : t("public.uploadScreenshot")}
-                  </button>
-                  <p className="text-center text-xs font-medium text-muted">{t("public.reviewHint")}</p>
-                </motion.div>
-              )}
+              {step !== "wheel" && step !== "claim" && step !== "result" && renderActionStep(step)}
 
               {step === "wheel" && (
                 <motion.div
@@ -332,7 +352,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="text-3xl" aria-hidden>
                       🎰
                     </p>
-                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">{t("public.wheelTitle")}</h2>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
+                      {t("public.wheelTitle")}
+                    </h2>
                     <p className="mt-1 text-sm font-medium text-muted">{t("public.wheelSubtitle")}</p>
                   </div>
 
@@ -350,7 +372,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   {!spinning && !targetPrizeId && (
                     <button
                       type="button"
-                      onClick={handleWheelSpin}
+                      onClick={executeSpin}
                       disabled={loading}
                       className="public-btn public-touch-target text-lg"
                       style={btnStyle}

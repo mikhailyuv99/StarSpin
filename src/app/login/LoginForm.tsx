@@ -53,7 +53,7 @@ export default function LoginPage() {
   const planParam = searchParams.get("plan");
   const postAuthPath =
     planParam && isBillingPlan(planParam)
-      ? `/subscribe?subscribe=${planParam as BillingPlan}`
+      ? `/subscribe/checkout?plan=${planParam as BillingPlan}`
       : redirect;
 
   const [email, setEmail] = useState("");

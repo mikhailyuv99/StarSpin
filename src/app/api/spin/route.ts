@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       followedSocial,
       reviewScreenshotUrl,
       reviewScreenshotStatus,
+      completedFlowSteps,
     } = body;
 
     if (!merchantId) {
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
         followed_social: Boolean(followedSocial),
         review_screenshot_url: reviewScreenshotUrl ?? null,
         review_screenshot_status: status,
+        completed_flow_steps: Array.isArray(completedFlowSteps) ? completedFlowSteps : [],
       })
       .select("*, prize:prizes(*)")
       .single();

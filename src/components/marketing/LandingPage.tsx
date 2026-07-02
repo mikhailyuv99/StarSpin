@@ -234,7 +234,7 @@ function PhoneScene() {
         </div>
         <div className="cadeo-review-card">
           <span className="cadeo-review-badge">Step 1</span>
-          <h4>{t("marketing.visit1Action")}</h4>
+          <h4>{t("public.reviewTitle")}</h4>
           <ol className="cadeo-review-steps">
             <li>Leave a Google review</li>
             <li>Come back to this page</li>
@@ -252,35 +252,38 @@ function PhoneScene() {
   );
 }
 
-function VisitsFlow() {
+function JourneyPreview() {
   const { t } = useI18n();
-  const visits: { label: string; action: string; pill: string; brand: SocialBrand }[] = [
-    { label: t("marketing.visit1"), action: t("marketing.visit1Action"), pill: "cadeo-visit-pill--google", brand: "google" },
-    { label: t("marketing.visit2"), action: t("marketing.visit2Action"), pill: "cadeo-visit-pill--insta", brand: "instagram" },
-    { label: t("marketing.visit3"), action: t("marketing.visit3Action"), pill: "cadeo-visit-pill--tiktok", brand: "tiktok" },
-    { label: t("marketing.visit4"), action: t("marketing.visit4Action"), pill: "cadeo-visit-pill--facebook", brand: "facebook" },
+  const steps: { brand: SocialBrand; label: string }[] = [
+    { brand: "google", label: t("dashboard.flowStep_google_review") },
+    { brand: "instagram", label: t("dashboard.flowStep_instagram") },
+    { brand: "tripadvisor", label: t("dashboard.flowStep_tripadvisor") },
   ];
 
   return (
     <div className="cadeo-visits-block">
       <RevealStagger className="cadeo-visits">
-        {visits.map((v, i) => (
-          <RevealItem key={v.label} className="cadeo-visit-item">
+        {steps.map((step, i) => (
+          <RevealItem key={step.label} className="cadeo-visit-item">
             <div className="cadeo-visit-card">
               <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
-              <p className="cadeo-visit-label">{v.label}</p>
-              <div className="cadeo-visit-xp" aria-hidden>
-                <div className="cadeo-visit-xp-fill" style={{ width: `${(i + 1) * 25}%` }} />
-              </div>
-              <span className={`cadeo-visit-pill ${v.pill}`}>
+              <span className={`cadeo-visit-pill cadeo-visit-pill--google`}>
                 <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={v.brand} size={22} />
+                  <SocialIcon brand={step.brand} size={22} />
                 </span>
-                <span className="cadeo-visit-pill-text">{v.action}</span>
+                <span className="cadeo-visit-pill-text">{step.label}</span>
               </span>
             </div>
           </RevealItem>
         ))}
+        <RevealItem className="cadeo-visit-item">
+          <div className="cadeo-visit-card">
+            <span className="cadeo-visit-step">{String(steps.length + 1).padStart(2, "0")}</span>
+            <span className="cadeo-visit-pill cadeo-visit-pill--yellow">
+              <span className="cadeo-visit-pill-text">{t("public.stepWheel")}</span>
+            </span>
+          </div>
+        </RevealItem>
       </RevealStagger>
     </div>
   );
@@ -367,7 +370,7 @@ function Features() {
             <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
             <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
           </Reveal>
-          <VisitsFlow />
+          <JourneyPreview />
         </div>
 
         <Reveal className="cadeo-quote" y={28}>
@@ -405,7 +408,7 @@ function Features() {
             <DataScene />
           </Reveal>
           <Reveal className="cadeo-feature-copy" delay={0.06}>
-            <p className="cadeo-feature-label">CRM</p>
+            <p className="cadeo-feature-label">{t("dashboard.navCrm")}</p>
             <h3 className="cadeo-feature-title">{t("marketing.dataTitle")}</h3>
             <p className="cadeo-feature-body">{t("marketing.dataBody")}</p>
           </Reveal>
@@ -458,19 +461,15 @@ function Advantages() {
 
 function Pricing() {
   const { t } = useI18n();
-  const left = [
+  const features = [
     t("marketing.priceF1"),
     t("marketing.priceF2"),
     t("marketing.priceF3"),
     t("marketing.priceF4"),
     t("marketing.priceF5"),
     t("marketing.priceF6"),
-  ];
-  const right = [
     t("marketing.priceF7"),
     t("marketing.priceF8"),
-    t("marketing.priceF9"),
-    t("marketing.priceF10"),
   ];
   const sideAdv = getMarketingAdvantages(t);
 
@@ -507,11 +506,11 @@ function Pricing() {
               </div>
               <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
               <div className="cadeo-pricing-features">
-                {[...left, ...right].map((f) => (
+                {features.map((f) => (
                   <div key={f} className="cadeo-check">
-                    {f === t("marketing.priceF2") ? (
+                    {f === t("marketing.priceF1") ? (
                       <span className="cadeo-check-social">
-                        <span>{t("marketing.priceF2")}</span>
+                        <span>{f}</span>
                         <SocialIconRow size={14} />
                       </span>
                     ) : (

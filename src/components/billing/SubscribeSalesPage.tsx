@@ -18,19 +18,15 @@ import "@/components/marketing/cadeo-styles.css";
 export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
   const { t } = useI18n();
 
-  const left = [
+  const features = [
     t("marketing.priceF1"),
     t("marketing.priceF2"),
     t("marketing.priceF3"),
     t("marketing.priceF4"),
     t("marketing.priceF5"),
     t("marketing.priceF6"),
-  ];
-  const right = [
     t("marketing.priceF7"),
     t("marketing.priceF8"),
-    t("marketing.priceF9"),
-    t("marketing.priceF10"),
   ];
   const sideAdv = getMarketingAdvantages(t);
 
@@ -55,7 +51,7 @@ export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
       </div>
 
       <main>
-        <section className="cadeo-section cadeo-section--tight-top">
+        <section className="cadeo-section cadeo-subscribe-section">
           <div className="cadeo-section-inner">
             <Reveal className="cadeo-subscribe-hero" y={24}>
               <p className="cadeo-subscribe-kicker">{t("billing.pageKicker")}</p>
@@ -86,11 +82,11 @@ export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
                     </div>
                     <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
                     <div className="cadeo-pricing-features">
-                      {[...left, ...right].map((f) => (
+                      {features.map((f) => (
                         <div key={f} className="cadeo-check">
-                          {f === t("marketing.priceF2") ? (
+                          {f === t("marketing.priceF1") ? (
                             <span className="cadeo-check-social">
-                              <span>{t("marketing.priceF2")}</span>
+                              <span>{f}</span>
                               <SocialIconRow size={14} />
                             </span>
                           ) : (

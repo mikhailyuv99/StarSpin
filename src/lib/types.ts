@@ -5,6 +5,7 @@ export interface SocialLinks {
   instagram?: string;
   facebook?: string;
   tiktok?: string;
+  tripadvisor?: string;
 }
 
 export interface Merchant {
@@ -23,6 +24,7 @@ export interface Merchant {
   stripe_subscription_id?: string | null;
   billing_plan?: "monthly" | "annual" | null;
   spin_cooldown_days?: number;
+  flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
   created_at: string;
 }
 
@@ -50,11 +52,13 @@ export interface Spin {
   review_screenshot_status: ReviewScreenshotStatus;
   claim_first_name?: string | null;
   claim_email?: string | null;
+  claim_phone?: string | null;
   prize_code?: string | null;
   claim_notified_at?: string | null;
   redeem_next_visit?: boolean | null;
   redeem_min_spend_cents?: number | null;
   redeem_expires_at?: string | null;
+  completed_flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
   created_at: string;
   prize?: Prize;
 }
@@ -66,4 +70,4 @@ export interface ReviewCountHistory {
   checked_at: string;
 }
 
-export type PublicStep = "social" | "review" | "wheel" | "claim" | "result";
+export type { PublicStep } from "@/lib/flow-steps";
