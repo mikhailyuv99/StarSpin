@@ -22,15 +22,7 @@ export default async function DashboardLayout({
   ];
 
   return (
-    <DashboardShell
-      merchantName={merchant.name}
-      merchantSlug={merchant.slug}
-      nav={NAV}
-      labels={{
-        dashboard: t("common.dashboard"),
-        viewSite: t("dashboard.viewSite"),
-      }}
-    >
+    <DashboardShell nav={NAV}>
       {children}
     </DashboardShell>
   );

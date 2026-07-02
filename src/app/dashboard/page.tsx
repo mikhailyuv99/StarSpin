@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { getTranslations } from "@/i18n/server";
 import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
-import { MerchantLiveCard } from "@/components/dashboard/MerchantLiveCard";
+import { DashboardHomeActive } from "@/components/dashboard/DashboardHomeActive";
 import { publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,11 +15,11 @@ export default async function DashboardPage() {
   if (!merchant) redirect("/setup");
   const t = await getTranslations();
 
-  const links = [
-    { href: "/dashboard/flow", title: t("dashboard.flowCard"), desc: t("dashboard.flowCardDesc") },
-    { href: "/dashboard/prizes", title: t("dashboard.prizesCard"), desc: t("dashboard.prizesDesc") },
-    { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmCardDesc") },
-    { href: "/dashboard/qr", title: t("dashboard.qrCard"), desc: t("dashboard.qrDesc") },
+  const quickLinks = [
+    { href: "/dashboard/flow", title: t("dashboard.flowCard") },
+    { href: "/dashboard/prizes", title: t("dashboard.prizesCard") },
+    { href: "/dashboard/qr", title: t("dashboard.qrCard") },
+    { href: "/dashboard/crm", title: t("dashboard.crmCard") },
   ];
 
   const needsSubscribe = needsSubscription(merchant.subscription_status);
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <Suspense fallback={null}>
         <DashboardBillingRedirect />
       </Suspense>
@@ -59,12 +59,13 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {isActive && (
-        <MerchantLiveCard
+      {isActive ? (
+        <DashboardHomeActive
           slug={merchant.slug}
           publicUrl={publicMerchantUrl(merchant.slug)}
           totalSpins={totalSpins}
           showBilling={Boolean(merchant.stripe_customer_id)}
+          quickLinks={quickLinks}
           labels={{
             title: t("dashboard.homeLiveTitle"),
             body: t("dashboard.homeLiveBody"),
@@ -72,19 +73,18 @@ export default async function DashboardPage() {
             copyLink: t("dashboard.copyPublicLink"),
             copiedLink: t("dashboard.copiedPublicLink"),
             totalSpins: t("dashboard.homeTotalSpins"),
-            viewCrm: t("dashboard.homeViewCrm"),
+            quickNav: t("dashboard.homeQuickNav"),
           }}
         />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {quickLinks.map((item) => (
+            <Link key={item.href} href={item.href} className={ui.cardGrid}>
+              <h2 className="text-[15px] font-extrabold text-ink">{item.title}</h2>
+            </Link>
+          ))}
+        </div>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {links.map((item) => (
-          <Link key={item.href} href={item.href} className={ui.cardGrid}>
-            <h2 className="text-[15px] font-extrabold text-ink">{item.title}</h2>
-            <p className="mt-1 text-sm text-muted">{item.desc}</p>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

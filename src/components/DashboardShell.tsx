@@ -6,19 +6,10 @@ import { StarspinLogo } from "@/components/StarspinLogo";
 type NavItem = { href: string; label: string };
 
 export function DashboardShell({
-  merchantName,
-  merchantSlug,
   nav,
-  labels,
   children,
 }: {
-  merchantName: string;
-  merchantSlug: string;
   nav: NavItem[];
-  labels: {
-    dashboard: string;
-    viewSite: string;
-  };
   children: React.ReactNode;
 }) {
   return (
@@ -35,22 +26,6 @@ export function DashboardShell({
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6">
-        <div className="brutal-card mb-8 flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
-              {labels.dashboard}
-            </p>
-            <p className="text-base font-extrabold text-ink">{merchantName}</p>
-          </div>
-          <a
-            href={`/${merchantSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="brutal-btn brutal-btn-yellow text-sm"
-          >
-            {labels.viewSite}
-          </a>
-        </div>
         <main>{children}</main>
       </div>
     </div>
