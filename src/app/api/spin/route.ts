@@ -1,7 +1,6 @@
 import { apiT, resolveRequestLocale } from "@/i18n/api";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
@@ -25,19 +24,32 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminClient();
+
+    const { data: merchant } = await supabase
+      .from("merchants")
+      .select("subscription_status, spin_cooldown_days")
+      .eq("id", merchantId)
+      .single();
+
+    if (!merchant || !["active", "trial"].includes(merchant.subscription_status)) {
+      return NextResponse.json({ error: t("api.merchantUnavailable") }, { status: 404 });
+    }
+
+    const cooldownDays = merchant.spin_cooldown_days ?? 0;
+
     const fingerprint = createDeviceFingerprint(
       getClientIp(request),
       request.headers.get("user-agent") ?? "",
     );
 
-    const blocker = await findRecentSpinBlocker(supabase, merchantId, null, fingerprint);
+    const blocker = await findRecentSpinBlocker(supabase, merchantId, null, fingerprint, cooldownDays);
     if (blocker) {
       return NextResponse.json(
         {
           error:
             blocker === "phone"
-              ? t("api.alreadyPlayedPhone", { days: SPIN_COOLDOWN_DAYS })
-              : t("api.alreadyPlayedDevice", { days: SPIN_COOLDOWN_DAYS }),
+              ? t("api.alreadyPlayedPhone", { days: cooldownDays })
+              : t("api.alreadyPlayedDevice", { days: cooldownDays }),
         },
         { status: 429 },
       );

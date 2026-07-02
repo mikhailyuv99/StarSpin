@@ -359,6 +359,42 @@ html.locale-vi .cadeo-page .cadeo-nav-links a {
   font-family: var(--font-display);
 }
 
+/* Vietnamese hero accent — Baloo 2 is wide; keep text inside the lavender frame */
+html.locale-vi .cadeo-hero-accent {
+  font-size: 0.84em;
+  padding: 0.12rem 0.65rem;
+  letter-spacing: -0.025em;
+}
+
+html.locale-ru .cadeo-hero-accent {
+  font-size: 0.88em;
+  padding: 0.12rem 0.6rem;
+  letter-spacing: -0.02em;
+}
+
+html.locale-es .cadeo-hero-accent {
+  font-size: 0.9em;
+  padding: 0.12rem 0.55rem;
+}
+
+@media (max-width: 640px) {
+  html.locale-vi .cadeo-hero-accent,
+  html.locale-ru .cadeo-hero-accent,
+  html.locale-es .cadeo-hero-accent {
+    font-size: 0.76em;
+    padding: 0.1rem 0.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  html.locale-vi .cadeo-hero-accent {
+    font-size: 0.72em;
+    padding-inline: 0.45rem;
+  }
+}
+
 .brutal-btn-ghost:hover:not(:disabled) {
   transform: none;
   box-shadow: none;

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "@/i18n/client";
 import type { BillingPlan } from "@/lib/billing";
+import { startCheckoutSession } from "@/lib/billing-checkout";
 
 export function SubscribeButton({
   plan,
@@ -17,36 +18,34 @@ export function SubscribeButton({
   const t = useTranslations();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleClick = async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
+    setError(null);
 
-      if (res.status === 401) {
-        router.push(`/login?redirect=${encodeURIComponent("/#pricing")}&plan=${plan}`);
-        return;
-      }
+    const result = await startCheckoutSession(plan);
 
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      console.error(data.error ?? "Checkout failed");
-    } finally {
-      setLoading(false);
+    if (result.ok) {
+      window.location.assign(result.url);
+      return;
     }
+
+    if (result.status === 401) {
+      router.push(`/login?redirect=${encodeURIComponent("/subscribe")}&plan=${plan}`);
+      return;
+    }
+
+    setError(t("billing.checkoutError"));
+    setLoading(false);
   };
 
   return (
-    <button type="button" onClick={handleClick} disabled={loading} className={className}>
-      {loading ? t("common.loading") : children}
-    </button>
+    <div className="cadeo-subscribe-btn-wrap">
+      <button type="button" onClick={handleClick} disabled={loading} className={className}>
+        {loading ? t("billing.checkoutLoading") : children}
+      </button>
+      {error && <p className="cadeo-subscribe-btn-error">{error}</p>}
+    </div>
   );
 }

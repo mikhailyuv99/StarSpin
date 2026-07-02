@@ -44,6 +44,7 @@
     "heroCta": "Start for free",
     "heroDemo": "Set up your wheel",
     "magicRecipe": "The magic recipe",
+    "mobileAppBanner": "Mobile app coming soon",
     "trustedBy": "Trusted and recommended by our clients:",
     "pillarsTitle": "How we capture, engage, and retain your customers",
     "pillarsEyebrow": "The STARSPIN journey",
@@ -232,6 +233,15 @@
     "defaultPrize3": "Free dessert",
     "defaultPrize4": "No luck — try again!"
   },
+  "billing": {
+    "pageKicker": "STARSPIN Pro",
+    "pageTitle": "Activate your prize wheel",
+    "pageSubtitle": "One subscription keeps your wheel live for every customer.",
+    "backDashboard": "Back to dashboard",
+    "secureStripe": "Secure payment via Stripe · Apple Pay · Google Pay",
+    "checkoutLoading": "Redirecting to checkout…",
+    "checkoutError": "Couldn't start checkout. Check your connection or contact hello@starspin.cc."
+  },
   "dashboard": {
     "navHome": "Home",
     "viewSite": "Dashboard",
@@ -254,7 +264,13 @@
     "brandingTitle": "Branding & links",
     "brandingSubtitle": "Visual identity and links on your public page.",
     "prizesTitle": "Wheel prizes",
-    "prizesSubtitle": "Probabilities, stock, and reward labels.",
+    "prizesSubtitle": "Probabilities, stock, spin limits, and reward labels.",
+    "spinCooldownTitle": "Spin frequency limit",
+    "spinCooldownDesc": "Set how many days a customer must wait before spinning again on the same device.",
+    "spinCooldownDays": "Days between spins",
+    "spinCooldownHint": "Each device can spin once every {days} days.",
+    "spinCooldownDisabled": "No limit — customers can spin every time (not recommended for abuse prevention).",
+    "spinCooldownInvalid": "Enter a number between 0 and 365.",
     "reviewsTitle": "Review screenshots",
     "reviewsSubtitle": "Moderate proofs submitted by customers.",
     "statsTitle": "Statistics",
@@ -289,7 +305,7 @@
     "qrHint": "Print and place on tables or at the counter.",
     "subscribeTitle": "Activate your subscription",
     "subscribeBody": "Subscribe to keep your prize wheel live for customers.",
-    "subscribeCta": "Compare plans",
+    "subscribeCta": "Choose your plan",
     "manageBilling": "Manage billing"
   },
   "admin": {

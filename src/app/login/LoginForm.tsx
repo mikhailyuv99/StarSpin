@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
+import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import { ui } from "@/components/ui/styles";
 import type { BillingPlan } from "@/lib/billing";
 import { isBillingPlan } from "@/lib/billing";
@@ -52,7 +53,7 @@ export default function LoginPage() {
   const planParam = searchParams.get("plan");
   const postAuthPath =
     planParam && isBillingPlan(planParam)
-      ? `/dashboard?subscribe=${planParam as BillingPlan}`
+      ? `/subscribe?subscribe=${planParam as BillingPlan}`
       : redirect;
 
   const [email, setEmail] = useState("");
@@ -120,7 +121,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="brutal-page flex min-h-screen flex-col lg:flex-row">
+    <div className="brutal-page flex min-h-screen flex-col">
+      <MobileAppBanner variant="brutal" />
+      <div className="flex flex-1 flex-col lg:flex-row">
       <div className="marketing-grid hidden flex-1 flex-col justify-between border-r-[2.5px] border-black bg-[var(--c-lavender)] p-10 lg:flex">
         <StarspinLogo href="/" variant="light" size="lg" />
         <div className="brutal-card-lg max-w-md p-8">
@@ -215,6 +218,7 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

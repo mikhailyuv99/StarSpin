@@ -7,5 +7,5 @@ export async function middleware(request: NextRequest) {
 
 /** Only auth-related routes — public merchant pages live at /{slug} without middleware. */
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/setup", "/login", "/auth/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/setup", "/login", "/auth/:path*", "/subscribe"],
 };

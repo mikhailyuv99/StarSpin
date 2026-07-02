@@ -44,6 +44,7 @@
     "heroCta": "Bắt đầu miễn phí",
     "heroDemo": "Thiết lập vòng quay",
     "magicRecipe": "Công thức thần kỳ",
+    "mobileAppBanner": "Ứng dụng di động — sắp ra mắt",
     "trustedBy": "Được khách hàng tin tưởng và giới thiệu:",
     "pillarsTitle": "Cách chúng tôi thu hút, tương tác và giữ chân khách hàng",
     "pillarsEyebrow": "Hành trình STARSPIN",
@@ -232,6 +233,15 @@
     "defaultPrize3": "Tráng miệng miễn phí",
     "defaultPrize4": "Không may — thử lại!"
   },
+  "billing": {
+    "pageKicker": "STARSPIN Pro",
+    "pageTitle": "Kích hoạt vòng quay thưởng",
+    "pageSubtitle": "Một gói đăng ký giữ vòng quay luôn hoạt động cho mọi khách hàng.",
+    "backDashboard": "Về bảng điều khiển",
+    "secureStripe": "Thanh toán an toàn qua Stripe · Apple Pay · Google Pay",
+    "checkoutLoading": "Đang chuyển đến thanh toán…",
+    "checkoutError": "Không thể bắt đầu thanh toán. Kiểm tra kết nối hoặc liên hệ hello@starspin.cc."
+  },
   "dashboard": {
     "navHome": "Trang chủ",
     "viewSite": "Dashboard",
@@ -254,7 +264,13 @@
     "brandingTitle": "Thương hiệu & liên kết",
     "brandingSubtitle": "Nhận diện thương hiệu và liên kết trên trang công khai.",
     "prizesTitle": "Phần thưởng vòng quay",
-    "prizesSubtitle": "Xác suất, tồn kho và nhãn phần thưởng.",
+    "prizesSubtitle": "Xác suất, tồn kho, giới hạn quay và nhãn phần thưởng.",
+    "spinCooldownTitle": "Giới hạn tần suất quay",
+    "spinCooldownDesc": "Số ngày khách phải chờ trước khi quay lại trên cùng thiết bị.",
+    "spinCooldownDays": "Số ngày giữa các lượt quay",
+    "spinCooldownHint": "Mỗi thiết bị chỉ quay một lần mỗi {days} ngày.",
+    "spinCooldownDisabled": "Không giới hạn — khách có thể quay mỗi lần (không khuyến nghị).",
+    "spinCooldownInvalid": "Nhập số từ 0 đến 365.",
     "reviewsTitle": "Ảnh chụp đánh giá",
     "reviewsSubtitle": "Kiểm duyệt bằng chứng khách hàng gửi.",
     "statsTitle": "Thống kê",
@@ -289,7 +305,7 @@
     "qrHint": "In và đặt trên bàn hoặc tại quầy.",
     "subscribeTitle": "Kích hoạt gói đăng ký",
     "subscribeBody": "Đăng ký để vòng quay luôn hoạt động cho khách hàng.",
-    "subscribeCta": "Xem gói",
+    "subscribeCta": "Chọn gói",
     "manageBilling": "Quản lý thanh toán"
   },
   "admin": {

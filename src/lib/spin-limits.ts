@@ -1,16 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { SPIN_COOLDOWN_DAYS } from "@/lib/constants";
 
 export async function findRecentSpinBlocker(
   supabase: SupabaseClient,
   merchantId: string,
   phoneNumber: string | null,
   deviceFingerprint: string,
+  cooldownDays: number,
 ): Promise<"phone" | "device" | null> {
-  if (SPIN_COOLDOWN_DAYS <= 0) return null;
+  if (cooldownDays <= 0) return null;
 
   const cooldownDate = new Date();
-  cooldownDate.setDate(cooldownDate.getDate() - SPIN_COOLDOWN_DAYS);
+  cooldownDate.setDate(cooldownDate.getDate() - cooldownDays);
 
   if (phoneNumber) {
     const { data: byPhone } = await supabase

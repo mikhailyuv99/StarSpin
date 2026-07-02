@@ -14,6 +14,7 @@ import { PricingPlans } from "@/components/billing/PricingPlans";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { marketingImages } from "@/lib/marketing-images";
+import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import "./cadeo-styles.css";
 
 function Logo() {
@@ -62,7 +63,7 @@ function HeroWheelPhone() {
 function Hero() {
   const { t } = useI18n();
   const badges: { cls: string; brand: SocialBrand; text: string }[] = [
-    { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google reviews" },
+    { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google" },
     { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", text: "+251 TripAdvisor" },
     { cls: "cadeo-stat-badge--yellow", brand: "tiktok", text: "+150 TikTok" },
     { cls: "cadeo-stat-badge--pink", brand: "instagram", text: "+251 Instagram" },
@@ -103,7 +104,7 @@ function Hero() {
                     <span className="cadeo-stat-badge-icon">
                       <SocialIcon brand={b.brand} size={16} />
                     </span>
-                    <span>{b.text}</span>
+                    <span className="cadeo-stat-badge-text">{b.text}</span>
                   </div>
                 </Reveal>
               ))}
@@ -634,6 +635,7 @@ function CookieBanner() {
 export function LandingPage() {
   return (
     <div className="cadeo-page">
+      <MobileAppBanner />
       <PageScrollFallers />
       <Nav />
       <main>

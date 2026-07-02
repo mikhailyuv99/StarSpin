@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       mode: "subscription",
       line_items: [{ price: priceIdForPlan(body.plan), quantity: 1 }],
       success_url: `${appUrl}/dashboard?billing=success`,
-      cancel_url: `${appUrl}/#pricing`,
+      cancel_url: `${appUrl}/subscribe`,
       metadata: {
         merchant_id: merchant.id,
         plan: body.plan,
@@ -82,6 +82,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("[stripe/checkout]", err);
-    return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
+    const message =
+      err instanceof Error && err.message.includes("STRIPE_SECRET_KEY")
+        ? "Stripe is not configured"
+        : err instanceof Error
+          ? err.message
+          : "Checkout failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

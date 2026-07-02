@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { OTP_EXPIRY_MINUTES, OTP_LENGTH, SPIN_COOLDOWN_DAYS } from "@/lib/constants";
+import { OTP_EXPIRY_MINUTES, OTP_LENGTH } from "@/lib/constants";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { sendSmsMessage } from "@/lib/sms";
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const { data: merchant } = await supabase
       .from("merchants")
-      .select("id, subscription_status")
+      .select("id, subscription_status, spin_cooldown_days")
       .eq("id", merchantId)
       .single();
 
@@ -41,21 +41,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.merchantUnavailable") }, { status: 404 });
     }
 
+    const cooldownDays = merchant.spin_cooldown_days ?? 0;
+
     const fingerprint = createDeviceFingerprint(
       getClientIp(request),
       request.headers.get("user-agent") ?? "",
     );
 
-    const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint);
+    const blocker = await findRecentSpinBlocker(supabase, merchantId, phoneNumber, fingerprint, cooldownDays);
     if (blocker === "phone") {
       return NextResponse.json(
-        { error: t("api.phoneAlreadyPlayed", { days: SPIN_COOLDOWN_DAYS }) },
+        { error: t("api.phoneAlreadyPlayed", { days: cooldownDays }) },
         { status: 429 },
       );
     }
     if (blocker === "device") {
       return NextResponse.json(
-        { error: t("api.deviceAlreadyPlayed", { days: SPIN_COOLDOWN_DAYS }) },
+        { error: t("api.deviceAlreadyPlayed", { days: cooldownDays }) },
         { status: 429 },
       );
     }

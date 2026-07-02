@@ -290,8 +290,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
-                    capture="environment"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,.heic"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -300,7 +299,12 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   />
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      const input = fileInputRef.current;
+                      if (!input) return;
+                      input.value = "";
+                      input.click();
+                    }}
                     disabled={loading}
                     className="public-btn public-btn-outline public-touch-target"
                   >

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isBillingPlan } from "@/lib/billing";
+import { startCheckoutSession } from "@/lib/billing-checkout";
 
 /** After login, auto-start Stripe checkout when ?subscribe=monthly|annual is present. */
 export function DashboardBillingRedirect() {
@@ -16,21 +17,20 @@ export function DashboardBillingRedirect() {
     let cancelled = false;
 
     (async () => {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-
+      const result = await startCheckoutSession(plan);
       if (cancelled) return;
 
-      const data = (await res.json()) as { url?: string };
-      if (data.url) {
-        window.location.href = data.url;
+      if (result.ok) {
+        window.location.assign(result.url);
         return;
       }
 
-      router.replace("/dashboard");
+      if (result.status === 401) {
+        router.replace(`/login?redirect=/subscribe&plan=${plan}`);
+        return;
+      }
+
+      router.replace("/subscribe?checkout=error");
     })();
 
     return () => {

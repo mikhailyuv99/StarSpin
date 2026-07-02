@@ -99,6 +99,44 @@
   font-family: var(--font-game), system-ui, sans-serif;
 }
 
+/* ── Mobile app coming soon banner ── */
+.cadeo-app-banner,
+.site-app-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem var(--c-page-pad);
+  background: var(--c-purple-deep);
+  color: #fff;
+  border-bottom: var(--c-border);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.site-app-banner--brutal {
+  background: #0a0a0a;
+  color: var(--c-yellow-bright);
+  border-bottom: 2.5px solid #0a0a0a;
+  font-family: var(--font-game), system-ui, sans-serif;
+}
+
+.site-app-banner-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.cadeo-page > .cadeo-app-banner {
+  position: relative;
+  z-index: 101;
+}
+
 /* ── Nav ── */
 .cadeo-nav-wrap {
   position: sticky;
@@ -432,7 +470,12 @@
   font-weight: 700;
   line-height: 1.2;
   max-width: 180px;
-  white-space: nowrap;
+  min-width: 0;
+}
+
+.cadeo-stat-badge-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cadeo-stat-badge-icon {
@@ -581,20 +624,54 @@
 
 @media (max-width: 640px) {
   .cadeo-hero-visual {
-    padding-left: 1.5rem;
+    padding-left: 1.25rem;
+    padding-right: 0.25rem;
     max-width: 100%;
   }
 
   .cadeo-hero-badges {
-    left: -0.35rem;
+    left: 0;
     top: 4%;
     bottom: 22%;
+    max-width: 42%;
   }
 
   .cadeo-stat-badge {
-    font-size: 0.58rem;
-    max-width: 132px;
-    padding: 0.4rem 0.55rem;
+    font-size: 0.56rem;
+    max-width: 100%;
+    padding: 0.35rem 0.45rem;
+    gap: 0.35rem;
+    line-height: 1.15;
+  }
+
+  .cadeo-stat-badge-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    padding: 4px;
+  }
+
+  .cadeo-hero-eyebrow {
+    font-size: 0.62rem;
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    border-radius: 12px;
+    line-height: 1.25;
+  }
+
+  .cadeo-hero h1 {
+    font-size: clamp(1.65rem, 7.5vw, 2.75rem);
+    overflow-wrap: anywhere;
+  }
+
+  .cadeo-hero-accent {
+    max-width: 100%;
+    box-sizing: border-box;
+    display: inline-block;
+  }
+
+  .cadeo-hero-actions {
+    max-width: 100%;
   }
 
   .cadeo-hero-phone {
@@ -2482,6 +2559,119 @@
     width: 2.5rem;
     height: 2.5rem;
     padding: 6px;
+  }
+}
+
+/* ── Subscribe sales page ── */
+.cadeo-page--subscribe {
+  padding-bottom: 3rem;
+}
+
+.cadeo-subscribe-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cadeo-subscribe-hero {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+}
+
+.cadeo-subscribe-kicker {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--c-yellow-bright);
+  border: var(--c-border);
+  border-radius: 999px;
+  box-shadow: var(--c-shadow);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cadeo-subscribe-title {
+  margin-top: 0.25rem;
+}
+
+.cadeo-subscribe-lead {
+  margin-top: 0.65rem;
+}
+
+.cadeo-subscribe-merchant {
+  display: inline-block;
+  margin-top: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--c-mint);
+  border: var(--c-border);
+  border-radius: 999px;
+  box-shadow: var(--c-shadow);
+  font-size: 0.85rem;
+  font-weight: 800;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.cadeo-subscribe-pricing {
+  margin-top: 0.5rem;
+}
+
+.cadeo-subscribe-stripe-note {
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.cadeo-subscribe-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.cadeo-subscribe-btn-error,
+.cadeo-subscribe-alert {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  background: #ffe8e8;
+  border: 2px solid var(--c-black);
+  border-radius: var(--c-radius);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--c-black);
+}
+
+.cadeo-subscribe-alert {
+  max-width: 40rem;
+  margin: 0 auto 1.25rem;
+  text-align: center;
+}
+
+.cadeo-subscribe-auto-error {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .cadeo-subscribe-nav-actions .cadeo-btn {
+    font-size: 0.78rem;
+    padding: 0.45rem 0.7rem;
+  }
+
+  .cadeo-subscribe-hero {
+    text-align: left;
+  }
+
+  .cadeo-subscribe-alert {
+    text-align: left;
   }
 }
 

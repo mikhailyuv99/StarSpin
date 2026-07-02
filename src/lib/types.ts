@@ -22,6 +22,7 @@ export interface Merchant {
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   billing_plan?: "monthly" | "annual" | null;
+  spin_cooldown_days?: number;
   created_at: string;
 }
 

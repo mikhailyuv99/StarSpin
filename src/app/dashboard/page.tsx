@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { getTranslations } from "@/i18n/server";
 import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
-import { SubscribeButton } from "@/components/billing/SubscribeButton";
 import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
 
 export default async function DashboardPage() {
@@ -38,14 +37,8 @@ export default async function DashboardPage() {
         <div className={`${ui.card} border-[var(--c-yellow)] bg-[var(--c-yellow-bright)]/40`}>
           <h2 className="text-base font-extrabold text-ink">{t("dashboard.subscribeTitle")}</h2>
           <p className="mt-2 text-sm text-muted">{t("dashboard.subscribeBody")}</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <SubscribeButton plan="monthly" className={`${ui.btnYellow} !w-auto px-5`}>
-              {t("marketing.subscribeMonthly")}
-            </SubscribeButton>
-            <SubscribeButton plan="annual" className={`${ui.btn} !w-auto px-5`}>
-              {t("marketing.subscribeAnnual")}
-            </SubscribeButton>
-            <Link href="/#pricing" className={`${ui.btnOutline} !w-auto px-5`}>
+          <div className="mt-4">
+            <Link href="/subscribe" className={`${ui.btnYellow} !w-auto px-6 py-3 inline-flex`}>
               {t("dashboard.subscribeCta")}
             </Link>
           </div>

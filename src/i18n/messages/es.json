@@ -44,6 +44,7 @@
     "heroCta": "Empezar gratis",
     "heroDemo": "Configura tu ruleta",
     "magicRecipe": "La receta mágica",
+    "mobileAppBanner": "App móvil — próximamente",
     "trustedBy": "Confían en nosotros y nos recomiendan:",
     "pillarsTitle": "Cómo captamos, involucramos y retenemos a tus clientes",
     "pillarsEyebrow": "El recorrido STARSPIN",
@@ -232,6 +233,15 @@
     "defaultPrize3": "Postre gratis",
     "defaultPrize4": "Sin suerte — ¡inténtalo de nuevo!"
   },
+  "billing": {
+    "pageKicker": "STARSPIN Pro",
+    "pageTitle": "Activa tu ruleta de premios",
+    "pageSubtitle": "Una suscripción mantiene tu ruleta activa para todos tus clientes.",
+    "backDashboard": "Volver al panel",
+    "secureStripe": "Pago seguro con Stripe · Apple Pay · Google Pay",
+    "checkoutLoading": "Redirigiendo al pago…",
+    "checkoutError": "No se pudo iniciar el pago. Comprueba tu conexión o escribe a hello@starspin.cc."
+  },
   "dashboard": {
     "navHome": "Inicio",
     "viewSite": "Dashboard",
@@ -254,7 +264,13 @@
     "brandingTitle": "Marca y enlaces",
     "brandingSubtitle": "Identidad visual y enlaces en tu página pública.",
     "prizesTitle": "Premios de la ruleta",
-    "prizesSubtitle": "Probabilidades, stock y etiquetas de recompensa.",
+    "prizesSubtitle": "Probabilidades, stock, límites de giro y etiquetas de recompensa.",
+    "spinCooldownTitle": "Límite de frecuencia",
+    "spinCooldownDesc": "Cuántos días debe esperar un cliente antes de volver a girar en el mismo dispositivo.",
+    "spinCooldownDays": "Días entre giros",
+    "spinCooldownHint": "Cada dispositivo puede girar una vez cada {days} días.",
+    "spinCooldownDisabled": "Sin límite — los clientes pueden girar cada vez (no recomendado).",
+    "spinCooldownInvalid": "Introduce un número entre 0 y 365.",
     "reviewsTitle": "Capturas de reseñas",
     "reviewsSubtitle": "Modera las pruebas enviadas por clientes.",
     "statsTitle": "Estadísticas",
@@ -289,7 +305,7 @@
     "qrHint": "Imprime y coloca en mesas o en caja.",
     "subscribeTitle": "Activa tu suscripción",
     "subscribeBody": "Suscríbete para mantener tu ruleta activa para los clientes.",
-    "subscribeCta": "Ver planes",
+    "subscribeCta": "Elegir plan",
     "manageBilling": "Gestionar facturación"
   },
   "admin": {
