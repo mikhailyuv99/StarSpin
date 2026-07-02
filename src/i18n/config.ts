@@ -6,9 +6,9 @@ export const LOCALE_COOKIE = "locale";
 
 export const localeLabels: Record<Locale, string> = {
   en: "English",
-  ru: "Русский",
-  vi: "Tiếng Việt",
-  es: "Español",
+  ru: "Russian",
+  vi: "Vietnamese",
+  es: "Spanish",
 };
 
 export function isLocale(value: string): value is Locale {

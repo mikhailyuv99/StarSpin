@@ -7,8 +7,9 @@ import { WheelPointer } from "@/components/WheelPointer";
 import {
   contrastTextColor,
   describeSlice,
+  pickWeightedPrize,
   polarToCartesian,
-  prizeSliceAngles,
+  prizeEqualSliceAngles,
   sliceLabelRotation,
 } from "@/lib/wheel";
 
@@ -23,18 +24,18 @@ interface WheelProps {
   hideSpinButton?: boolean;
 }
 
-const FALLBACK_SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#b8cfe8", "#a8e6cf", "#f4a89a"];
+const SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#a8e6cf", "#b8cfe8", "#f4a89a"];
 
-function truncateLabel(label: string, sliceAngle: number): string {
-  const maxChars = sliceAngle < 20 ? 5 : sliceAngle < 35 ? 8 : sliceAngle < 55 ? 12 : 16;
-  if (label.length <= maxChars) return label;
-  return `${label.slice(0, maxChars - 1)}…`;
+function wheelLabelFontSize(label: string, sliceCount: number): string {
+  const sliceAngle = 360 / Math.max(sliceCount, 1);
+  if (label.length > 16) return sliceAngle < 60 ? "3.8" : "4.2";
+  if (label.length > 11) return sliceAngle < 60 ? "4.2" : "4.8";
+  return "5.5";
 }
 
 export function Wheel({
   prizes,
   primaryColor,
-  secondaryColor,
   onSpinComplete,
   spinning,
   setSpinning,
@@ -45,13 +46,11 @@ export function Wheel({
   const [rotation, setRotation] = useState(0);
   const [wheelSize, setWheelSize] = useState(280);
   const spunRef = useRef<string | undefined>(undefined);
-  const slices = prizeSliceAngles(prizes);
+  const slices = prizeEqualSliceAngles(prizes);
 
-  const colors = [primaryColor, secondaryColor, ...FALLBACK_SLICE_COLORS];
   const cx = 50;
   const cy = 50;
   const r = 44;
-  const hubSize = Math.round(wheelSize * 0.18);
   const pointerW = Math.round(wheelSize * 0.22);
   const pointerH = Math.round(wheelSize * 0.17);
 
@@ -71,7 +70,17 @@ export function Wheel({
 
     const target = targetPrizeId
       ? (slices.find((s) => s.prize.id === targetPrizeId) ?? slices[0])
-      : slices[Math.floor(Math.random() * slices.length)];
+      : (() => {
+          const picked = pickWeightedPrize(prizes);
+          return picked
+            ? (slices.find((s) => s.prize.id === picked.id) ?? slices[0])
+            : slices[0];
+        })();
+
+    if (!target) {
+      setSpinning(false);
+      return;
+    }
 
     const sliceMid = (target.start + target.end) / 2;
     const extraTurns = 5 * 360;
@@ -82,7 +91,7 @@ export function Wheel({
       setSpinning(false);
       onSpinComplete(target.prize);
     }, 4500);
-  }, [spinning, slices, targetPrizeId, setSpinning, onSpinComplete]);
+  }, [spinning, slices, targetPrizeId, setSpinning, onSpinComplete, prizes]);
 
   useEffect(() => {
     if (targetPrizeId && !spinning && spunRef.current !== targetPrizeId) {
@@ -102,23 +111,27 @@ export function Wheel({
           <WheelPointer width={pointerW} height={pointerH} />
         </div>
 
-        <div
-          className="marketing-wheel transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.25,1)]"
-          style={{
-            width: wheelSize,
-            height: wheelSize,
-            transform: `rotate(${rotation}deg)`,
-          }}
+        <svg
+          viewBox="0 0 100 100"
+          width={wheelSize}
+          height={wheelSize}
+          className="marketing-wheel block"
+          aria-hidden
         >
-          <svg viewBox="0 0 100 100" width="100%" height="100%" className="block" aria-hidden>
-            <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
+          <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
+          <g
+            className="marketing-wheel__disc"
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transition: "transform 4500ms cubic-bezier(0.15, 0.85, 0.25, 1)",
+            }}
+          >
             {slices.map((slice, i) => {
-              const sliceAngle = slice.end - slice.start;
               const mid = (slice.start + slice.end) / 2;
               const labelPos = polarToCartesian(cx, cy, 26, mid);
               const labelRotation = sliceLabelRotation(mid);
-              const fill = colors[i % colors.length]!;
-              const label = truncateLabel(slice.prize.label, sliceAngle);
+              const fill = SLICE_COLORS[i % SLICE_COLORS.length]!;
+              const label = slice.prize.label.trim();
 
               return (
                 <g key={slice.prize.id}>
@@ -128,36 +141,26 @@ export function Wheel({
                     stroke="#0a0a0a"
                     strokeWidth="1.25"
                   />
-                  {sliceAngle >= 14 && (
-                    <text
-                      x={labelPos.x}
-                      y={labelPos.y}
-                      fill="#0a0a0a"
-                      fontSize={sliceAngle < 25 ? "4.2" : sliceAngle < 40 ? "4.8" : "5.5"}
-                      fontWeight="800"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      transform={`rotate(${labelRotation}, ${labelPos.x}, ${labelPos.y})`}
-                      style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
-                    >
-                      {label}
-                    </text>
-                  )}
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y}
+                    fill="#0a0a0a"
+                    fontSize={wheelLabelFontSize(label, slices.length)}
+                    fontWeight="800"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${labelRotation}, ${labelPos.x}, ${labelPos.y})`}
+                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
+                  >
+                    {label}
+                  </text>
                 </g>
               );
             })}
-            <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
-          </svg>
-        </div>
-
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div
-            className="flex items-center justify-center rounded-full border-[2.5px] border-black bg-[var(--c-yellow)] text-[11px] font-extrabold uppercase tracking-wider text-black"
-            style={{ width: hubSize, height: hubSize }}
-          >
-            {t("public.wheelGo")}
-          </div>
-        </div>
+          </g>
+          <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
+          <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />
+        </svg>
       </div>
 
       {!hideSpinButton && (

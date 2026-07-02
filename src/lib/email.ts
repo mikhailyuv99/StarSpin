@@ -1,3 +1,5 @@
+import { getAppUrl } from "./app-url";
+
 type PrizeEmailParams = {
   to: string;
   firstName: string;
@@ -36,7 +38,7 @@ function prizeEmailHtml({
           <p style="margin:0;font-size:14px;line-height:1.5;color:#555;">Show this code at the counter to redeem your prize. Keep this email — you'll need the code.</p>
         </td></tr>
         <tr><td style="padding:16px 24px 24px;border-top:2px solid #ececec;">
-          <p style="margin:0;font-size:11px;color:#888;text-align:center;">Powered by STARSPIN · reviewlottery.netlify.app</p>
+          <p style="margin:0;font-size:11px;color:#888;text-align:center;">Powered by STARSPIN · ${getAppUrl().replace(/^https?:\/\//, "")}</p>
         </td></tr>
       </table>
     </td></tr>

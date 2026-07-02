@@ -125,3 +125,18 @@ export function prizeSliceAngles(prizes: Prize[]): { prize: Prize; start: number
     return { prize, start, end };
   });
 }
+
+/** Equal visual slices for the wheel UI (spin odds still use weights). */
+export function prizeEqualSliceAngles(prizes: Prize[]): { prize: Prize; start: number; end: number }[] {
+  const eligible = prizes.filter(
+    (p) => p.active && (p.stock_remaining === null || p.stock_remaining > 0),
+  );
+  if (eligible.length === 0) return [];
+
+  const sliceAngle = 360 / eligible.length;
+  return eligible.map((prize, i) => ({
+    prize,
+    start: i * sliceAngle,
+    end: (i + 1) * sliceAngle,
+  }));
+}

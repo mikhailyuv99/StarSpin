@@ -1,8 +1,12 @@
+import { OFFICIAL_SITE_URL } from "./brand";
+
 /** Base app URL without trailing slash. */
 export function getAppUrl(): string {
   const raw = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const trimmed = raw.replace(/\/+$/, "");
-  return trimmed || "http://localhost:3000";
+  if (trimmed) return trimmed;
+  if (process.env.NODE_ENV === "production") return OFFICIAL_SITE_URL;
+  return "http://localhost:3000";
 }
 
 export function publicMerchantUrl(slug: string): string {

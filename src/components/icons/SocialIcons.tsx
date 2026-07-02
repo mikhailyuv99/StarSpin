@@ -31,15 +31,16 @@ function TikTokIcon({ size, className, label }: { size: number; className: strin
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="-1.5 -1.5 27 27"
       className={className}
       role="img"
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
+      overflow="visible"
     >
       <title>{label}</title>
-      <path d={d} fill="#25F4EE" transform="translate(-0.7 -0.7)" />
-      <path d={d} fill="#FE2C55" transform="translate(0.7 0.7)" />
+      <path d={d} fill="#25F4EE" transform="translate(-0.45 -0.45)" />
+      <path d={d} fill="#FE2C55" transform="translate(0.45 0.45)" />
       <path d={d} fill="#000000" />
     </svg>
   );

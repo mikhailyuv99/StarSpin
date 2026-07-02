@@ -69,7 +69,7 @@ Ce document résume les options pour vérifier qu'un client a bien laissé un av
 | Fiabilité | Bonne pour les commerçants qui les utilisent déjà |
 | Intégration | API propriétaire, onboarding lourd |
 
-**Verdict** : Overkill pour Da Nang local 20-30 clients.
+**Verdict** : Overkill pour un petit volume local (20–30 clients).
 
 ---
 

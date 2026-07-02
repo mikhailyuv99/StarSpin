@@ -288,6 +288,77 @@ body {
   color: var(--muted);
 }
 
+.brutal-oauth-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 2.85rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--c-black);
+  background: #fff;
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  box-shadow: var(--brutal-shadow);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.brutal-oauth-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--c-black);
+}
+
+.brutal-oauth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.brutal-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.brutal-divider::before,
+.brutal-divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: rgb(10 10 10 / 0.12);
+}
+
+/* Locale-specific cartoony fonts */
+html.locale-ru {
+  --font-body: var(--font-body-ru), var(--font-plex-sans), system-ui, sans-serif;
+  --font-display: var(--font-display-ru), var(--font-body-ru), system-ui, sans-serif;
+  --font-game: var(--font-game-cyrillic), var(--font-game), system-ui, sans-serif;
+}
+
+html.locale-vi {
+  --font-body: var(--font-body-vi), var(--font-plex-sans), system-ui, sans-serif;
+  --font-display: var(--font-display-vi), var(--font-body-vi), system-ui, sans-serif;
+  --font-game: var(--font-game-vi), var(--font-body-vi), system-ui, sans-serif;
+}
+
+html.locale-ru .cadeo-page,
+html.locale-vi .cadeo-page {
+  font-family: var(--font-body);
+}
+
+html.locale-ru .cadeo-page .cadeo-nav-links a,
+html.locale-vi .cadeo-page .cadeo-nav-links a {
+  font-family: var(--font-display);
+}
+
 .brutal-btn-ghost:hover:not(:disabled) {
   transform: none;
   box-shadow: none;

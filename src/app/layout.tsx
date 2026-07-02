@@ -1,9 +1,10 @@
-import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans, Fredoka } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans, Fredoka, Baloo_2, Nunito, Rubik, Comfortaa } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { I18nProvider } from "@/i18n/client";
 import { getMessages } from "@/i18n/get-messages";
 import { getLocale, getTranslations } from "@/i18n/server";
+import { OFFICIAL_SITE_URL } from "@/lib/brand";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -36,11 +37,63 @@ const gameFont = Fredoka({
   variable: "--font-game",
 });
 
+const gameFontCyrillic = Comfortaa({
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  weight: ["600", "700"],
+  variable: "--font-game-cyrillic",
+});
+
+const bodyRu = Nunito({
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body-ru",
+});
+
+const displayRu = Rubik({
+  subsets: ["latin", "cyrillic"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display-ru",
+});
+
+const bodyVi = Nunito({
+  subsets: ["latin", "vietnamese", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body-vi",
+});
+
+const displayVi = Baloo_2({
+  subsets: ["latin", "vietnamese", "latin-ext"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display-vi",
+});
+
+const gameVi = Baloo_2({
+  subsets: ["latin", "vietnamese"],
+  weight: ["600", "700", "800"],
+  variable: "--font-game-vi",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   return {
+    metadataBase: new URL(OFFICIAL_SITE_URL),
     title: t("meta.title"),
     description: t("meta.description"),
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      type: "website",
+      url: OFFICIAL_SITE_URL,
+      siteName: "STARSPIN",
+      title: t("meta.title"),
+      description: t("meta.description"),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta.title"),
+      description: t("meta.description"),
+    },
   };
 }
 
@@ -55,7 +108,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} h-full antialiased`}
+      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
         <I18nProvider locale={locale} messages={messages}>

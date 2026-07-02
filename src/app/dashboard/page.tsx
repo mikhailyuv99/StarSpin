@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { getTranslations } from "@/i18n/server";
+import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
+import { SubscribeButton } from "@/components/billing/SubscribeButton";
+import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
 
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
@@ -16,12 +20,38 @@ export default async function DashboardPage() {
     { href: "/dashboard/stats", title: t("dashboard.statsCard"), desc: t("dashboard.statsDesc") },
   ];
 
+  const needsSubscribe = merchant.subscription_status === "trial" || merchant.subscription_status === "past_due";
+  const isActive = merchant.subscription_status === "active";
+
   return (
     <div className="space-y-8">
+      <Suspense fallback={null}>
+        <DashboardBillingRedirect />
+      </Suspense>
+
       <div>
         <h1 className={ui.h1}>{t("dashboard.homeTitle")}</h1>
         <p className={ui.muted}>{t("dashboard.homeSubtitle")}</p>
       </div>
+
+      {needsSubscribe && (
+        <div className={`${ui.card} border-[var(--c-yellow)] bg-[var(--c-yellow-bright)]/40`}>
+          <h2 className="text-base font-extrabold text-ink">{t("dashboard.subscribeTitle")}</h2>
+          <p className="mt-2 text-sm text-muted">{t("dashboard.subscribeBody")}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <SubscribeButton plan="monthly" className={`${ui.btnYellow} !w-auto px-5`}>
+              {t("marketing.subscribeMonthly")}
+            </SubscribeButton>
+            <SubscribeButton plan="annual" className={`${ui.btn} !w-auto px-5`}>
+              {t("marketing.subscribeAnnual")}
+            </SubscribeButton>
+            <Link href="/#pricing" className={`${ui.btnOutline} !w-auto px-5`}>
+              {t("dashboard.subscribeCta")}
+            </Link>
+          </div>
+          <p className="mt-3 text-xs font-semibold text-muted">{t("marketing.pricingWallets")}</p>
+        </div>
+      )}
 
       <div className={ui.card}>
         <p className={ui.statLabel}>{t("dashboard.publicPage")}</p>
@@ -32,6 +62,11 @@ export default async function DashboardPage() {
           {t("common.subscription")} ·{" "}
           <span className="font-mono text-xs uppercase text-ink">{merchant.subscription_status}</span>
         </p>
+        {isActive && merchant.stripe_customer_id && (
+          <div className="mt-4">
+            <ManageBillingButton className={`${ui.btnOutline} !w-auto px-5`} />
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

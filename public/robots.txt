@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://starspin.cc/sitemap.xml

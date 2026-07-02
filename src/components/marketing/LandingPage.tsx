@@ -8,7 +8,9 @@ import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { SocialIconRow } from "@/components/icons/SocialIconRow";
+import { CONTACT_EMAIL } from "@/lib/brand";
 import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
+import { PricingPlans } from "@/components/billing/PricingPlans";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { marketingImages } from "@/lib/marketing-images";
@@ -503,10 +505,7 @@ function Pricing() {
             <div className="cadeo-pricing-main">
               <div className="cadeo-pricing-header">
                 <h3 className="cadeo-pricing-name">{t("marketing.pricingName")}</h3>
-                <div>
-                  <span className="cadeo-pricing-price">{t("marketing.pricingPrice")}</span>
-                  <span className="cadeo-pricing-period"> {t("marketing.pricingPeriod")}</span>
-                </div>
+                <PricingPlans />
               </div>
               <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
               <div className="cadeo-pricing-features">
@@ -606,7 +605,7 @@ function Footer() {
             <span className="cadeo-footer-sticker cadeo-footer-sticker--2">{t("marketing.navFaq")}</span>
             <ul className="cadeo-footer-links">
               <li><Link href="/login">{t("marketing.navLogin")}</Link></li>
-              <li><a href="mailto:hello@starspin.com">Contact</a></li>
+              <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
             </ul>
           </div>
         </div>

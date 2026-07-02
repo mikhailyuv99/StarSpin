@@ -19,6 +19,9 @@ export interface Merchant {
   google_place_id: string | null;
   social_links: SocialLinks;
   subscription_status: SubscriptionStatus;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  billing_plan?: "monthly" | "annual" | null;
   created_at: string;
 }
 
