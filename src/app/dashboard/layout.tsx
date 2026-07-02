@@ -15,7 +15,6 @@ export default async function DashboardLayout({
   const NAV = [
     { href: "/dashboard", label: t("common.dashboard") },
     { href: "/dashboard/flow", label: t("dashboard.navFlow") },
-    { href: "/dashboard/branding", label: t("dashboard.navBranding") },
     { href: "/dashboard/prizes", label: t("dashboard.navPrizes") },
     { href: "/dashboard/reviews", label: t("dashboard.navReviews") },
     { href: "/dashboard/crm", label: t("dashboard.navCrm") },

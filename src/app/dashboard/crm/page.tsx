@@ -137,13 +137,17 @@ export default async function CrmPage() {
           {recent.map((spin) => (
             <div
               key={spin.id}
-              className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black/10 bg-white px-4 py-2.5 text-sm last:border-b-0"
+              className="grid grid-cols-[1fr_minmax(0,1.2fr)_1fr] items-center gap-2 border-b-2 border-black/10 bg-white px-4 py-2.5 text-sm last:border-b-0"
             >
               <span className="font-mono text-xs text-muted">
                 {new Date(spin.created_at).toLocaleString(intl)}
               </span>
-              <span className="text-ink">{spin.prize?.label ?? "-"}</span>
-              <span className="text-xs text-muted">{spin.claim_email ?? t("dashboard.crmAnonymous")}</span>
+              <span className="truncate text-center font-extrabold text-ink">
+                {spin.prize?.label ?? "-"}
+              </span>
+              <span className="truncate text-right text-xs text-muted">
+                {spin.claim_email ?? t("dashboard.crmAnonymous")}
+              </span>
             </div>
           ))}
         </div>

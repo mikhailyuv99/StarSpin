@@ -254,11 +254,12 @@ function PhoneScene() {
 
 function JourneyPreview() {
   const { t } = useI18n();
-  const steps: { brand: SocialBrand; label: string }[] = [
-    { brand: "google", label: t("dashboard.flowStep_google_review") },
-    { brand: "instagram", label: t("dashboard.flowStep_instagram") },
-    { brand: "tripadvisor", label: t("dashboard.flowStep_tripadvisor") },
+  const steps: { brand: SocialBrand; label: string; pill: string }[] = [
+    { brand: "google", label: t("dashboard.flowStep_google_review"), pill: "cadeo-visit-pill--google" },
+    { brand: "instagram", label: t("dashboard.flowStep_instagram"), pill: "cadeo-visit-pill--insta" },
+    { brand: "tripadvisor", label: t("dashboard.flowStep_tripadvisor"), pill: "cadeo-visit-pill--tripadvisor" },
   ];
+  const total = steps.length + 1;
 
   return (
     <div className="cadeo-visits-block">
@@ -267,7 +268,11 @@ function JourneyPreview() {
           <RevealItem key={step.label} className="cadeo-visit-item">
             <div className="cadeo-visit-card">
               <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
-              <span className={`cadeo-visit-pill cadeo-visit-pill--google`}>
+              <p className="cadeo-visit-label">{step.label}</p>
+              <div className="cadeo-visit-xp" aria-hidden>
+                <div className="cadeo-visit-xp-fill" style={{ width: `${((i + 1) / total) * 100}%` }} />
+              </div>
+              <span className={`cadeo-visit-pill ${step.pill}`}>
                 <span className="cadeo-visit-pill-icon">
                   <SocialIcon brand={step.brand} size={22} />
                 </span>
@@ -279,6 +284,10 @@ function JourneyPreview() {
         <RevealItem className="cadeo-visit-item">
           <div className="cadeo-visit-card">
             <span className="cadeo-visit-step">{String(steps.length + 1).padStart(2, "0")}</span>
+            <p className="cadeo-visit-label">{t("public.stepWheel")}</p>
+            <div className="cadeo-visit-xp" aria-hidden>
+              <div className="cadeo-visit-xp-fill" style={{ width: "100%" }} />
+            </div>
             <span className="cadeo-visit-pill cadeo-visit-pill--yellow">
               <span className="cadeo-visit-pill-text">{t("public.stepWheel")}</span>
             </span>

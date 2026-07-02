@@ -42,6 +42,11 @@ function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
       <PaymentElement
         options={{
           layout: "tabs",
+          paymentMethodOrder: ["apple_pay", "google_pay", "card"],
+          wallets: {
+            applePay: "auto",
+            googlePay: "auto",
+          },
         }}
       />
       {error && <p className="cadeo-subscribe-btn-error">{error}</p>}

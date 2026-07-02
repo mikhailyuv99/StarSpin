@@ -26,4 +26,13 @@ export const RESERVED_SLUGS = new Set([
   "auth",
   "api",
   "r",
+  "subscribe",
+  "checkout",
+  "flow",
+  "crm",
+  "prizes",
+  "reviews",
+  "stats",
+  "branding",
+  "qr",
 ]);
