@@ -658,6 +658,52 @@ html.locale-es .cadeo-hero-accent {
   overflow: hidden;
 }
 
+/* Prize wheel — shared by public journey and marketing (not only cadeo-styles.css) */
+.marketing-wheel-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: visible;
+  margin-inline: auto;
+}
+
+.marketing-wheel-pointer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  transform: translate(-50%, -48%);
+  pointer-events: none;
+  line-height: 0;
+}
+
+.marketing-wheel-wrap .marketing-wheel {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.marketing-wheel {
+  display: block;
+  flex-shrink: 0;
+}
+
+.marketing-wheel__disc {
+  transform-origin: 50px 50px;
+}
+
+.public-wheel-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  overflow: visible;
+  padding-top: 0.75rem;
+}
+
 .public-btn {
   display: flex;
   width: 100%;

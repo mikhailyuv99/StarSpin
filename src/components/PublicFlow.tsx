@@ -346,7 +346,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  className="public-wheel-stage"
                 >
                   <div className="text-center">
                     <p className="text-3xl" aria-hidden>

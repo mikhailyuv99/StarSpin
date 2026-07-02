@@ -57,7 +57,7 @@ export function Wheel({
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      setWheelSize(Math.min(Math.max(w * 0.88, 300), 400));
+      setWheelSize(Math.min(Math.max(w - 72, 260), 320));
     };
     update();
     window.addEventListener("resize", update);
@@ -105,7 +105,7 @@ export function Wheel({
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-4">
+    <div className="public-wheel-stage">
       <div className="marketing-wheel-wrap" style={{ width: wheelSize, height: wheelSize }}>
         <div className="marketing-wheel-pointer" aria-hidden>
           <WheelPointer width={pointerW} height={pointerH} />
