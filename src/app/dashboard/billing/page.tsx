@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BillingManagePage } from "@/components/billing/BillingManagePage";
 import { getBillingSummary } from "@/lib/billing-summary";
+import { isMerchantLive } from "@/lib/merchant-access";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { getStripe } from "@/lib/stripe";
 import { getStripePublishableKey } from "@/lib/stripe-client";
@@ -28,6 +29,7 @@ export default async function DashboardBillingPage() {
       merchantName={merchant.name}
       summary={summary}
       publishableKey={publishableKey}
+      isSubscribed={isMerchantLive(merchant.subscription_status)}
     />
   );
 }

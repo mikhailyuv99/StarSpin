@@ -93,10 +93,12 @@ export function BillingManagePage({
   merchantName,
   summary,
   publishableKey,
+  isSubscribed,
 }: {
   merchantName: string;
   summary: BillingSummary;
   publishableKey: string;
+  isSubscribed: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -322,7 +324,7 @@ export function BillingManagePage({
             </button>
           )}
 
-          {!canManageSubscription && (
+          {!canManageSubscription && !isSubscribed && (
             <Link href="/subscribe" className={`${ui.btnYellow} !w-auto px-5 inline-flex`}>
               {t("dashboard.subscribeCta")}
             </Link>

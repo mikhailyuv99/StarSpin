@@ -24,12 +24,19 @@ function purpleBg(width, height) {
   return `<rect width="${width}" height="${height}" fill="${BRAND.purple}"/>`;
 }
 
-const PADDING = 0.1;
+// Star path bounds inside the 40×40 viewBox (not the full viewBox).
+const STAR_VISUAL_WIDTH = 20;
+const STAR_VISUAL_HEIGHT = 19;
+const PADDING = 0.06;
+
+function starScaleForInner(inner) {
+  return Math.min(inner / STAR_VISUAL_WIDTH, inner / STAR_VISUAL_HEIGHT) * 0.98;
+}
 
 /** Star centered on solid purple — nothing else. */
 function iconOnlySvg({ size = 1024, withBackground = true }) {
   const inner = size * (1 - PADDING * 2);
-  const scale = inner / 40;
+  const scale = starScaleForInner(inner);
   const cx = size / 2;
   const cy = size / 2;
   const bg = withBackground ? purpleBg(size, size) : "";
@@ -45,9 +52,9 @@ function wordmarkElements(width, height) {
   const padY = height * PADDING;
   const innerW = width - padX * 2;
   const innerH = height - padY * 2;
-  const scale = innerW / 40;
-  const visualStarH = 19 * scale;
-  const fontSize = Math.round(innerW * 0.13);
+  const scale = starScaleForInner(Math.min(innerW, innerH));
+  const visualStarH = STAR_VISUAL_HEIGHT * scale;
+  const fontSize = Math.round(innerW * 0.14);
   const gap = fontSize * 0.42;
   const blockHeight = visualStarH + gap + fontSize;
   const blockTop = padY + (innerH - blockHeight) / 2;
