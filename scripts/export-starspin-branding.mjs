@@ -14,10 +14,16 @@ const OUT = path.join(process.env.USERPROFILE ?? "", "Desktop", "SpinStar Brandi
 /** Yellow star only — no orbit ring, no frame, no dot. */
 const STAR_PATH = `M20 7.5 22.4 14.8 30 14.8 23.8 19.2 26.2 26.5 20 22.2 13.8 26.5 16.2 19.2 10 14.8 17.6 14.8Z`;
 const STAR_STROKE = 1.85;
+const HALF_STROKE = STAR_STROKE / 2;
 
-/** Tight crop around the star path + stroke (not the full 40×40 mark viewBox). */
-const STAR_CROP = { x: 9, y: 6.5, width: 22, height: 20.5 };
-const ICON_BLEED = 0.01;
+/** Exact star path bounds + stroke — zero extra padding for max favicon size. */
+const STAR_CROP = {
+  x: 10 - HALF_STROKE,
+  y: 7.5 - HALF_STROKE,
+  width: 20 + STAR_STROKE,
+  height: 19 + STAR_STROKE,
+};
+const ICON_BLEED = 0;
 
 function starPath(strokeWidth = STAR_STROKE) {
   return `<path d="${STAR_PATH}" fill="${BRAND.yellow}" stroke="${BRAND.black}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>`;
@@ -44,8 +50,8 @@ function starGroupAt(scale, cx, cy) {
   </g>`;
 }
 
-/** Star cropped tight on solid purple — fills favicon/tab icons. */
-function iconOnlySvg({ size = 1024, withBackground = true, bleed = ICON_BLEED }) {
+/** Star cropped tight — transparent by default for favicons. */
+function iconOnlySvg({ size = 1024, withBackground = false, bleed = ICON_BLEED }) {
   const vb = iconViewBox(bleed);
   const bg = withBackground ? purpleBgRect(vb) : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -128,7 +134,7 @@ const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 const APP_ICON_PATHS = [
   ["favicon/favicon.ico", "src/app/favicon.ico"],
   ["favicon/apple-touch-icon.png", "src/app/apple-icon.png"],
-  ["png/icon-only-512.png", "src/app/icon.png"],
+  ["pwa/icon-512x512.png", "src/app/icon.png"],
   ["pwa/icon-192x192.png", "public/icon-192.png"],
   ["pwa/icon-512x512.png", "public/icon-512.png"],
   ["social/og-image.png", "src/app/opengraph-image.png"],
@@ -164,29 +170,29 @@ async function main() {
   ];
   await Promise.all(dirs.map((d) => fs.mkdir(d, { recursive: true })));
 
-  const iconSvg = iconOnlySvg({ size: 1024 });
-  const iconTransparentSvg = iconOnlySvg({ size: 1024, withBackground: false });
+  const faviconSvg = iconOnlySvg({ size: 1024, withBackground: false });
+  const iconPurpleSvg = iconOnlySvg({ size: 1024, withBackground: true });
   const logoSvg = logoWordmarkSvg({ width: 1024, height: 1280 });
   const ogSvg = bannerSvg({ width: 1200, height: 630 });
   const twitterSvg = bannerSvg({ width: 1500, height: 500 });
 
-  await writeSvg(path.join(OUT, "svg", "icon-only.svg"), iconSvg);
-  await writeSvg(path.join(OUT, "svg", "icon-only-transparent.svg"), iconTransparentSvg);
+  await writeSvg(path.join(OUT, "svg", "icon-only.svg"), iconPurpleSvg);
+  await writeSvg(path.join(OUT, "svg", "icon-only-transparent.svg"), faviconSvg);
   await writeSvg(path.join(OUT, "svg", "logo-icon-wordmark.svg"), logoSvg);
   await writeSvg(path.join(OUT, "svg", "og-image.svg"), ogSvg);
   await writeSvg(path.join(OUT, "svg", "twitter-banner.svg"), twitterSvg);
 
   const exports = [
-    [path.join(OUT, "png", "icon-only-1024.png"), iconSvg, 1024, 1024],
-    [path.join(OUT, "png", "icon-only-512.png"), iconSvg, 512, 512],
+    [path.join(OUT, "png", "icon-only-1024.png"), iconPurpleSvg, 1024, 1024],
+    [path.join(OUT, "png", "icon-only-512.png"), iconPurpleSvg, 512, 512],
     [path.join(OUT, "png", "logo-wordmark-1024.png"), logoSvg, 1024, 1280],
     [path.join(OUT, "png", "logo-wordmark-512.png"), logoSvg, 512, 640],
-    [path.join(OUT, "favicon", "favicon-16x16.png"), iconSvg, 16, 16],
-    [path.join(OUT, "favicon", "favicon-32x32.png"), iconSvg, 32, 32],
-    [path.join(OUT, "favicon", "apple-touch-icon.png"), iconSvg, 180, 180],
-    [path.join(OUT, "pwa", "icon-192x192.png"), iconSvg, 192, 192],
-    [path.join(OUT, "pwa", "icon-512x512.png"), iconSvg, 512, 512],
-    [path.join(OUT, "social", "instagram-profile.png"), iconSvg, 1080, 1080],
+    [path.join(OUT, "favicon", "favicon-16x16.png"), faviconSvg, 16, 16],
+    [path.join(OUT, "favicon", "favicon-32x32.png"), faviconSvg, 32, 32],
+    [path.join(OUT, "favicon", "apple-touch-icon.png"), faviconSvg, 180, 180],
+    [path.join(OUT, "pwa", "icon-192x192.png"), faviconSvg, 192, 192],
+    [path.join(OUT, "pwa", "icon-512x512.png"), faviconSvg, 512, 512],
+    [path.join(OUT, "social", "instagram-profile.png"), iconPurpleSvg, 1080, 1080],
     [path.join(OUT, "social", "instagram-logo.png"), logoSvg, 1080, 1350],
     [path.join(OUT, "social", "og-image.png"), ogSvg, 1200, 630],
     [path.join(OUT, "social", "twitter-banner.png"), twitterSvg, 1500, 500],
@@ -196,9 +202,9 @@ async function main() {
     await writePng(file, svg, w, h);
   }
 
-  const fav16 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(16, 16).png().toBuffer();
-  const fav32 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(32, 32).png().toBuffer();
-  const fav48 = await sharp(Buffer.from(iconSvg)).resize(256, 256).resize(48, 48).png().toBuffer();
+  const fav16 = await sharp(Buffer.from(faviconSvg)).resize(256, 256).resize(16, 16).png().toBuffer();
+  const fav32 = await sharp(Buffer.from(faviconSvg)).resize(256, 256).resize(32, 32).png().toBuffer();
+  const fav48 = await sharp(Buffer.from(faviconSvg)).resize(256, 256).resize(48, 48).png().toBuffer();
   const ico = await toIco([fav16, fav32, fav48]);
   await fs.writeFile(path.join(OUT, "favicon", "favicon.ico"), ico);
   await fs.copyFile(path.join(OUT, "favicon", "favicon.ico"), path.join(OUT, "favicon.ico"));
