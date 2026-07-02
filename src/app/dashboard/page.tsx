@@ -5,8 +5,10 @@ import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { getTranslations } from "@/i18n/server";
-import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
 import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
+import { MerchantLiveCard } from "@/components/dashboard/MerchantLiveCard";
+import { publicMerchantUrl } from "@/lib/app-url";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
@@ -22,6 +24,16 @@ export default async function DashboardPage() {
 
   const needsSubscribe = needsSubscription(merchant.subscription_status);
   const isActive = isMerchantLive(merchant.subscription_status);
+
+  let totalSpins = 0;
+  if (isActive) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("spins")
+      .select("*", { count: "exact", head: true })
+      .eq("merchant_id", merchant.id);
+    totalSpins = count ?? 0;
+  }
 
   return (
     <div className="space-y-8">
@@ -47,10 +59,22 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {isActive && merchant.stripe_customer_id && (
-        <div className="flex justify-end">
-          <ManageBillingButton className={`${ui.btnOutline} !w-auto px-5`} />
-        </div>
+      {isActive && (
+        <MerchantLiveCard
+          slug={merchant.slug}
+          publicUrl={publicMerchantUrl(merchant.slug)}
+          totalSpins={totalSpins}
+          showBilling={Boolean(merchant.stripe_customer_id)}
+          labels={{
+            title: t("dashboard.homeLiveTitle"),
+            body: t("dashboard.homeLiveBody"),
+            testJourney: t("dashboard.testJourney"),
+            copyLink: t("dashboard.copyPublicLink"),
+            copiedLink: t("dashboard.copiedPublicLink"),
+            totalSpins: t("dashboard.homeTotalSpins"),
+            viewCrm: t("dashboard.homeViewCrm"),
+          }}
+        />
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">

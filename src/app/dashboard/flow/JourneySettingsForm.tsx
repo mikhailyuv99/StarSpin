@@ -76,13 +76,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     tripadvisor: merchant.social_links.tripadvisor ?? "",
     logo_url: merchant.logo_url ?? "",
   });
-  const [placeIdReady, setPlaceIdReady] = useState(
-    () =>
-      Boolean(
-        merchant.google_place_id ||
-          extractGooglePlaceId(merchant.google_review_link ?? ""),
-      ),
-  );
   const [placeIdWarning, setPlaceIdWarning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -99,12 +92,10 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     const extracted = extractGooglePlaceId(link);
     if (extracted) {
       setForm((prev) => ({ ...prev, google_place_id: extracted }));
-      setPlaceIdReady(true);
       setPlaceIdWarning(false);
       return;
     }
     setForm((prev) => ({ ...prev, google_place_id: "" }));
-    setPlaceIdReady(false);
     setPlaceIdWarning(Boolean(link.trim()));
   };
 
@@ -381,11 +372,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                           <p className="mt-2 text-xs font-medium leading-relaxed text-muted">
                             {t("dashboard.googleReviewLinkHint")}
                           </p>
-                          {placeIdReady && (
-                            <p className="mt-1 text-xs font-bold text-emerald-800">
-                              {t("dashboard.googlePlaceIdAuto")}
-                            </p>
-                          )}
                           {placeIdWarning && (
                             <p className="mt-1 text-xs font-bold text-amber-800">
                               {t("dashboard.googlePlaceIdFailed")}

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { SignOutButton } from "@/components/SignOutButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
@@ -8,11 +7,13 @@ type NavItem = { href: string; label: string };
 
 export function DashboardShell({
   merchantName,
+  merchantSlug,
   nav,
   labels,
   children,
 }: {
   merchantName: string;
+  merchantSlug: string;
   nav: NavItem[];
   labels: {
     dashboard: string;
@@ -41,9 +42,14 @@ export function DashboardShell({
             </p>
             <p className="text-base font-extrabold text-ink">{merchantName}</p>
           </div>
-          <Link href="/dashboard" className="brutal-btn brutal-btn-yellow text-sm">
+          <a
+            href={`/${merchantSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="brutal-btn brutal-btn-yellow text-sm"
+          >
             {labels.viewSite}
-          </Link>
+          </a>
         </div>
         <main>{children}</main>
       </div>
