@@ -13,6 +13,7 @@ import {
   RedemptionRulesFields,
   type RedemptionFormState,
 } from "./RedemptionRulesFields";
+import { PRIZE_LABEL_MAX_LENGTH, clampPrizeLabel } from "@/lib/wheel";
 
 type PrizeForm = {
   label: string;
@@ -77,7 +78,7 @@ export function PrizesManager({
     setSaving(true);
     const supabase = createClient();
     const payload = {
-      label: editForm.label.trim(),
+      label: clampPrizeLabel(editForm.label),
       probability_weight: editForm.probability_weight,
       stock_remaining: editForm.stock_remaining ? parseInt(editForm.stock_remaining, 10) : null,
       ...buildRedemptionPayload(editForm.redemption),
@@ -98,7 +99,7 @@ export function PrizesManager({
       .from("prizes")
       .insert({
         merchant_id: merchantId,
-        label: newPrize.label,
+        label: clampPrizeLabel(newPrize.label),
         probability_weight: newPrize.probability_weight,
         stock_remaining: newPrize.stock_remaining ? parseInt(newPrize.stock_remaining, 10) : null,
         ...buildRedemptionPayload(newPrize.redemption),
@@ -157,9 +158,18 @@ export function PrizesManager({
                         <label className={ui.label}>{t("dashboard.label")}</label>
                         <input
                           value={editForm.label}
-                          onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
+                          maxLength={PRIZE_LABEL_MAX_LENGTH}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              label: e.target.value.slice(0, PRIZE_LABEL_MAX_LENGTH),
+                            }))
+                          }
                           className={ui.input}
                         />
+                        <p className="mt-1 text-xs font-medium text-muted">
+                          {t("dashboard.prizeLabelHint", { max: PRIZE_LABEL_MAX_LENGTH })}
+                        </p>
                       </div>
                       <div>
                         <label className={ui.label}>{t("dashboard.weight")}</label>
@@ -242,9 +252,18 @@ export function PrizesManager({
             <label className={ui.label}>{t("dashboard.label")}</label>
             <input
               value={newPrize.label}
-              onChange={(e) => setNewPrize((p) => ({ ...p, label: e.target.value }))}
+              maxLength={PRIZE_LABEL_MAX_LENGTH}
+              onChange={(e) =>
+                setNewPrize((p) => ({
+                  ...p,
+                  label: e.target.value.slice(0, PRIZE_LABEL_MAX_LENGTH),
+                }))
+              }
               className={ui.input}
             />
+            <p className="mt-1 text-xs font-medium text-muted">
+              {t("dashboard.prizeLabelHint", { max: PRIZE_LABEL_MAX_LENGTH })}
+            </p>
           </div>
           <div>
             <label className={ui.label}>{t("dashboard.weight")}</label>

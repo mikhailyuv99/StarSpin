@@ -344,6 +344,7 @@
     "noPrizes": "Aún no hay premios.",
     "addPrize": "Añadir un premio",
     "label": "Etiqueta",
+    "prizeLabelHint": "Texto corto para la ruleta — máx. {max} caracteres. 2–3 palabras (ej. \"Bebida gratis\").",
     "weight": "Peso",
     "stockOptional": "Stock (vacío = ∞)",
     "primaryColor": "Color principal",

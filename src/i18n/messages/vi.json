@@ -344,6 +344,7 @@
     "noPrizes": "Chưa có phần thưởng.",
     "addPrize": "Thêm phần thưởng",
     "label": "Nhãn",
+    "prizeLabelHint": "Nhãn ngắn trên vòng quay — tối đa {max} ký tự. 2–3 từ (vd. \"Nước miễn phí\").",
     "weight": "Trọng số",
     "stockOptional": "Tồn kho (trống = ∞)",
     "primaryColor": "Màu chính",

@@ -8,10 +8,9 @@ import {
   contrastTextColor,
   describeSlice,
   pickWeightedPrize,
-  polarToCartesian,
   prizeEqualSliceAngles,
-  sliceLabelRotation,
 } from "@/lib/wheel";
+import { WheelSliceLabels, wheelClipPrefix } from "@/components/WheelSliceLabels";
 
 interface WheelProps {
   prizes: Prize[];
@@ -25,13 +24,6 @@ interface WheelProps {
 }
 
 const SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#a8e6cf", "#b8cfe8", "#f4a89a"];
-
-function wheelLabelFontSize(label: string, sliceCount: number): string {
-  const sliceAngle = 360 / Math.max(sliceCount, 1);
-  if (label.length > 16) return sliceAngle < 60 ? "3.8" : "4.2";
-  if (label.length > 11) return sliceAngle < 60 ? "4.2" : "4.8";
-  return "5.5";
-}
 
 export function Wheel({
   prizes,
@@ -47,6 +39,7 @@ export function Wheel({
   const [wheelSize, setWheelSize] = useState(280);
   const spunRef = useRef<string | undefined>(undefined);
   const slices = prizeEqualSliceAngles(prizes);
+  const clipPrefix = wheelClipPrefix(slices.map((s) => s.prize));
 
   const cx = 50;
   const cy = 50;
@@ -127,36 +120,25 @@ export function Wheel({
             }}
           >
             {slices.map((slice, i) => {
-              const mid = (slice.start + slice.end) / 2;
-              const labelPos = polarToCartesian(cx, cy, 26, mid);
-              const labelRotation = sliceLabelRotation(mid);
               const fill = SLICE_COLORS[i % SLICE_COLORS.length]!;
-              const label = slice.prize.label.trim();
 
               return (
-                <g key={slice.prize.id}>
-                  <path
-                    d={describeSlice(cx, cy, r, slice.start, slice.end)}
-                    fill={fill}
-                    stroke="#0a0a0a"
-                    strokeWidth="1.25"
-                  />
-                  <text
-                    x={labelPos.x}
-                    y={labelPos.y}
-                    fill="#0a0a0a"
-                    fontSize={wheelLabelFontSize(label, slices.length)}
-                    fontWeight="800"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${labelRotation}, ${labelPos.x}, ${labelPos.y})`}
-                    style={{ fontFamily: "var(--font-game), system-ui, sans-serif" }}
-                  >
-                    {label}
-                  </text>
-                </g>
+                <path
+                  key={slice.prize.id}
+                  d={describeSlice(cx, cy, r, slice.start, slice.end)}
+                  fill={fill}
+                  stroke="#0a0a0a"
+                  strokeWidth="1.25"
+                />
               );
             })}
+            <WheelSliceLabels
+              slices={slices}
+              cx={cx}
+              cy={cy}
+              r={r}
+              clipIdPrefix={clipPrefix}
+            />
           </g>
           <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
           <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />

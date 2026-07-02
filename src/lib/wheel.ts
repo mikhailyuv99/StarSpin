@@ -1,5 +1,118 @@
 import type { Prize } from "./types";
 
+/** Max characters merchants can enter; wheel layout also clamps at render time. */
+export const PRIZE_LABEL_MAX_LENGTH = 24;
+
+export function clampPrizeLabel(label: string, max = PRIZE_LABEL_MAX_LENGTH): string {
+  const trimmed = label.trim().replace(/\s+/g, " ");
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, Math.max(1, max - 1)).trimEnd()}…`;
+}
+
+function arcChordWidth(radius: number, sliceAngleDeg: number): number {
+  const halfRad = ((sliceAngleDeg / 2) * Math.PI) / 180;
+  return 2 * radius * Math.sin(halfRad);
+}
+
+function maxCharsForArc(arcWidth: number, fontSize: number): number {
+  const charWidth = fontSize * 0.58;
+  return Math.max(3, Math.floor(arcWidth / charWidth) - 1);
+}
+
+function wrapLabelWords(label: string, maxChars: number, maxLines: number): string[] {
+  const words = label.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = "";
+
+  const truncate = (text: string) =>
+    text.length > maxChars ? `${text.slice(0, Math.max(1, maxChars - 1))}…` : text;
+
+  for (const word of words) {
+    const w = truncate(word);
+    if (!current) {
+      current = w;
+      continue;
+    }
+    const candidate = `${current} ${w}`;
+    if (candidate.length <= maxChars) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = w;
+    }
+  }
+  if (current) lines.push(current);
+
+  let result = lines.map((line) => truncate(line));
+  if (result.length > maxLines) {
+    const kept = result.slice(0, maxLines - 1);
+    const tail = truncate(result.slice(maxLines - 1).join(" "));
+    result = [...kept, tail];
+  }
+  return result;
+}
+
+export type WheelSliceLabelLayout = {
+  lines: string[];
+  fontSize: number;
+  labelRadius: number;
+  lineHeight: number;
+  visible: boolean;
+};
+
+/** Layout prize text inside one wheel slice (viewBox 0–100 coordinate system). */
+export function layoutWheelSliceLabel(
+  label: string,
+  sliceAngle: number,
+  sliceCount: number,
+  wheelRadius = 44,
+): WheelSliceLabelLayout {
+  const safe = clampPrizeLabel(label);
+  if (!shouldShowSliceLabel(sliceAngle) || !safe) {
+    return { lines: [], fontSize: 0, labelRadius: 0, lineHeight: 0, visible: false };
+  }
+
+  const labelRadius = sliceLabelRadius(wheelRadius, sliceAngle);
+  const maxLines = sliceAngle < 28 ? 1 : sliceAngle < 52 ? 2 : sliceAngle < 90 ? 3 : 4;
+  let fontSize = labelFontSizeSvg(sliceAngle, sliceCount);
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const arcWidth = arcChordWidth(labelRadius, sliceAngle * 0.82);
+    const maxChars = maxCharsForArc(arcWidth, fontSize);
+    const lines = wrapLabelWords(safe, maxChars, maxLines);
+    const fits = lines.every((line) => line.length <= maxChars);
+    if (fits && lines.length <= maxLines) {
+      return {
+        lines,
+        fontSize,
+        labelRadius,
+        lineHeight: fontSize * 1.12,
+        visible: true,
+      };
+    }
+    fontSize = Math.max(2.6, fontSize * 0.9);
+  }
+
+  const arcWidth = arcChordWidth(labelRadius, sliceAngle * 0.82);
+  const maxChars = Math.max(3, maxCharsForArc(arcWidth, 2.6));
+  const lines = wrapLabelWords(safe, maxChars, maxLines);
+  return {
+    lines,
+    fontSize: 2.6,
+    labelRadius,
+    lineHeight: 2.6 * 1.12,
+    visible: lines.length > 0,
+  };
+}
+
+/** Font size for SVG viewBox 0–100 wheels (not pixel-sized SVGs). */
+export function labelFontSizeSvg(sliceAngle: number, sliceCount: number): number {
+  let size = sliceAngle < 30 ? 3.1 : sliceAngle < 45 ? 3.5 : sliceAngle < 72 ? 4 : 4.6;
+  if (sliceCount > 8) size -= 0.35;
+  if (sliceCount > 10) size -= 0.25;
+  return Math.max(2.8, Math.min(size, 5));
+}
+
 export function pickWeightedPrize(prizes: Prize[]): Prize | null {
   const eligible = prizes.filter(
     (p) => p.active && (p.stock_remaining === null || p.stock_remaining > 0),

@@ -344,6 +344,7 @@
     "noPrizes": "No prizes yet.",
     "addPrize": "Add a prize",
     "label": "Label",
+    "prizeLabelHint": "Short label for the wheel — max {max} characters. Use 2–3 words (e.g. \"Free drink\").",
     "weight": "Weight",
     "stockOptional": "Stock (empty = ∞)",
     "primaryColor": "Primary color",
