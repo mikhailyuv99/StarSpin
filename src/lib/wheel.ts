@@ -6,7 +6,12 @@ export const PRIZE_LABEL_MAX_LENGTH = 24;
 export function clampPrizeLabel(label: string, max = PRIZE_LABEL_MAX_LENGTH): string {
   const trimmed = label.trim().replace(/\s+/g, " ");
   if (trimmed.length <= max) return trimmed;
-  return `${trimmed.slice(0, Math.max(1, max - 1)).trimEnd()}…`;
+  return trimmed.slice(0, max).trimEnd();
+}
+
+function fitTextToWidth(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars);
 }
 
 function arcChordWidth(radius: number, sliceAngleDeg: number): number {
@@ -24,8 +29,7 @@ function wrapLabelWords(label: string, maxChars: number, maxLines: number): stri
   const lines: string[] = [];
   let current = "";
 
-  const truncate = (text: string) =>
-    text.length > maxChars ? `${text.slice(0, Math.max(1, maxChars - 1))}…` : text;
+  const truncate = (text: string) => fitTextToWidth(text, maxChars);
 
   for (const word of words) {
     const w = truncate(word);
@@ -201,9 +205,9 @@ export function splitSliceLabel(label: string, sliceAngle: number): string[] {
     const candidate = current ? `${current} ${word}` : word;
     if (candidate.length > maxChars && current) {
       lines.push(current);
-      current = word.length > maxChars ? `${word.slice(0, maxChars - 1)}…` : word;
+      current = word.length > maxChars ? fitTextToWidth(word, maxChars) : word;
     } else if (candidate.length > maxChars) {
-      lines.push(`${word.slice(0, maxChars - 1)}…`);
+      lines.push(fitTextToWidth(word, maxChars));
       current = "";
     } else {
       current = candidate;
