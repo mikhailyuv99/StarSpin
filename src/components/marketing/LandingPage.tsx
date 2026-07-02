@@ -64,11 +64,11 @@ function HeroWheelPhone() {
 
 function Hero() {
   const { t } = useI18n();
-  const badges: { cls: string; brand: SocialBrand; textKey: "heroBadgeGoogle" | "heroBadgeTripadvisor" | "heroBadgeTiktok" | "heroBadgeInstagram" }[] = [
-    { cls: "cadeo-stat-badge--white", brand: "google", textKey: "heroBadgeGoogle" },
-    { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", textKey: "heroBadgeTripadvisor" },
-    { cls: "cadeo-stat-badge--yellow", brand: "tiktok", textKey: "heroBadgeTiktok" },
-    { cls: "cadeo-stat-badge--pink", brand: "instagram", textKey: "heroBadgeInstagram" },
+  const badges: { cls: string; brand: SocialBrand; text: string }[] = [
+    { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google" },
+    { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", text: "+251 TripAdvisor" },
+    { cls: "cadeo-stat-badge--yellow", brand: "tiktok", text: "+150 TikTok" },
+    { cls: "cadeo-stat-badge--pink", brand: "instagram", text: "+251 Instagram" },
   ];
 
   return (
@@ -101,12 +101,12 @@ function Hero() {
           <div className="cadeo-hero-scene">
             <div className="cadeo-hero-badges">
               {badges.map((b, i) => (
-                <Reveal key={b.textKey} delay={0.12 + i * 0.06} y={20}>
+                <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
                   <div className={`cadeo-stat-badge ${b.cls}`}>
                     <span className="cadeo-stat-badge-icon">
                       <SocialIcon brand={b.brand} size={16} />
                     </span>
-                    <span className="cadeo-stat-badge-text">{t(`marketing.${b.textKey}`)}</span>
+                    <span className="cadeo-stat-badge-text">{b.text}</span>
                   </div>
                 </Reveal>
               ))}
