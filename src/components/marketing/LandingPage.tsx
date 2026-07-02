@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
+import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { CONTACT_EMAIL } from "@/lib/brand";
@@ -289,6 +290,9 @@ function JourneyPreview() {
               <div className="cadeo-visit-xp-fill" style={{ width: "100%" }} />
             </div>
             <span className="cadeo-visit-pill cadeo-visit-pill--yellow">
+              <span className="cadeo-visit-pill-icon cadeo-visit-pill-icon--wheel">
+                <JourneyWheelIcon size={22} />
+              </span>
               <span className="cadeo-visit-pill-text">{t("public.stepWheel")}</span>
             </span>
           </div>
@@ -587,20 +591,37 @@ function Footer() {
       <div className="cadeo-footer-box">
         <div className="cadeo-footer-top">
           <Logo />
+          <div className="cadeo-footer-social" aria-hidden>
+            <span className="cadeo-social-btn">
+              <SocialIcon brand="facebook" size={14} />
+            </span>
+            <span className="cadeo-social-btn">
+              <SocialIcon brand="instagram" size={14} />
+            </span>
+            <span className="cadeo-social-btn">
+              <SocialIcon brand="tiktok" size={14} />
+            </span>
+          </div>
         </div>
         <div className="cadeo-footer-cols">
-          <div>
+          <div className="cadeo-footer-col">
             <span className="cadeo-footer-sticker">{t("marketing.footerSocial")}</span>
             <ul className="cadeo-footer-links">
               <li><Link href="/login">{t("marketing.footerDemo")}</Link></li>
               <li><a href="#pricing">{t("marketing.navPricing")}</a></li>
             </ul>
           </div>
-          <div>
+          <div className="cadeo-footer-col">
             <span className="cadeo-footer-sticker cadeo-footer-sticker--2">{t("marketing.navFaq")}</span>
             <ul className="cadeo-footer-links">
+              <li><a href="#faq">{t("marketing.navFaq")}</a></li>
               <li><Link href="/login">{t("marketing.navLogin")}</Link></li>
               <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
+            </ul>
+          </div>
+          <div className="cadeo-footer-col">
+            <span className="cadeo-footer-sticker">{t("marketing.footerLegal")}</span>
+            <ul className="cadeo-footer-links">
               <li><Link href="/terms">{t("marketing.footerTerms")}</Link></li>
               <li><Link href="/privacy">{t("marketing.footerPrivacy")}</Link></li>
             </ul>

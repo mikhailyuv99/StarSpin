@@ -1473,6 +1473,12 @@
 .cadeo-visit-pill--tiktok { background: var(--c-salmon); }
 .cadeo-visit-pill--facebook { background: var(--c-pink); }
 .cadeo-visit-pill--tripadvisor { background: var(--c-mint); }
+.cadeo-visit-pill--yellow { background: var(--c-yellow); }
+
+.cadeo-visit-pill-icon--wheel {
+  padding: 4px;
+  overflow: hidden;
+}
 
 /* Dashboard journey flow preview */
 .journey-flow-preview {
@@ -2256,9 +2262,21 @@
 }
 
 .cadeo-footer-cols {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+  width: 100%;
+}
+
+.cadeo-footer-col {
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .cadeo-footer-cols {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }
 
 .cadeo-footer-sticker {
