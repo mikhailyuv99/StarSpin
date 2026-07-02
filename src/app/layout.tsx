@@ -82,17 +82,31 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: "/",
     },
+    icons: {
+      icon: [{ url: "/favicon.ico", sizes: "any" }],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    },
+    manifest: "/manifest.webmanifest",
     openGraph: {
       type: "website",
       url: OFFICIAL_SITE_URL,
       siteName: "STARSPIN",
       title: t("meta.title"),
       description: t("meta.description"),
+      images: [
+        {
+          url: "/opengraph-image.png",
+          width: 1200,
+          height: 630,
+          alt: "STARSPIN",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: t("meta.title"),
       description: t("meta.description"),
+      images: ["/twitter-image.png"],
     },
   };
 }
