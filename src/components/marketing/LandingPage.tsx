@@ -15,6 +15,8 @@ import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { marketingImages } from "@/lib/marketing-images";
 import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
+import { AdvantageCopy } from "@/components/marketing/AdvantageCopy";
+import { getMarketingAdvantages } from "@/lib/marketing-advantages";
 import "./cadeo-styles.css";
 
 function Logo() {
@@ -431,12 +433,7 @@ function Features() {
 
 function Advantages() {
   const { t } = useI18n();
-  const items = [
-    { num: "01", text: t("marketing.adv1") },
-    { num: "02", text: t("marketing.adv2") },
-    { num: "03", text: t("marketing.adv3") },
-    { num: "04", text: t("marketing.adv4") },
-  ];
+  const items = getMarketingAdvantages(t);
 
   return (
     <section className="cadeo-section cadeo-section--tight-top">
@@ -446,10 +443,10 @@ function Advantages() {
         </Reveal>
         <RevealStagger className="cadeo-adv-grid">
           {items.map((item) => (
-            <RevealItem key={item.text}>
+            <RevealItem key={item.num}>
               <div className="cadeo-adv-item">
                 <span className="cadeo-adv-num">{item.num}</span>
-                <span>{item.text}</span>
+                <AdvantageCopy title={item.title} desc={item.desc} />
               </div>
             </RevealItem>
           ))}
@@ -475,7 +472,7 @@ function Pricing() {
     t("marketing.priceF9"),
     t("marketing.priceF10"),
   ];
-  const sideAdv = [t("marketing.adv1"), t("marketing.adv2"), t("marketing.adv3"), t("marketing.adv4")];
+  const sideAdv = getMarketingAdvantages(t);
 
   return (
     <section id="pricing" className="cadeo-section">
@@ -486,10 +483,10 @@ function Pricing() {
             <div className="cadeo-pricing-side">
               <h3>{t("marketing.advantagesTitle")}</h3>
               <ul>
-                {sideAdv.map((a) => (
-                  <li key={a}>
+                {sideAdv.map((item) => (
+                  <li key={item.num}>
                     <span>🎯</span>
-                    <span>{a}</span>
+                    <AdvantageCopy title={item.title} desc={item.desc} />
                   </li>
                 ))}
               </ul>
