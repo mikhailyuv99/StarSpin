@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
-import { MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
+import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
+import { extractGooglePlaceId } from "@/lib/google-place-id";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -36,18 +37,11 @@ function cleanSlug(raw: string): string {
     .replace(/^-|-$/g, "");
 }
 
-type LinkKey =
-  | "google_review_link"
-  | "google_place_id"
-  | "instagram"
-  | "facebook"
-  | "tiktok"
-  | "tripadvisor";
+type LinkKey = "google_review_link" | "instagram" | "facebook" | "tiktok" | "tripadvisor";
 
 function linkLabelForKey(t: (key: string) => string, key: LinkKey): string {
   const labels: Record<LinkKey, string> = {
     google_review_link: t("dashboard.googleReviewLink"),
-    google_place_id: t("dashboard.googlePlaceId"),
     instagram: t("dashboard.instagramUrl"),
     facebook: t("dashboard.facebookUrl"),
     tiktok: t("dashboard.tiktokUrl"),
@@ -82,6 +76,14 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     tripadvisor: merchant.social_links.tripadvisor ?? "",
     logo_url: merchant.logo_url ?? "",
   });
+  const [placeIdReady, setPlaceIdReady] = useState(
+    () =>
+      Boolean(
+        merchant.google_place_id ||
+          extractGooglePlaceId(merchant.google_review_link ?? ""),
+      ),
+  );
+  const [placeIdWarning, setPlaceIdWarning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +94,19 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
   );
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const syncPlaceIdFromLink = (link: string) => {
+    const extracted = extractGooglePlaceId(link);
+    if (extracted) {
+      setForm((prev) => ({ ...prev, google_place_id: extracted }));
+      setPlaceIdReady(true);
+      setPlaceIdWarning(false);
+      return;
+    }
+    setForm((prev) => ({ ...prev, google_place_id: "" }));
+    setPlaceIdReady(false);
+    setPlaceIdWarning(Boolean(link.trim()));
+  };
 
   const move = (index: number, direction: -1 | 1) => {
     setSteps((prev) => {
@@ -174,6 +189,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       tripadvisor: form.tripadvisor || undefined,
     };
 
+    const resolvedPlaceId =
+      extractGooglePlaceId(form.google_review_link) || form.google_place_id.trim() || null;
+
     const { error: updateError } = await supabase
       .from("merchants")
       .update({
@@ -182,7 +200,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
         google_review_link: form.google_review_link || null,
-        google_place_id: form.google_place_id || null,
+        google_place_id: resolvedPlaceId,
         social_links,
         logo_url: form.logo_url || null,
         flow_steps: steps,
@@ -283,9 +301,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           ))}
           <div className="journey-preview-step journey-preview-step--wheel">
             <span className="journey-preview-num">{steps.length + 1}</span>
-            <div className="journey-preview-wheel">
-              <MarketingSpinWheel size={26} />
-            </div>
+            <JourneyWheelIcon size={24} />
             <span className="journey-preview-label">{t("public.stepWheel")}</span>
           </div>
         </div>
@@ -344,20 +360,40 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                       </label>
                       <input
                         value={form[linkKey]}
-                        onChange={(e) => update(linkKey, e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (step === "google_review") {
+                            update("google_review_link", value);
+                            syncPlaceIdFromLink(value);
+                          } else {
+                            update(linkKey, value);
+                          }
+                        }}
                         className={ui.input}
+                        placeholder={
+                          step === "google_review"
+                            ? t("dashboard.googleReviewLinkPlaceholder")
+                            : undefined
+                        }
                       />
+                      {step === "google_review" && (
+                        <>
+                          <p className="mt-2 text-xs font-medium leading-relaxed text-muted">
+                            {t("dashboard.googleReviewLinkHint")}
+                          </p>
+                          {placeIdReady && (
+                            <p className="mt-1 text-xs font-bold text-emerald-800">
+                              {t("dashboard.googlePlaceIdAuto")}
+                            </p>
+                          )}
+                          {placeIdWarning && (
+                            <p className="mt-1 text-xs font-bold text-amber-800">
+                              {t("dashboard.googlePlaceIdFailed")}
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
-                    {step === "google_review" && (
-                      <div>
-                        <label className={ui.label}>{t("dashboard.googlePlaceId")}</label>
-                        <input
-                          value={form.google_place_id}
-                          onChange={(e) => update("google_place_id", e.target.value)}
-                          className={ui.input}
-                        />
-                      </div>
-                    )}
                   </div>
                 )}
               </li>

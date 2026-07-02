@@ -820,10 +820,16 @@ html.locale-es .cadeo-hero-accent {
 
 .journey-preview-step--wheel {
   background: var(--c-lavender);
+  padding-inline: 0.65rem;
 }
 
 .journey-preview-step--wheel::before {
   display: none;
+}
+
+.journey-wheel-icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 .journey-preview-num {
@@ -843,14 +849,6 @@ html.locale-es .cadeo-hero-accent {
   font-weight: 900;
   opacity: 0.35;
   font-size: 0.85rem;
-}
-
-.journey-preview-wheel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
 }
 
 .journey-step-list {

@@ -13,27 +13,36 @@ const SLICES = [
 export function MarketingSpinWheel({
   size = 120,
   animate = false,
+  showPointer = true,
   className = "",
 }: {
   size?: number;
   animate?: boolean;
+  showPointer?: boolean;
   className?: string;
 }) {
   const cx = 50;
   const cy = 50;
   const r = 44;
   const sliceAngle = 360 / SLICES.length;
-  const pointerW = Math.round(size * 0.22);
-  const pointerH = Math.round(size * 0.17);
+  const pointerW = Math.max(12, Math.round(size * 0.22));
+  const pointerH = Math.max(10, Math.round(size * 0.17));
+  const pointerLift = size < 48 ? -42 : -48;
 
   return (
     <div
       className={`marketing-wheel-wrap ${className}`.trim()}
       style={{ width: size, height: size }}
     >
-      <div className="marketing-wheel-pointer" aria-hidden>
-        <WheelPointer width={pointerW} height={pointerH} />
-      </div>
+      {showPointer && (
+        <div
+          className="marketing-wheel-pointer"
+          style={{ transform: `translate(-50%, ${pointerLift}%)` }}
+          aria-hidden
+        >
+          <WheelPointer width={pointerW} height={pointerH} />
+        </div>
+      )}
       <svg
         viewBox="0 0 100 100"
         width={size}
