@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isMerchantLive } from "@/lib/merchant-access";
 import { StarspinCheckout } from "@/components/billing/StarspinCheckout";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
@@ -27,7 +28,7 @@ export default async function SubscribeCheckoutPage({
     redirect("/setup");
   }
 
-  if (merchant.subscription_status === "active") {
+  if (isMerchantLive(merchant.subscription_status)) {
     redirect("/dashboard");
   }
 

@@ -333,6 +333,7 @@
     "slugTaken": "Esta URL ya está en uso. Elige otra.",
     "colorPreviewPrimary": "Botón girar",
     "colorPreviewSecondary": "Botón acento",
+    "flowAddStep": "Añadir un paso",
     "flowRemoveStep": "Quitar paso",
     "flowBrandingHint": "Configura tus enlaces en",
     "flowStepsHint": "Reordena las tarjetas con ↑↓. Cada paso incluye su enlace abajo.",

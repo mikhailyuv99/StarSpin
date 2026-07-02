@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
-import { contrastTextColor } from "@/lib/wheel";
+import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
+import { MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -14,14 +15,13 @@ import {
   type FlowActionStep,
 } from "@/lib/flow-steps";
 import type { Merchant } from "@/lib/types";
-import "@/components/marketing/cadeo-styles.css";
 
-const STEP_PILL: Partial<Record<FlowActionStep, string>> = {
-  google_review: "cadeo-visit-pill--google",
-  instagram: "cadeo-visit-pill--insta",
-  facebook: "cadeo-visit-pill--facebook",
-  tiktok: "cadeo-visit-pill--tiktok",
-  tripadvisor: "cadeo-visit-pill--tripadvisor",
+const STEP_ACCENT: Record<FlowActionStep, string> = {
+  google_review: "#9b7fe8",
+  instagram: "#fbbf24",
+  facebook: "#f472b6",
+  tiktok: "#2dd4bf",
+  tripadvisor: "#6ee7b7",
 };
 
 function stepBrand(step: FlowActionStep): SocialBrand {
@@ -198,8 +198,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     router.refresh();
   };
 
-  const previewTotal = steps.length + 1;
-
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
       {message && <p className={ui.alertSuccess}>{message}</p>}
@@ -247,46 +245,17 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className={ui.label}>{t("dashboard.primaryColor")}</label>
-            <input
-              type="color"
-              value={form.primary_color}
-              onChange={(e) => update("primary_color", e.target.value)}
-              className="h-12 w-full cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className={ui.label}>{t("dashboard.secondaryColor")}</label>
-            <input
-              type="color"
-              value={form.secondary_color}
-              onChange={(e) => update("secondary_color", e.target.value)}
-              className="h-12 w-full cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-            />
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <span
-            className="brutal-btn w-full justify-center text-sm"
-            style={{
-              backgroundColor: form.primary_color,
-              color: contrastTextColor(form.primary_color),
-            }}
-          >
-            {t("dashboard.colorPreviewPrimary")}
-          </span>
-          <span
-            className="brutal-btn w-full justify-center text-sm"
-            style={{
-              backgroundColor: form.secondary_color,
-              color: contrastTextColor(form.secondary_color),
-            }}
-          >
-            {t("dashboard.colorPreviewSecondary")}
-          </span>
+          <ColorPickButton
+            label={t("dashboard.colorPreviewPrimary")}
+            value={form.primary_color}
+            onChange={(v) => update("primary_color", v)}
+          />
+          <ColorPickButton
+            label={t("dashboard.colorPreviewSecondary")}
+            value={form.secondary_color}
+            onChange={(v) => update("secondary_color", v)}
+          />
         </div>
       </section>
 
@@ -296,51 +265,52 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           <p className="mt-1 text-sm text-muted">{t("dashboard.flowStepsHint")}</p>
         </div>
 
-        <div className="journey-flow-preview">
+        <div className="journey-preview" aria-label={t("dashboard.flowPreviewTitle")}>
           {steps.map((step, i) => (
-            <div key={step} className="journey-flow-preview-card">
-              <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
-              <div className="cadeo-visit-xp" aria-hidden>
-                <div
-                  className="cadeo-visit-xp-fill"
-                  style={{ width: `${((i + 1) / previewTotal) * 100}%` }}
-                />
+            <div key={step} className="journey-preview-flow">
+              <div
+                className="journey-preview-step"
+                style={{ ["--step-accent" as string]: STEP_ACCENT[step] }}
+              >
+                <span className="journey-preview-num">{i + 1}</span>
+                <SocialIcon brand={stepBrand(step)} size={18} />
+                <span className="journey-preview-label">{t(`dashboard.flowStep_${step}`)}</span>
               </div>
-              <span className={`cadeo-visit-pill ${STEP_PILL[step] ?? "cadeo-visit-pill--google"}`}>
-                <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={stepBrand(step)} size={20} />
-                </span>
-                <span className="cadeo-visit-pill-text">{t(`dashboard.flowStep_${step}`)}</span>
+              <span className="journey-preview-arrow" aria-hidden>
+                →
               </span>
             </div>
           ))}
-          <div className="journey-flow-preview-card">
-            <span className="cadeo-visit-step">{String(steps.length + 1).padStart(2, "0")}</span>
-            <div className="cadeo-visit-xp" aria-hidden>
-              <div className="cadeo-visit-xp-fill" style={{ width: "100%" }} />
+          <div className="journey-preview-step journey-preview-step--wheel">
+            <span className="journey-preview-num">{steps.length + 1}</span>
+            <div className="journey-preview-wheel">
+              <MarketingSpinWheel size={26} />
             </div>
-            <span className="cadeo-visit-pill cadeo-visit-pill--yellow">
-              <span className="cadeo-visit-pill-text">{t("public.stepWheel")}</span>
-            </span>
+            <span className="journey-preview-label">{t("public.stepWheel")}</span>
           </div>
         </div>
 
-        <ul className="space-y-3">
+        <ul className="journey-step-list">
           {steps.map((step, index) => {
             const linkKey = linkKeyForStep(step);
             return (
-              <li key={step} className="rounded-[14px] border-2 border-black bg-white p-4 shadow-[3px_3px_0_0_#0a0a0a]">
-                <div className="flex flex-wrap items-center gap-3">
-                  <SocialIcon brand={stepBrand(step)} size={20} />
-                  <span className="min-w-0 flex-1 font-extrabold text-ink">
-                    {t(`dashboard.flowStep_${step}`)}
-                  </span>
-                  <div className="flex items-center gap-1">
+              <li
+                key={step}
+                className="journey-step"
+                style={{ ["--step-accent" as string]: STEP_ACCENT[step] }}
+              >
+                <div className="journey-step-header">
+                  <div className="journey-step-leading">
+                    <span className="journey-step-num">{index + 1}</span>
+                    <SocialIcon brand={stepBrand(step)} size={22} />
+                    <span className="journey-step-title">{t(`dashboard.flowStep_${step}`)}</span>
+                  </div>
+                  <div className="journey-step-actions">
                     <button
                       type="button"
                       onClick={() => move(index, -1)}
                       disabled={index <= 0}
-                      className="brutal-btn brutal-btn-white !px-2 !py-1 text-sm disabled:opacity-40"
+                      className="journey-step-action"
                       aria-label={t("dashboard.flowMoveUp")}
                     >
                       ↑
@@ -349,7 +319,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                       type="button"
                       onClick={() => move(index, 1)}
                       disabled={index >= steps.length - 1}
-                      className="brutal-btn brutal-btn-white !px-2 !py-1 text-sm disabled:opacity-40"
+                      className="journey-step-action"
                       aria-label={t("dashboard.flowMoveDown")}
                     >
                       ↓
@@ -357,7 +327,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                     <button
                       type="button"
                       onClick={() => removeStep(step)}
-                      className="brutal-btn brutal-btn-white !px-2 !py-1 text-sm"
+                      className="journey-step-action journey-step-action--danger"
                       aria-label={t("dashboard.flowRemoveStep")}
                     >
                       ✕
@@ -366,7 +336,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                 </div>
 
                 {linkKey && (
-                  <div className="mt-3 space-y-3">
+                  <div className="journey-step-fields">
                     <div>
                       <label className={`${ui.label} inline-flex items-center gap-2`}>
                         <SocialIcon brand={stepBrand(step)} size={16} />
@@ -396,17 +366,22 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         </ul>
 
         {disabledSteps.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {disabledSteps.map((step) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => addStep(step)}
-                className="brutal-btn brutal-btn-white text-sm"
-              >
-                + {t(`dashboard.flowStep_${step}`)}
-              </button>
-            ))}
+          <div className="journey-add-steps">
+            <p className="text-xs font-extrabold uppercase tracking-wide text-muted">
+              {t("dashboard.flowAddStep")}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {disabledSteps.map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => addStep(step)}
+                  className="brutal-btn brutal-btn-white text-sm"
+                >
+                  + {t(`dashboard.flowStep_${step}`)}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </section>

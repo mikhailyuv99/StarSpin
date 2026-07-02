@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
+import { isMerchantLive } from "@/lib/merchant-access";
 import { getStripe } from "@/lib/stripe";
 import { createSubscriptionPaymentSecret, ensureStripeCustomer } from "@/lib/stripe-billing";
 
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Create your business first" }, { status: 400 });
     }
 
-    if (merchant.subscription_status === "active") {
+    if (isMerchantLive(merchant.subscription_status)) {
       return NextResponse.json({ error: "Already subscribed" }, { status: 400 });
     }
 

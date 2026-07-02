@@ -27,7 +27,7 @@ export default async function PublicMerchantPage({
     .from("merchants")
     .select("*")
     .eq("slug", slug)
-    .in("subscription_status", ["active", "trial"])
+    .eq("subscription_status", "active")
     .maybeSingle();
 
   if (error || !merchant) notFound();

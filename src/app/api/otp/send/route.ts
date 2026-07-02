@@ -5,6 +5,7 @@ import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { sendSmsMessage } from "@/lib/sms";
 import { apiT, resolveRequestLocale } from "@/i18n/api";
+import { isMerchantLive } from "@/lib/merchant-access";
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString().slice(0, OTP_LENGTH);
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       .eq("id", merchantId)
       .single();
 
-    if (!merchant || !["active", "trial"].includes(merchant.subscription_status)) {
+    if (!merchant || !isMerchantLive(merchant.subscription_status)) {
       return NextResponse.json({ error: t("api.merchantUnavailable") }, { status: 404 });
     }
 

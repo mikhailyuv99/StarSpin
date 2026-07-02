@@ -1,5 +1,6 @@
 import { apiT, resolveRequestLocale } from "@/i18n/api";
 import { NextResponse } from "next/server";
+import { isMerchantLive } from "@/lib/merchant-access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
       .eq("id", merchantId)
       .single();
 
-    if (!merchant || !["active", "trial"].includes(merchant.subscription_status)) {
+    if (!merchant || !isMerchantLive(merchant.subscription_status)) {
       return NextResponse.json({ error: t("api.merchantUnavailable") }, { status: 404 });
     }
 

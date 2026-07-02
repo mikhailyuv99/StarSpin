@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isMerchantLive, needsSubscription } from "@/lib/merchant-access";
 import { Suspense } from "react";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
@@ -19,8 +20,8 @@ export default async function DashboardPage() {
     { href: "/dashboard/qr", title: t("dashboard.qrCard"), desc: t("dashboard.qrDesc") },
   ];
 
-  const needsSubscribe = merchant.subscription_status === "trial" || merchant.subscription_status === "past_due";
-  const isActive = merchant.subscription_status === "active";
+  const needsSubscribe = needsSubscription(merchant.subscription_status);
+  const isActive = isMerchantLive(merchant.subscription_status);
 
   return (
     <div className="space-y-8">
@@ -46,21 +47,11 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className={ui.card}>
-        <p className={ui.statLabel}>{t("dashboard.publicPage")}</p>
-        <Link href={`/${merchant.slug}`} className={`mt-2 inline-block font-mono text-sm ${ui.link}`}>
-          /{merchant.slug}
-        </Link>
-        <p className="mt-4 text-sm text-muted">
-          {t("common.subscription")} ·{" "}
-          <span className="font-mono text-xs uppercase text-ink">{merchant.subscription_status}</span>
-        </p>
-        {isActive && merchant.stripe_customer_id && (
-          <div className="mt-4">
-            <ManageBillingButton className={`${ui.btnOutline} !w-auto px-5`} />
-          </div>
-        )}
-      </div>
+      {isActive && merchant.stripe_customer_id && (
+        <div className="flex justify-end">
+          <ManageBillingButton className={`${ui.btnOutline} !w-auto px-5`} />
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {links.map((item) => (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { SignOutButton } from "@/components/SignOutButton";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
@@ -24,13 +25,7 @@ export function DashboardShell({
       <div className="brutal-nav-wrap">
         <header className="brutal-nav">
           <StarspinLogo href="/dashboard" variant="light" size="md" wordmark="DASHBOARD" />
-          <nav className="brutal-nav-links" aria-label="Dashboard">
-            {nav.map((item) => (
-              <Link key={item.href} href={item.href} className="brutal-nav-link">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <DashboardNav items={nav} />
           <div className="flex shrink-0 items-center gap-2">
             <LocaleSwitcher variant="brutal" />
             <SignOutButton />

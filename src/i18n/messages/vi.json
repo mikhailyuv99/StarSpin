@@ -333,6 +333,7 @@
     "slugTaken": "URL này đã được dùng. Chọn tên khác.",
     "colorPreviewPrimary": "Nút quay",
     "colorPreviewSecondary": "Nút nhấn mạnh",
+    "flowAddStep": "Thêm bước",
     "flowRemoveStep": "Xóa bước",
     "flowBrandingHint": "Đặt liên kết của bạn trong",
     "flowStepsHint": "Sắp xếp thẻ bằng ↑↓. Mỗi bước có liên kết bên dưới.",

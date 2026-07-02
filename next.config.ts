@@ -14,7 +14,11 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey,
   },
   experimental: {
-    optimizePackageImports: ["framer-motion", "lenis"],
+    optimizePackageImports: ["framer-motion", "lenis", "@stripe/stripe-js", "@stripe/react-stripe-js"],
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
   images: {
     remotePatterns: [

@@ -215,8 +215,10 @@ body {
 }
 
 .brutal-nav-link:hover,
-.brutal-nav-link[data-active="true"] {
+.brutal-nav-link[data-active="true"],
+.brutal-nav-link--active {
   border-bottom-color: var(--c-black);
+  font-weight: 800;
 }
 
 .brutal-card {
@@ -774,6 +776,175 @@ html.locale-es .cadeo-hero-accent {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+/* Journey builder (dashboard) */
+.journey-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding: 1rem;
+  background: rgb(10 10 10 / 0.03);
+  border: 2px dashed rgb(10 10 10 / 0.2);
+  border-radius: var(--brutal-radius);
+}
+
+.journey-preview-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.journey-preview-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.7rem;
+  background: #fff;
+  border: 2px solid var(--c-black);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.journey-preview-step::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--step-accent, var(--c-purple-deep));
+  flex-shrink: 0;
+}
+
+.journey-preview-step--wheel {
+  background: var(--c-lavender);
+}
+
+.journey-preview-step--wheel::before {
+  display: none;
+}
+
+.journey-preview-num {
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  opacity: 0.65;
+}
+
+.journey-preview-label {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-preview-arrow {
+  font-weight: 900;
+  opacity: 0.35;
+  font-size: 0.85rem;
+}
+
+.journey-preview-wheel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.journey-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.journey-step {
+  border: 2px solid var(--c-black);
+  border-left-width: 5px;
+  border-left-color: var(--step-accent, var(--c-purple-deep));
+  border-radius: var(--brutal-radius);
+  background: #fff;
+  box-shadow: var(--brutal-shadow);
+}
+
+.journey-step-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+.journey-step-leading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.journey-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  background: var(--c-black);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.journey-step-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.journey-step-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.journey-step-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--c-black);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.journey-step-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.journey-step-action--danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.journey-step-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+  border-top: 1px solid rgb(10 10 10 / 0.08);
+  padding-top: 0.85rem;
+}
+
+.journey-add-steps {
+  padding-top: 0.25rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

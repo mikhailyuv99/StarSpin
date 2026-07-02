@@ -333,6 +333,7 @@
     "slugTaken": "Этот URL уже занят. Выберите другой.",
     "colorPreviewPrimary": "Кнопка вращения",
     "colorPreviewSecondary": "Акцентная кнопка",
+    "flowAddStep": "Добавить шаг",
     "flowRemoveStep": "Убрать шаг",
     "flowBrandingHint": "Укажите ссылки в",
     "flowStepsHint": "Меняйте порядок карточек кнопками ↑↓. Ссылка для каждого шага ниже.",

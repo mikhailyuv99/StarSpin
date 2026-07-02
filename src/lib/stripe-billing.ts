@@ -41,6 +41,7 @@ export async function createSubscriptionPaymentSecret(
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceIdForPlan(plan) }],
+    trial_period_days: 7,
     payment_behavior: "default_incomplete",
     payment_settings: {
       save_default_payment_method: "on_subscription",

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     .from("merchants")
     .select("id, google_place_id")
     .not("google_place_id", "is", null)
-    .in("subscription_status", ["active", "trial"]);
+    .eq("subscription_status", "active");
 
   const results: { merchantId: string; count?: number; error?: string }[] = [];
 
