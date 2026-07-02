@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { reviewScreenshotHref } from "@/lib/review-screenshot";
 import type { Spin } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -60,7 +61,7 @@ export function ReviewsManager({ spins }: { spins: Spin[] }) {
           </div>
           {spin.review_screenshot_url && (
             <a
-              href={spin.review_screenshot_url}
+              href={reviewScreenshotHref(spin.review_screenshot_url)}
               target="_blank"
               rel="noopener noreferrer"
               className={`mt-3 inline-block text-sm ${ui.link}`}

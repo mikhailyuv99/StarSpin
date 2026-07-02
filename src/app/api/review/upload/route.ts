@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { apiT, resolveRequestLocale } from "@/i18n/api";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
+
+  const limited = rateLimit(clientIpKey(request, "review-upload"), 15, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: t("api.rateLimited") },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
 
   try {
     const formData = await request.formData();
@@ -30,7 +39,7 @@ export async function POST(request: Request) {
       .from("review-screenshots")
       .getPublicUrl(path);
 
-    return NextResponse.json({ url: urlData.publicUrl, path });
+    return NextResponse.json({ path, url: urlData.publicUrl });
   } catch (err) {
     console.error("Upload error:", err);
     return NextResponse.json({ error: t("api.uploadFailed") }, { status: 500 });

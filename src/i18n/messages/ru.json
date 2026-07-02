@@ -34,13 +34,17 @@
     "navPricing": "Цены",
     "navFaq": "FAQ",
     "navLogin": "Войти",
-    "navCta": "Начать бесплатно",
+    "navCta": "Пробный период 7 дней",
     "heroTitle": "Больше отзывов в Google,",
     "heroTitleAccent": "без лишних хлопот",
     "heroEyebrow": "QR-отзывы × колесо призов",
     "heroSubtitle": "Каждый клиент становится игроком. Каждая игра приносит отзывы и лояльность.",
     "heroBody": "Повышайте видимость, укрепляйте лояльность и вовлекайте клиентов - начиная с сегодняшнего дня.",
-    "heroCta": "Начать бесплатно",
+    "heroCta": "7 дней бесплатно",
+    "heroBadgeGoogle": "Отзывы Google",
+    "heroBadgeTripadvisor": "TripAdvisor",
+    "heroBadgeTiktok": "TikTok",
+    "heroBadgeInstagram": "Instagram",
     "heroDemo": "Настроить колесо",
     "magicRecipe": "Волшебный рецепт",
     "mobileAppBanner": "Мобильное приложение - скоро",
@@ -118,6 +122,8 @@
     "cookieAccept": "Принять",
     "footerSocial": "Подписывайтесь на нас",
     "footerDemo": "Настроить",
+    "footerTerms": "Условия",
+    "footerPrivacy": "Конфиденциальность",
     "footerRights": "© {year} STARSPIN",
     "wheelSlice1": "Скидка 10%",
     "wheelSlice2": "Бесплатный напиток",
@@ -276,7 +282,9 @@
     "managePaymentSave": "Сохранить способ оплаты",
     "managePaymentSaving": "Сохранение…",
     "managePaymentUpdated": "Способ оплаты обновлён.",
-    "managePaymentError": "Не удалось обновить способ оплаты."
+    "managePaymentError": "Не удалось обновить способ оплаты.",
+    "activatingTitle": "Активируем подписку…",
+    "activatingBody": "Оплата прошла успешно. Включаем колесо — обычно это занимает несколько секунд."
   },
   "dashboard": {
     "navHome": "Главная",
@@ -288,6 +296,7 @@
     "navCrm": "CRM",
     "navFlow": "Путь клиента",
     "navQr": "QR-код",
+    "navBilling": "Оплата",
     "homeTitle": "Главная",
     "homeSubtitle": "Обзор вашей программы.",
     "homeLiveTitle": "Ваша страница активна",
@@ -442,6 +451,7 @@
     "fileRequired": "Требуется файл",
     "smsBody": "Ваш код STARSPIN: {code}. Действителен {minutes} мин.",
     "verifyError": "Ошибка проверки",
-    "fileMerchantRequired": "Требуются file и merchantId"
+    "fileMerchantRequired": "Требуются file и merchantId",
+    "rateLimited": "Слишком много запросов. Подождите немного и попробуйте снова."
   }
 }

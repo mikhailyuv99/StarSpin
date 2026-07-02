@@ -64,11 +64,11 @@ function HeroWheelPhone() {
 
 function Hero() {
   const { t } = useI18n();
-  const badges: { cls: string; brand: SocialBrand; text: string }[] = [
-    { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google" },
-    { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", text: "+251 TripAdvisor" },
-    { cls: "cadeo-stat-badge--yellow", brand: "tiktok", text: "+150 TikTok" },
-    { cls: "cadeo-stat-badge--pink", brand: "instagram", text: "+251 Instagram" },
+  const badges: { cls: string; brand: SocialBrand; textKey: "heroBadgeGoogle" | "heroBadgeTripadvisor" | "heroBadgeTiktok" | "heroBadgeInstagram" }[] = [
+    { cls: "cadeo-stat-badge--white", brand: "google", textKey: "heroBadgeGoogle" },
+    { cls: "cadeo-stat-badge--mint", brand: "tripadvisor", textKey: "heroBadgeTripadvisor" },
+    { cls: "cadeo-stat-badge--yellow", brand: "tiktok", textKey: "heroBadgeTiktok" },
+    { cls: "cadeo-stat-badge--pink", brand: "instagram", textKey: "heroBadgeInstagram" },
   ];
 
   return (
@@ -101,12 +101,12 @@ function Hero() {
           <div className="cadeo-hero-scene">
             <div className="cadeo-hero-badges">
               {badges.map((b, i) => (
-                <Reveal key={b.text} delay={0.12 + i * 0.06} y={20}>
+                <Reveal key={b.textKey} delay={0.12 + i * 0.06} y={20}>
                   <div className={`cadeo-stat-badge ${b.cls}`}>
                     <span className="cadeo-stat-badge-icon">
                       <SocialIcon brand={b.brand} size={16} />
                     </span>
-                    <span className="cadeo-stat-badge-text">{b.text}</span>
+                    <span className="cadeo-stat-badge-text">{t(`marketing.${b.textKey}`)}</span>
                   </div>
                 </Reveal>
               ))}
@@ -587,17 +587,6 @@ function Footer() {
       <div className="cadeo-footer-box">
         <div className="cadeo-footer-top">
           <Logo />
-          <div className="cadeo-footer-social">
-            <a href="#" className="cadeo-social-btn" aria-label="Facebook">
-              <SocialIcon brand="facebook" size={14} />
-            </a>
-            <a href="#" className="cadeo-social-btn" aria-label="Instagram">
-              <SocialIcon brand="instagram" size={14} />
-            </a>
-            <a href="#" className="cadeo-social-btn" aria-label="TikTok">
-              <SocialIcon brand="tiktok" size={14} />
-            </a>
-          </div>
         </div>
         <div className="cadeo-footer-cols">
           <div>
@@ -612,6 +601,8 @@ function Footer() {
             <ul className="cadeo-footer-links">
               <li><Link href="/login">{t("marketing.navLogin")}</Link></li>
               <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
+              <li><Link href="/terms">{t("marketing.footerTerms")}</Link></li>
+              <li><Link href="/privacy">{t("marketing.footerPrivacy")}</Link></li>
             </ul>
           </div>
         </div>
@@ -629,7 +620,12 @@ function CookieBanner() {
   if (!visible) return null;
   return (
     <div className="cadeo-cookie">
-      <p>{t("marketing.cookieText")}</p>
+      <p>
+        {t("marketing.cookieText")}{" "}
+        <Link href="/privacy" className="font-bold underline underline-offset-2">
+          {t("marketing.footerPrivacy")}
+        </Link>
+      </p>
       <button type="button" className="cadeo-btn cadeo-btn-yellow !px-3 !py-1.5 !text-xs" onClick={() => setVisible(false)}>
         {t("marketing.cookieAccept")}
       </button>

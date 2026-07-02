@@ -32,6 +32,62 @@ export async function ensureStripeCustomer(
   return customer.id;
 }
 
+async function clientSecretFromSubscription(
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+): Promise<string | null> {
+  const invoice = subscription.latest_invoice;
+  if (!invoice || typeof invoice === "string") return null;
+
+  const expanded =
+    typeof invoice === "object"
+      ? invoice
+      : await stripe.invoices.retrieve(invoice, { expand: ["confirmation_secret"] });
+
+  const withSecret = expanded as Stripe.Invoice & {
+    confirmation_secret?: { client_secret?: string | null } | null;
+  };
+
+  return withSecret.confirmation_secret?.client_secret ?? null;
+}
+
+export async function getOrCreateSubscriptionPaymentSecret(
+  stripe: Stripe,
+  customerId: string,
+  plan: BillingPlan,
+  merchantId: string,
+): Promise<{ clientSecret: string; subscriptionId: string }> {
+  const open = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "incomplete",
+    limit: 10,
+    expand: ["data.latest_invoice.confirmation_secret"],
+  });
+
+  const reusable = open.data.find(
+    (sub) => sub.metadata?.merchant_id === merchantId && sub.metadata?.plan === plan,
+  );
+
+  if (reusable) {
+    const clientSecret = await clientSecretFromSubscription(stripe, reusable);
+    if (clientSecret) {
+      return { clientSecret, subscriptionId: reusable.id };
+    }
+  }
+
+  for (const sub of open.data) {
+    if (sub.id !== reusable?.id) {
+      try {
+        await stripe.subscriptions.cancel(sub.id);
+      } catch {
+        /* ignore stale incomplete subs */
+      }
+    }
+  }
+
+  return createSubscriptionPaymentSecret(stripe, customerId, plan, merchantId);
+}
+
 export async function createSubscriptionPaymentSecret(
   stripe: Stripe,
   customerId: string,
@@ -56,16 +112,7 @@ export async function createSubscriptionPaymentSecret(
     expand: ["latest_invoice.confirmation_secret"],
   });
 
-  const invoice = subscription.latest_invoice;
-  if (!invoice || typeof invoice === "string") {
-    throw new Error("Subscription invoice missing");
-  }
-
-  const expandedInvoice = invoice as Stripe.Invoice & {
-    confirmation_secret?: { client_secret?: string | null } | null;
-  };
-
-  const clientSecret = expandedInvoice.confirmation_secret?.client_secret ?? null;
+  const clientSecret = await clientSecretFromSubscription(stripe, subscription);
 
   if (!clientSecret) {
     throw new Error("Payment client secret missing");

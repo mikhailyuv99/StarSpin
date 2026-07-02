@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { apiT, resolveRequestLocale } from "@/i18n/api";
-
-function normalizePhone(phone: string): string {
-  return phone.replace(/\s+/g, "").replace(/^0/, "+84");
-}
+import { normalizePhone } from "@/lib/phone";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
+
+  const limited = rateLimit(clientIpKey(request, "otp-verify"), 20, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: t("api.rateLimited") },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
 
   try {
     const { merchantId, phone, code } = await request.json();

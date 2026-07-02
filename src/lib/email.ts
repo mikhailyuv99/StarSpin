@@ -60,17 +60,24 @@ function prizeEmailHtml({
 </html>`;
 }
 
-export async function sendPrizeEmail(params: PrizeEmailParams): Promise<boolean> {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL ?? "STARSPIN <onboarding@resend.dev>";
 
   if (!apiKey) {
-    console.warn("[email] RESEND_API_KEY not set - prize email skipped (dev mode)");
+    console.warn("[email] RESEND_API_KEY not set - email skipped (dev mode)");
     return false;
   }
-
-  const subject = `STARSPIN - Your prize code: ${params.prizeCode}`;
-  const html = prizeEmailHtml(params);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -80,9 +87,10 @@ export async function sendPrizeEmail(params: PrizeEmailParams): Promise<boolean>
     },
     body: JSON.stringify({
       from,
-      to: [params.to],
+      to: [to],
       subject,
       html,
+      ...(text ? { text } : {}),
     }),
   });
 
@@ -93,4 +101,11 @@ export async function sendPrizeEmail(params: PrizeEmailParams): Promise<boolean>
   }
 
   return true;
+}
+
+export async function sendPrizeEmail(params: PrizeEmailParams): Promise<boolean> {
+  const subject = `STARSPIN - Your prize code: ${params.prizeCode}`;
+  const html = prizeEmailHtml(params);
+
+  return sendEmail({ to: params.to, subject, html });
 }

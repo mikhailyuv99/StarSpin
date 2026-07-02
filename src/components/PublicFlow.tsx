@@ -122,7 +122,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(uploadData.error ?? t("api.uploadFailed"));
-      setScreenshotUrl(uploadData.url);
+      setScreenshotUrl(uploadData.path ?? uploadData.url);
       advance("google_review");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
 import { isMerchantLive } from "@/lib/merchant-access";
 import { getStripe } from "@/lib/stripe";
-import { createSubscriptionPaymentSecret, ensureStripeCustomer } from "@/lib/stripe-billing";
+import { createSubscriptionPaymentSecret, ensureStripeCustomer, getOrCreateSubscriptionPaymentSecret } from "@/lib/stripe-billing";
 
 export async function POST(request: Request) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     const stripe = getStripe();
     const customerId = await ensureStripeCustomer(supabase, stripe, user, merchant);
-    const { clientSecret } = await createSubscriptionPaymentSecret(
+    const { clientSecret } = await getOrCreateSubscriptionPaymentSecret(
       stripe,
       customerId,
       body.plan,

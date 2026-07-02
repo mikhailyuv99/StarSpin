@@ -6,10 +6,19 @@ import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
 import type { Prize } from "@/lib/types";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
+
+  const limited = rateLimit(clientIpKey(request, "spin"), 30, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: t("api.rateLimited") },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
 
   try {
     const body = await request.json();
@@ -88,11 +97,17 @@ export async function POST(request: Request) {
     if (spinError) throw spinError;
 
     if (selected.stock_remaining !== null) {
-      await supabase
+      const { data: decremented } = await supabase
         .from("prizes")
         .update({ stock_remaining: selected.stock_remaining - 1 })
         .eq("id", selected.id)
-        .gt("stock_remaining", 0);
+        .gt("stock_remaining", 0)
+        .select("id")
+        .maybeSingle();
+
+      if (!decremented) {
+        return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
+      }
     }
 
     return NextResponse.json({

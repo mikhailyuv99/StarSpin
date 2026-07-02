@@ -34,13 +34,17 @@
     "navPricing": "Precios",
     "navFaq": "FAQ",
     "navLogin": "Iniciar sesión",
-    "navCta": "Empezar gratis",
+    "navCta": "Prueba 7 días gratis",
     "heroTitle": "Más reseñas en Google,",
     "heroTitleAccent": "sin complicaciones",
     "heroEyebrow": "Reseñas QR × ruleta de premios",
     "heroSubtitle": "Cada cliente se convierte en jugador. Cada juego impulsa reseñas y fidelización.",
     "heroBody": "Aumenta la visibilidad, fideliza y genera engagement - desde hoy.",
-    "heroCta": "Empezar gratis",
+    "heroCta": "Prueba 7 días gratis",
+    "heroBadgeGoogle": "Reseñas Google",
+    "heroBadgeTripadvisor": "TripAdvisor",
+    "heroBadgeTiktok": "TikTok",
+    "heroBadgeInstagram": "Instagram",
     "heroDemo": "Configura tu ruleta",
     "magicRecipe": "La receta mágica",
     "mobileAppBanner": "App móvil - próximamente",
@@ -118,6 +122,8 @@
     "cookieAccept": "Aceptar",
     "footerSocial": "Síguenos",
     "footerDemo": "Configurar",
+    "footerTerms": "Términos",
+    "footerPrivacy": "Privacidad",
     "footerRights": "© {year} STARSPIN",
     "wheelSlice1": "10% de descuento",
     "wheelSlice2": "Bebida gratis",
@@ -276,7 +282,9 @@
     "managePaymentSave": "Guardar método de pago",
     "managePaymentSaving": "Guardando…",
     "managePaymentUpdated": "Método de pago actualizado.",
-    "managePaymentError": "No se pudo actualizar el método de pago."
+    "managePaymentError": "No se pudo actualizar el método de pago.",
+    "activatingTitle": "Activando tu suscripción…",
+    "activatingBody": "El pago se realizó correctamente. Estamos activando tu ruleta; suele tardar unos segundos."
   },
   "dashboard": {
     "navHome": "Inicio",
@@ -288,6 +296,7 @@
     "navCrm": "CRM",
     "navFlow": "Recorrido",
     "navQr": "Código QR",
+    "navBilling": "Facturación",
     "homeTitle": "Inicio",
     "homeSubtitle": "Resumen de tu programa.",
     "homeLiveTitle": "Tu página está activa",
@@ -442,6 +451,7 @@
     "fileRequired": "Archivo requerido",
     "smsBody": "Tu código STARSPIN: {code}. Válido {minutes} min.",
     "verifyError": "Error de verificación",
-    "fileMerchantRequired": "Se requieren file y merchantId"
+    "fileMerchantRequired": "Se requieren file y merchantId",
+    "rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo."
   }
 }

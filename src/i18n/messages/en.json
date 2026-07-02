@@ -34,13 +34,17 @@
     "navPricing": "Pricing",
     "navFaq": "FAQ",
     "navLogin": "Sign in",
-    "navCta": "Start free",
+    "navCta": "Start 7-day trial",
     "heroTitle": "More Google reviews,",
     "heroTitleAccent": "zero hassle",
     "heroEyebrow": "QR reviews × prize wheel",
     "heroSubtitle": "Every customer becomes a player. Every game drives reviews and loyalty.",
     "heroBody": "Boost visibility, build loyalty, and create engagement - starting today.",
-    "heroCta": "Start for free",
+    "heroCta": "Try 7 days free",
+    "heroBadgeGoogle": "Google reviews",
+    "heroBadgeTripadvisor": "TripAdvisor",
+    "heroBadgeTiktok": "TikTok",
+    "heroBadgeInstagram": "Instagram",
     "heroDemo": "Set up your wheel",
     "magicRecipe": "The magic recipe",
     "mobileAppBanner": "Mobile app coming soon",
@@ -118,6 +122,8 @@
     "cookieAccept": "Accept",
     "footerSocial": "Follow us",
     "footerDemo": "Set up",
+    "footerTerms": "Terms",
+    "footerPrivacy": "Privacy",
     "footerRights": "© {year} STARSPIN",
     "wheelSlice1": "10% off",
     "wheelSlice2": "Free drink",
@@ -276,7 +282,9 @@
     "managePaymentSave": "Save payment method",
     "managePaymentSaving": "Saving…",
     "managePaymentUpdated": "Payment method updated.",
-    "managePaymentError": "Couldn't update payment method."
+    "managePaymentError": "Couldn't update payment method.",
+    "activatingTitle": "Activating your subscription…",
+    "activatingBody": "Your payment succeeded. We're turning on your wheel — this usually takes a few seconds."
   },
   "dashboard": {
     "navHome": "Home",
@@ -288,6 +296,7 @@
     "navCrm": "CRM",
     "navFlow": "Journey",
     "navQr": "QR Code",
+    "navBilling": "Billing",
     "homeTitle": "Home",
     "homeSubtitle": "Overview of your program.",
     "homeLiveTitle": "Your page is live",
@@ -442,7 +451,8 @@
     "fileRequired": "File required",
     "smsBody": "Your STARSPIN code: {code}. Valid {minutes} min.",
     "verifyError": "Verification error",
-    "fileMerchantRequired": "File and merchantId required"
+    "fileMerchantRequired": "File and merchantId required",
+    "rateLimited": "Too many requests. Please wait a moment and try again."
   }
 }
 

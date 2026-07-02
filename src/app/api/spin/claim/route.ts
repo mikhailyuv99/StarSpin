@@ -9,13 +9,8 @@ import {
   snapshotFromPrize,
   type RedemptionRulesSnapshot,
 } from "@/lib/redemption-rules";
-
-function normalizePhone(phone: string): string {
-  const cleaned = phone.replace(/\s+/g, "");
-  if (cleaned.startsWith("+")) return cleaned;
-  if (cleaned.startsWith("0")) return `+84${cleaned.slice(1)}`;
-  return `+84${cleaned}`;
-}
+import { normalizePhone } from "@/lib/phone";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 function snapshotFromSpin(spin: {
   redeem_next_visit?: boolean | null;
@@ -32,6 +27,14 @@ function snapshotFromSpin(spin: {
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
+
+  const limited = rateLimit(clientIpKey(request, "claim"), 20, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: t("api.rateLimited") },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
 
   try {
     const body = await request.json();

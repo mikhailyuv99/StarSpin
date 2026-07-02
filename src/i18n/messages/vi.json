@@ -34,13 +34,17 @@
     "navPricing": "Bảng giá",
     "navFaq": "FAQ",
     "navLogin": "Đăng nhập",
-    "navCta": "Bắt đầu miễn phí",
+    "navCta": "Dùng thử 7 ngày",
     "heroTitle": "Nhiều đánh giá Google hơn,",
     "heroTitleAccent": "không phiền phức",
     "heroEyebrow": "Đánh giá QR × vòng quay thưởng",
     "heroSubtitle": "Mỗi khách hàng trở thành người chơi. Mỗi trò chơi thúc đẩy đánh giá và lòng trung thành.",
     "heroBody": "Tăng độ hiển thị, xây dựng lòng trung thành và tạo sự tương tác - bắt đầu từ hôm nay.",
-    "heroCta": "Bắt đầu miễn phí",
+    "heroCta": "Dùng thử 7 ngày",
+    "heroBadgeGoogle": "Đánh giá Google",
+    "heroBadgeTripadvisor": "TripAdvisor",
+    "heroBadgeTiktok": "TikTok",
+    "heroBadgeInstagram": "Instagram",
     "heroDemo": "Thiết lập vòng quay",
     "magicRecipe": "Công thức thần kỳ",
     "mobileAppBanner": "Ứng dụng di động - sắp ra mắt",
@@ -118,6 +122,8 @@
     "cookieAccept": "Chấp nhận",
     "footerSocial": "Theo dõi chúng tôi",
     "footerDemo": "Thiết lập",
+    "footerTerms": "Điều khoản",
+    "footerPrivacy": "Bảo mật",
     "footerRights": "© {year} STARSPIN",
     "wheelSlice1": "Giảm 10%",
     "wheelSlice2": "Đồ uống miễn phí",
@@ -276,7 +282,9 @@
     "managePaymentSave": "Lưu phương thức thanh toán",
     "managePaymentSaving": "Đang lưu…",
     "managePaymentUpdated": "Đã cập nhật phương thức thanh toán.",
-    "managePaymentError": "Không thể cập nhật phương thức thanh toán."
+    "managePaymentError": "Không thể cập nhật phương thức thanh toán.",
+    "activatingTitle": "Đang kích hoạt gói đăng ký…",
+    "activatingBody": "Thanh toán thành công. Chúng tôi đang bật vòng quay — thường chỉ mất vài giây."
   },
   "dashboard": {
     "navHome": "Trang chủ",
@@ -288,6 +296,7 @@
     "navCrm": "CRM",
     "navFlow": "Hành trình",
     "navQr": "Mã QR",
+    "navBilling": "Thanh toán",
     "homeTitle": "Trang chủ",
     "homeSubtitle": "Tổng quan chương trình của bạn.",
     "homeLiveTitle": "Trang của bạn đã hoạt động",
@@ -442,6 +451,7 @@
     "fileRequired": "Cần tệp",
     "smsBody": "Mã STARSPIN của bạn: {code}. Có hiệu lực {minutes} phút.",
     "verifyError": "Lỗi xác minh",
-    "fileMerchantRequired": "Cần file và merchantId"
+    "fileMerchantRequired": "Cần file và merchantId",
+    "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một chút rồi thử lại."
   }
 }

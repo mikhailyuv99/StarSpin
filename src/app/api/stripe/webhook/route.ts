@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, subscriptionStatusFromStripe } from "@/lib/stripe";
 import { isBillingPlan } from "@/lib/billing";
+import { sendMerchantBillingEmail } from "@/lib/merchant-email";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,22 @@ async function updateMerchantFromSubscription(
   }
 
   await admin.from("merchants").update(updates).eq("id", merchantId);
+}
+
+async function merchantOwnerEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  merchantId: string,
+): Promise<string | null> {
+  const { data: merchant } = await admin
+    .from("merchants")
+    .select("owner_id")
+    .eq("id", merchantId)
+    .maybeSingle();
+
+  if (!merchant?.owner_id) return null;
+
+  const { data: user } = await admin.auth.admin.getUserById(merchant.owner_id);
+  return user?.user?.email ?? null;
 }
 
 export async function POST(request: Request) {
@@ -74,10 +91,35 @@ export async function POST(request: Request) {
         }
         break;
       }
+      case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         await updateMerchantFromSubscription(subscription, admin);
+        break;
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionRef = invoice.parent?.subscription_details?.subscription;
+        const subscriptionId =
+          typeof subscriptionRef === "string" ? subscriptionRef : subscriptionRef?.id;
+
+        if (!subscriptionId) break;
+
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        await updateMerchantFromSubscription(subscription, admin);
+
+        const merchantId = subscription.metadata?.merchant_id;
+        if (merchantId) {
+          const email = await merchantOwnerEmail(admin, merchantId);
+          if (email) {
+            await sendMerchantBillingEmail({
+              to: email,
+              subject: "STARSPIN — payment issue on your subscription",
+              body: "We couldn't process your latest STARSPIN payment. Update your card in Billing to keep your wheel live.",
+            });
+          }
+        }
         break;
       }
       default:

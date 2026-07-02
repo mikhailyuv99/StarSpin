@@ -6,22 +6,24 @@ import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { sendSmsMessage } from "@/lib/sms";
 import { apiT, resolveRequestLocale } from "@/i18n/api";
 import { isMerchantLive } from "@/lib/merchant-access";
+import { normalizePhone } from "@/lib/phone";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString().slice(0, OTP_LENGTH);
 }
 
-function normalizePhone(phone: string): string {
-  const cleaned = phone.replace(/\s+/g, "");
-  if (cleaned.startsWith("+")) return cleaned;
-  if (cleaned.startsWith("0")) return `+84${cleaned.slice(1)}`;
-  return `+84${cleaned}`;
-}
-
-
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
+
+  const limited = rateLimit(clientIpKey(request, "otp-send"), 8, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: t("api.rateLimited") },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
 
   try {
     const { merchantId, phone } = await request.json();

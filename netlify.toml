@@ -12,3 +12,7 @@
 
 # Cron: daily review count sync (configure in Netlify UI with CRON_SECRET header)
 # Schedule: 0 2 * * *  ->  GET /api/cron/review-counts
+
+[[cron]]
+  path = "/api/cron/review-counts"
+  schedule = "0 2 * * *"
