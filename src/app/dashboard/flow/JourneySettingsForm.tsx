@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
-import { extractGooglePlaceId } from "@/lib/google-place-id";
+import { extractGooglePlaceId, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -180,8 +180,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       tripadvisor: form.tripadvisor || undefined,
     };
 
-    const resolvedPlaceId =
-      extractGooglePlaceId(form.google_review_link) || form.google_place_id.trim() || null;
+    const resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, form.google_review_link);
 
     const { error: updateError } = await supabase
       .from("merchants")

@@ -17,6 +17,7 @@ import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 import {
   buildPublicStepOrder,
   isSocialFlowStep,
+  reviewStepTitleKey,
   socialUrlForStep,
   type FlowActionStep,
   type PublicStep,
@@ -73,6 +74,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const [claimPhone, setClaimPhone] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
+  const [preparedSpin, setPreparedSpin] = useState<{ spinId: string; prize: Prize } | null>(null);
+  const [prefetchingSpin, setPrefetchingSpin] = useState(false);
+  const spinPrefetchStarted = useRef(false);
 
   const accent = merchant.primary_color;
   const stepIndex = stepOrder.indexOf(step);
@@ -83,6 +87,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     () => buildGoogleReviewUrl(merchant.google_review_link, merchant.google_place_id),
     [merchant.google_review_link, merchant.google_place_id],
   );
+  const reviewTitleKey = useMemo(() => reviewStepTitleKey(stepOrder), [stepOrder]);
 
   useEffect(() => {
     if (!stepOrder.includes(step)) {
@@ -136,8 +141,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     }
   };
 
-  const executeSpin = useCallback(async () => {
-    setLoading(true);
+  const prepareSpin = useCallback(async (): Promise<{ spinId: string; prize: Prize } | null> => {
     setError(null);
     try {
       const res = await fetch("/api/spin", {
@@ -153,16 +157,36 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
-      setTargetPrizeId(data.prize.id);
-      setSpinId(data.spinId);
-      return data.prize as Prize;
+      const prepared = { spinId: data.spinId as string, prize: data.prize as Prize };
+      setPreparedSpin(prepared);
+      return prepared;
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
       return null;
-    } finally {
-      setLoading(false);
     }
   }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, completedSteps, locale, t]);
+
+  useEffect(() => {
+    if (step !== "wheel" || preparedSpin || spinPrefetchStarted.current) return;
+    spinPrefetchStarted.current = true;
+    setPrefetchingSpin(true);
+    void prepareSpin().finally(() => setPrefetchingSpin(false));
+  }, [step, preparedSpin, prepareSpin]);
+
+  const handleSpinClick = useCallback(async () => {
+    if (spinning || targetPrizeId) return;
+
+    let ready = preparedSpin;
+    if (!ready) {
+      setPrefetchingSpin(true);
+      ready = await prepareSpin();
+      setPrefetchingSpin(false);
+      if (!ready) return;
+    }
+
+    setSpinId(ready.spinId);
+    setTargetPrizeId(ready.prize.id);
+  }, [spinning, targetPrizeId, preparedSpin, prepareSpin]);
 
   const onSpinComplete = (prize: Prize) => {
     setWonPrize(prize);
@@ -221,7 +245,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
               🏆
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
-              {t("public.reviewTitle")}
+              {t(`public.${reviewTitleKey}`)}
             </h2>
             <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
           </div>
@@ -381,12 +405,16 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   {!spinning && !targetPrizeId && (
                     <button
                       type="button"
-                      onClick={executeSpin}
-                      disabled={loading}
+                      onClick={() => void handleSpinClick()}
+                      disabled={prefetchingSpin || spinning}
                       className="public-btn public-touch-target text-lg"
                       style={btnStyle}
                     >
-                      {loading ? t("public.spinPreparing") : t("public.spinButton")}
+                      {prefetchingSpin
+                        ? t("public.spinPreparing")
+                        : spinning
+                          ? t("public.wheelSpinning")
+                          : t("public.spinButton")}
                     </button>
                   )}
                 </motion.div>

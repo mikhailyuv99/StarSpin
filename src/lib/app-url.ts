@@ -4,8 +4,9 @@ import { OFFICIAL_SITE_URL } from "./brand";
 export function getAppUrl(): string {
   const raw = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const trimmed = raw.replace(/\/+$/, "");
-  if (trimmed) return trimmed;
+  if (trimmed && !trimmed.includes("netlify.app")) return trimmed;
   if (process.env.NODE_ENV === "production") return OFFICIAL_SITE_URL;
+  if (trimmed) return trimmed;
   return "http://localhost:3000";
 }
 

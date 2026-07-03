@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
+import { resolveMerchantGooglePlaceId } from "@/lib/google-place-id.server";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import type { Merchant, Prize } from "@/lib/types";
@@ -23,14 +24,31 @@ export default async function PublicMerchantPage({
     notFound();
   }
 
-  const { data: merchant, error } = await supabase
+  const { data: merchantRow, error } = await supabase
     .from("merchants")
     .select("*")
     .eq("slug", slug)
     .eq("subscription_status", "active")
     .maybeSingle();
 
-  if (error || !merchant) notFound();
+  if (error || !merchantRow) notFound();
+
+  const resolvedPlaceId = await resolveMerchantGooglePlaceId({
+    google_place_id: merchantRow.google_place_id,
+    google_review_link: merchantRow.google_review_link,
+  });
+
+  if (resolvedPlaceId && resolvedPlaceId !== merchantRow.google_place_id) {
+    await supabase
+      .from("merchants")
+      .update({ google_place_id: resolvedPlaceId })
+      .eq("id", merchantRow.id);
+  }
+
+  const merchant = {
+    ...merchantRow,
+    google_place_id: resolvedPlaceId ?? merchantRow.google_place_id,
+  } as Merchant;
 
   const { data: prizes } = await supabase
     .from("prizes")
@@ -38,5 +56,5 @@ export default async function PublicMerchantPage({
     .eq("merchant_id", merchant.id)
     .eq("active", true);
 
-  return <PublicFlow merchant={merchant as Merchant} prizes={(prizes ?? []) as Prize[]} />;
+  return <PublicFlow merchant={merchant} prizes={(prizes ?? []) as Prize[]} />;
 }

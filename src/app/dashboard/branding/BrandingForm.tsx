@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
+import { sanitizeGooglePlaceId } from "@/lib/google-place-id";
 
 export function BrandingForm({
   merchant,
@@ -72,7 +73,7 @@ export function BrandingForm({
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
         google_review_link: form.google_review_link || null,
-        google_place_id: form.google_place_id || null,
+        google_place_id: sanitizeGooglePlaceId(form.google_place_id, form.google_review_link),
         social_links,
         logo_url: form.logo_url || null,
       })
