@@ -34,6 +34,7 @@ export default async function PublicMerchantPage({
   if (error || !merchantRow) notFound();
 
   const resolvedPlaceId = await resolveMerchantGooglePlaceId({
+    name: merchantRow.name,
     google_place_id: merchantRow.google_place_id,
     google_review_link: merchantRow.google_review_link,
   });

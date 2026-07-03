@@ -17,12 +17,12 @@ import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 import {
   buildPublicStepOrder,
   isSocialFlowStep,
-  reviewStepTitleKey,
+  journeyStepPosition,
   socialUrlForStep,
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
-import { buildGoogleReviewUrl, openGoogleReview } from "@/lib/google-place-id";
+import { pickGoogleReviewOpenUrl } from "@/lib/google-place-id";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -84,10 +84,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
   const followedSocial = completedSteps.some(isSocialFlowStep);
   const googleReviewUrl = useMemo(
-    () => buildGoogleReviewUrl(merchant.google_review_link, merchant.google_place_id),
+    () => pickGoogleReviewOpenUrl(merchant.google_review_link, merchant.google_place_id),
     [merchant.google_review_link, merchant.google_place_id],
   );
-  const reviewTitleKey = useMemo(() => reviewStepTitleKey(stepOrder), [stepOrder]);
+  const stepPosition = useMemo(() => journeyStepPosition(stepOrder, step), [stepOrder, step]);
+  const stepHeading = t("public.journeyStepHeading", {
+    current: stepPosition.current,
+    total: stepPosition.total,
+  });
 
   useEffect(() => {
     if (!stepOrder.includes(step)) {
@@ -245,23 +249,24 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
               🏆
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
-              {t(`public.${reviewTitleKey}`)}
+              {stepHeading}
             </h2>
             <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
           </div>
 
-          {googleReviewUrl && (
-            <button
-              type="button"
-              onClick={() =>
-                openGoogleReview(merchant.google_review_link, merchant.google_place_id)
-              }
+          {googleReviewUrl ? (
+            <a
+              href={googleReviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="public-btn public-touch-target flex w-full items-center justify-center gap-2"
               style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
             >
               <SocialIcon brand="google" size={20} />
               {t("public.openGoogle")}
-            </button>
+            </a>
+          ) : (
+            <p className="text-center text-sm font-semibold text-muted">{t("public.reviewLinkUnavailable")}</p>
           )}
 
           <input
@@ -295,6 +300,11 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     const url = socialUrlForStep(actionStep, merchant.social_links);
     const brand = socialBrandForStep(actionStep);
     const labelKey = `public.follow_${actionStep}` as const;
+    const actionPosition = journeyStepPosition(stepOrder, actionStep);
+    const actionHeading = t("public.journeyStepHeading", {
+      current: actionPosition.current,
+      total: actionPosition.total,
+    });
 
     return (
       <motion.div
@@ -311,9 +321,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
             ⭐
           </p>
           <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
-            {t(labelKey)}
+            {actionHeading}
           </h2>
-          <p className="mt-1 text-sm font-medium text-muted">{t("public.socialStepHint")}</p>
+          <p className="mt-1 text-sm font-medium text-muted">{t(labelKey)}</p>
         </div>
 
         {url ? (
@@ -386,7 +396,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                       🎰
                     </p>
                     <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-extrabold uppercase text-ink">
-                      {t("public.wheelTitle")}
+                      {stepHeading}
                     </h2>
                     <p className="mt-1 text-sm font-medium text-muted">{t("public.wheelSubtitle")}</p>
                   </div>
@@ -431,7 +441,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                   className="space-y-4"
                 >
                   <div className="text-center">
-                    <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{t("public.claimTitle")}</p>
+                    <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{stepHeading}</p>
                     <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase leading-tight text-ink">
                       {wonPrize.label}
                     </p>

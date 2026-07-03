@@ -4,6 +4,15 @@ export function isValidGooglePlaceId(value: string | null | undefined): value is
   return /^ChI[Jk][A-Za-z0-9_-]{20,}$/.test(value.trim());
 }
 
+function isUnsafeReviewLink(url: string): boolean {
+  const lower = url.toLowerCase();
+  return (
+    lower.includes("share.google") ||
+    lower.includes("maps.app.goo.gl") ||
+    lower.includes("goo.gl/maps")
+  );
+}
+
 /** Extract a Google Place ID from common Maps / review URLs. */
 export function extractGooglePlaceId(url: string): string | null {
   const raw = url.trim();
@@ -63,59 +72,34 @@ export function sanitizeGooglePlaceId(
   return null;
 }
 
-/** Canonical Google "write a review" URL when a Place ID is known. */
+/** writereview URL — only when a valid Place ID exists. */
+export function buildGoogleWriteReviewUrl(placeId: string): string {
+  return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
+}
+
+/**
+ * Best customer-facing review URL.
+ * Never returns share.google / goo.gl links — they break on mobile (blank page).
+ */
 export function buildGoogleReviewUrl(
   reviewLink: string | null | undefined,
   placeId: string | null | undefined,
 ): string | null {
   const pid = sanitizeGooglePlaceId(placeId, reviewLink);
-  if (pid) {
-    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(pid)}`;
-  }
+  if (pid) return buildGoogleWriteReviewUrl(pid);
 
   const raw = reviewLink?.trim();
-  if (raw && /^https?:\/\//i.test(raw)) return raw;
+  if (raw && /^https?:\/\//i.test(raw) && !isUnsafeReviewLink(raw)) {
+    return raw;
+  }
+
   return null;
 }
 
-function openNewTab(url: string): void {
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.target = "_blank";
-  anchor.rel = "noopener noreferrer";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-}
-
-function buildAndroidMapsIntent(placeId: string, webFallbackUrl: string): string {
-  const query = `placeid=${encodeURIComponent(placeId)}`;
-  const path = `search.google.com/local/writereview?${query}`;
-  const fallback = encodeURIComponent(webFallbackUrl);
-  return `intent://${path}#Intent;scheme=https;package=com.google.android.apps.maps;S.browser_fallback_url=${fallback};end`;
-}
-
-/**
- * Open Google review flow in a new tab.
- * Uses writereview?placeid= only with a valid ChI… Place ID; otherwise opens the merchant link as-is.
- */
-export function openGoogleReview(
+/** Best customer-facing review URL. Never returns share.google links. */
+export function pickGoogleReviewOpenUrl(
   reviewLink: string | null | undefined,
   placeId: string | null | undefined,
-): void {
-  const webUrl = buildGoogleReviewUrl(reviewLink, placeId);
-  if (!webUrl || typeof window === "undefined") return;
-
-  const pid = sanitizeGooglePlaceId(placeId, reviewLink);
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  if (isAndroid && pid) {
-    const intentUrl = buildAndroidMapsIntent(pid, webUrl);
-    const opened = window.open(intentUrl, "_blank", "noopener,noreferrer");
-    if (!opened) openNewTab(webUrl);
-    return;
-  }
-
-  const opened = window.open(webUrl, "_blank", "noopener,noreferrer");
-  if (!opened) openNewTab(webUrl);
+): string | null {
+  return buildGoogleReviewUrl(reviewLink, placeId);
 }

@@ -65,15 +65,18 @@ export function isSocialFlowStep(step: FlowActionStep): boolean {
   return step !== "google_review";
 }
 
-export type ReviewTitleKey = "reviewTitleFirst" | "reviewTitleMiddle" | "reviewTitleFinal";
-
-export function reviewStepTitleKey(stepOrder: PublicStep[]): ReviewTitleKey {
-  const actions = stepOrder.filter(
-    (step): step is FlowActionStep => step !== "wheel" && step !== "claim" && step !== "result",
-  );
-  const index = actions.indexOf("google_review");
-  if (index < 0) return "reviewTitleMiddle";
-  if (index === 0) return "reviewTitleFirst";
-  if (index === actions.length - 1) return "reviewTitleFinal";
-  return "reviewTitleMiddle";
+/** 1-based position in the customer journey (result excluded from numbering). */
+export function journeyStepPosition(
+  stepOrder: PublicStep[],
+  step: PublicStep,
+): { current: number; total: number } {
+  const displaySteps = stepOrder.filter((s) => s !== "result");
+  const index =
+    step === "result"
+      ? displaySteps.length - 1
+      : displaySteps.indexOf(step);
+  return {
+    current: index >= 0 ? index + 1 : 1,
+    total: displaySteps.length,
+  };
 }
