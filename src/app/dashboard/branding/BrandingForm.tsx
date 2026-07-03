@@ -177,7 +177,6 @@ export function BrandingForm({
           { key: "tiktok", label: t("dashboard.tiktokUrl"), brand: "tiktok" as SocialBrand },
           { key: "tripadvisor", label: t("dashboard.tripadvisorUrl"), brand: "tripadvisor" as SocialBrand },
           { key: "google_review_link", label: t("dashboard.googleReviewLink"), brand: "google" as SocialBrand },
-          { key: "google_place_id", label: t("dashboard.googlePlaceId") },
         ] as const
       ).map((field) => (
         <div key={field.key}>

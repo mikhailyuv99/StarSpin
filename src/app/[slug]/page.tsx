@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
-import { resolveMerchantGooglePlaceId } from "@/lib/google-place-id.server";
+import { resolveAndPersistMerchantPlaceId } from "@/lib/google-place-id.server";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import type { Merchant, Prize } from "@/lib/types";
@@ -33,22 +33,16 @@ export default async function PublicMerchantPage({
 
   if (error || !merchantRow) notFound();
 
-  const resolvedPlaceId = await resolveMerchantGooglePlaceId({
+  const resolvedPlaceId = await resolveAndPersistMerchantPlaceId(supabase, {
+    id: merchantRow.id,
     name: merchantRow.name,
     google_place_id: merchantRow.google_place_id,
     google_review_link: merchantRow.google_review_link,
   });
 
-  if (resolvedPlaceId && resolvedPlaceId !== merchantRow.google_place_id) {
-    await supabase
-      .from("merchants")
-      .update({ google_place_id: resolvedPlaceId })
-      .eq("id", merchantRow.id);
-  }
-
   const merchant = {
     ...merchantRow,
-    google_place_id: resolvedPlaceId ?? merchantRow.google_place_id,
+    google_place_id: resolvedPlaceId ?? null,
   } as Merchant;
 
   const { data: prizes } = await supabase

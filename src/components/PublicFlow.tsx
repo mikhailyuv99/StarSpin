@@ -22,7 +22,6 @@ import {
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
-import { pickGoogleReviewOpenUrl } from "@/lib/google-place-id";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -83,10 +82,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const progress = ((stepIndex + 1) / stepOrder.length) * 100;
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
   const followedSocial = completedSteps.some(isSocialFlowStep);
-  const googleReviewUrl = useMemo(
-    () => pickGoogleReviewOpenUrl(merchant.google_review_link, merchant.google_place_id),
-    [merchant.google_review_link, merchant.google_place_id],
-  );
+  const googleReviewHref = merchant.google_review_link?.trim()
+    ? `/api/google/review?slug=${encodeURIComponent(merchant.slug)}`
+    : null;
   const stepPosition = useMemo(() => journeyStepPosition(stepOrder, step), [stepOrder, step]);
   const stepHeading = t("public.journeyStepHeading", {
     current: stepPosition.current,
@@ -254,9 +252,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
             <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
           </div>
 
-          {googleReviewUrl ? (
+          {googleReviewHref ? (
             <a
-              href={googleReviewUrl}
+              href={googleReviewHref}
               target="_blank"
               rel="noopener noreferrer"
               className="public-btn public-touch-target flex w-full items-center justify-center gap-2"
