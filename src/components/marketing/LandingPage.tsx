@@ -31,7 +31,6 @@ function Nav() {
     { type: "anchor", href: "#features", label: t("marketing.navFeatures") },
     { type: "anchor", href: "#pricing", label: t("marketing.navPricing") },
     { type: "anchor", href: "#faq", label: t("marketing.navFaq") },
-    { type: "link", href: "/login", label: t("marketing.footerDemo") },
   ];
 
   return (
@@ -45,9 +44,6 @@ function Nav() {
         </div>
         <div className="cadeo-nav-actions">
           <LocaleSwitcher variant="brutal" />
-          <Link href="/login" className="cadeo-btn cadeo-btn-yellow cadeo-nav-login-desktop">
-            {t("marketing.footerDemo")}
-          </Link>
           <BrutalMobileMenu items={menuItems} className="cadeo-nav-burger" />
         </div>
       </nav>

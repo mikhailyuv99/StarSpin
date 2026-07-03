@@ -21,7 +21,7 @@ import {
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
-import { buildGoogleReviewUrl, openGoogleReviewUrl } from "@/lib/google-place-id";
+import { buildGoogleReviewUrl, openGoogleReview } from "@/lib/google-place-id";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -189,11 +189,14 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
         }),
       });
       const data = await res.json();
+      if (data.prizeCode) {
+        setPrizeCode(data.prizeCode);
+        setRedemptionRules(data.redemptionRules ?? null);
+        setClaimEmailSent(Boolean(data.emailSent));
+        setStep("result");
+        return;
+      }
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
-      setPrizeCode(data.prizeCode);
-      setRedemptionRules(data.redemptionRules ?? null);
-      setClaimEmailSent(Boolean(data.emailSent));
-      setStep("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
@@ -226,7 +229,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
           {googleReviewUrl && (
             <button
               type="button"
-              onClick={() => openGoogleReviewUrl(googleReviewUrl)}
+              onClick={() =>
+                openGoogleReview(merchant.google_review_link, merchant.google_place_id)
+              }
               className="public-btn public-touch-target flex w-full items-center justify-center gap-2"
               style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
             >
@@ -323,7 +328,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
               className="public-progress-fill"
               style={{ backgroundColor: accent }}
               initial={false}
-              animate={{ width: `${progress}%` }}
+              animate={{ scaleX: progress / 100 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>

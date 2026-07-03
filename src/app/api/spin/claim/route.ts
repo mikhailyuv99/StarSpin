@@ -24,30 +24,85 @@ function snapshotFromSpin(spin: {
   };
 }
 
+type ClaimFields = Record<string, string | boolean | number | null>;
+
+async function readPrizeCode(
+  supabase: ReturnType<typeof createAdminClient>,
+  spinId: string,
+): Promise<string | null> {
+  const { data } = await supabase.from("spins").select("prize_code").eq("id", spinId).maybeSingle();
+  return data?.prize_code ?? null;
+}
+
+async function tryClaimUpdate(
+  supabase: ReturnType<typeof createAdminClient>,
+  spinId: string,
+  fields: ClaimFields,
+  prizeCode: string,
+): Promise<{ ok: true; prizeCode: string } | { ok: false; retry: boolean; message?: string }> {
+  const { data, error } = await supabase
+    .from("spins")
+    .update({ ...fields, prize_code: prizeCode })
+    .eq("id", spinId)
+    .is("prize_code", null)
+    .select("prize_code")
+    .maybeSingle();
+
+  if (data?.prize_code) {
+    return { ok: true, prizeCode: data.prize_code };
+  }
+
+  const existing = await readPrizeCode(supabase, spinId);
+  if (existing) {
+    return { ok: true, prizeCode: existing };
+  }
+
+  if (!error) {
+    return { ok: false, retry: true };
+  }
+
+  if (error.code === "23505") {
+    return { ok: false, retry: true };
+  }
+
+  // PostgREST returns this when the update matched zero rows.
+  if (error.code === "PGRST116") {
+    const raced = await readPrizeCode(supabase, spinId);
+    if (raced) return { ok: true, prizeCode: raced };
+    return { ok: false, retry: true };
+  }
+
+  return { ok: false, retry: false, message: error.message };
+}
+
 async function persistClaim(
   supabase: ReturnType<typeof createAdminClient>,
   spinId: string,
-  updatePayload: Record<string, string | boolean | number | null>,
+  fullPayload: ClaimFields,
+  minimalPayload: ClaimFields,
 ): Promise<{ prizeCode: string } | { error: string }> {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const prizeCode = generatePrizeCode();
-    const { error: updateError } = await supabase
-      .from("spins")
-      .update({ ...updatePayload, prize_code: prizeCode })
-      .eq("id", spinId)
-      .is("prize_code", null);
+  const payloads = [fullPayload, minimalPayload];
 
-    if (!updateError) {
-      return { prizeCode };
+  for (const payload of payloads) {
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const prizeCode = generatePrizeCode();
+      const result = await tryClaimUpdate(supabase, spinId, payload, prizeCode);
+      if (result.ok) {
+        return { prizeCode: result.prizeCode };
+      }
+      if (!result.retry) {
+        console.error("Claim DB update error:", result.message);
+        break;
+      }
     }
-
-    if (updateError.code === "23505") continue;
-
-    console.error("Claim DB update error:", updateError);
-    return { error: updateError.message };
   }
 
-  return { error: "prize_code_collision" };
+  const existing = await readPrizeCode(supabase, spinId);
+  if (existing) {
+    return { prizeCode: existing };
+  }
+
+  return { error: "persist_failed" };
 }
 
 export async function POST(request: Request) {
@@ -89,14 +144,14 @@ export async function POST(request: Request) {
 
     const prize = Array.isArray(spin.prize) ? spin.prize[0] : spin.prize;
     const prizeLabel = prize?.label ?? "Prize";
+    const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin(spin);
 
     if (spin.prize_code) {
-      const redemptionRules = snapshotFromSpin(spin);
       return NextResponse.json({
         prizeCode: spin.prize_code,
         emailSent: Boolean(spin.claim_notified_at),
         alreadyClaimed: true,
-        redemptionRules,
+        redemptionRules: snapshotFromSpin(spin),
       });
     }
 
@@ -106,48 +161,63 @@ export async function POST(request: Request) {
       .eq("id", spin.merchant_id)
       .maybeSingle();
 
-    const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin({});
     const ruleLines = formatRedemptionRuleLines(redemptionRules, t, locale);
     const merchantName = merchant?.name ?? "STARSPIN";
 
-    const updatePayload: Record<string, string | boolean | number | null> = {
+    const minimalPayload: ClaimFields = {
       claim_first_name: firstName.trim(),
       claim_email: emailAddress,
+    };
+
+    const fullPayload: ClaimFields = {
+      ...minimalPayload,
       redeem_next_visit: redemptionRules.redeem_next_visit,
       redeem_min_spend_cents: redemptionRules.redeem_min_spend_cents,
       redeem_expires_at: redemptionRules.redeem_expires_at,
     };
 
     if (phoneNumber?.trim()) {
-      updatePayload.phone_number = normalizePhone(String(phoneNumber));
+      const normalized = normalizePhone(String(phoneNumber));
+      minimalPayload.phone_number = normalized;
+      fullPayload.phone_number = normalized;
     }
 
-    const persisted = await persistClaim(supabase, spinId, updatePayload);
+    const persisted = await persistClaim(supabase, spinId, fullPayload, minimalPayload);
     if ("error" in persisted) {
+      console.error("Claim persist failed for spin", spinId);
       return NextResponse.json({ error: t("api.claimError") }, { status: 500 });
     }
 
     const { prizeCode } = persisted;
 
-    const emailSent = await sendPrizeEmail({
-      to: emailAddress,
-      firstName: firstName.trim(),
-      prizeLabel,
-      prizeCode,
-      merchantName,
-      locale,
-      ruleLines,
-    });
+    let emailSent = false;
+    try {
+      emailSent = await sendPrizeEmail({
+        to: emailAddress,
+        firstName: firstName.trim(),
+        prizeLabel,
+        prizeCode,
+        merchantName,
+        locale,
+        ruleLines,
+      });
+    } catch (emailErr) {
+      console.error("Prize email error:", emailErr);
+    }
 
     let smsSent = false;
     if (phoneNumber?.trim()) {
-      const normalized = normalizePhone(String(phoneNumber));
-      const smsBody = t("api.prizeSmsBody", {
-        prize: prizeLabel,
-        code: prizeCode,
-        merchant: merchantName,
-      });
-      smsSent = await sendSmsMessage(normalized, smsBody);
+      try {
+        const normalized = normalizePhone(String(phoneNumber));
+        const smsBody = t("api.prizeSmsBody", {
+          prize: prizeLabel,
+          code: prizeCode,
+          merchant: merchantName,
+        });
+        smsSent = await sendSmsMessage(normalized, smsBody);
+      } catch (smsErr) {
+        console.error("Prize SMS error:", smsErr);
+      }
     }
 
     if (emailSent || smsSent) {

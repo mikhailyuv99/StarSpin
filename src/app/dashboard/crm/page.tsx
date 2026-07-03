@@ -6,6 +6,8 @@ import { localeToIntl } from "@/i18n/config";
 import { aggregateCrmContacts, computeCrmFunnel } from "@/lib/crm";
 import type { Spin } from "@/lib/types";
 import { CrmExportButton } from "@/app/dashboard/crm/CrmExportButton";
+import { reviewScreenshotHref } from "@/lib/review-screenshot";
+import Link from "next/link";
 
 export default async function CrmPage() {
   const merchant = await requireMerchant();
@@ -132,22 +134,40 @@ export default async function CrmPage() {
       )}
 
       <div className={ui.card}>
-        <h2 className={ui.h2}>{t("dashboard.recentSpins")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className={ui.h2}>{t("dashboard.recentSpins")}</h2>
+          <Link href="/dashboard/reviews" className={ui.link}>
+            {t("dashboard.reviewsTitle")} →
+          </Link>
+        </div>
         <div className="mt-4 overflow-hidden rounded-[14px] border-2 border-black">
           {recent.map((spin) => (
             <div
               key={spin.id}
-              className="grid grid-cols-[1fr_minmax(0,1.2fr)_1fr] items-center gap-2 border-b-2 border-black/10 bg-white px-4 py-2.5 text-sm last:border-b-0"
+              className="grid grid-cols-1 items-center gap-2 border-b-2 border-black/10 bg-white px-4 py-3 text-sm last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)_auto]"
             >
               <span className="font-mono text-xs text-muted">
                 {new Date(spin.created_at).toLocaleString(intl)}
               </span>
-              <span className="truncate text-center font-extrabold text-ink">
+              <span className="truncate font-extrabold text-ink">
                 {spin.prize?.label ?? "-"}
               </span>
-              <span className="truncate text-right text-xs text-muted">
+              <span className="truncate text-xs text-muted">
                 {spin.claim_email ?? t("dashboard.crmAnonymous")}
+                {spin.prize_code ? ` · ${spin.prize_code}` : ""}
               </span>
+              {spin.review_screenshot_url ? (
+                <a
+                  href={reviewScreenshotHref(spin.review_screenshot_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-xs font-bold ${ui.link}`}
+                >
+                  {t("dashboard.viewScreenshot")}
+                </a>
+              ) : (
+                <span className="text-xs text-muted">—</span>
+              )}
             </div>
           ))}
         </div>

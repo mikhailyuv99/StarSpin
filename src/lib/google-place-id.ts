@@ -34,7 +34,7 @@ function cleanPlaceId(value: string): string {
   return value.replace(/!.*/, "").trim();
 }
 
-/** Canonical Google "write a review" URL — works reliably on mobile. */
+/** Canonical Google "write a review" URL. */
 export function buildGoogleReviewUrl(
   reviewLink: string | null | undefined,
   placeId: string | null | undefined,
@@ -49,13 +49,61 @@ export function buildGoogleReviewUrl(
   return raw || null;
 }
 
-export function openGoogleReviewUrl(url: string): void {
-  const mobile =
-    typeof navigator !== "undefined" &&
-    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (mobile) {
-    window.location.assign(url);
+function resolvePlaceId(
+  reviewLink: string | null | undefined,
+  placeId: string | null | undefined,
+): string | null {
+  return (
+    placeId?.trim() ||
+    (reviewLink?.trim() ? extractGooglePlaceId(reviewLink) : null) ||
+    null
+  );
+}
+
+function openNewTab(url: string): boolean {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  return true;
+}
+
+function buildAndroidMapsIntent(placeId: string, webFallbackUrl: string): string {
+  const query = `placeid=${encodeURIComponent(placeId)}`;
+  const path = `search.google.com/local/writereview?${query}`;
+  const fallback = encodeURIComponent(webFallbackUrl);
+  return `intent://${path}#Intent;scheme=https;package=com.google.android.apps.maps;S.browser_fallback_url=${fallback};end`;
+}
+
+/**
+ * Open Google review flow in a new tab/window.
+ * On Android, tries the Maps app first (falls back to browser tab).
+ */
+export function openGoogleReview(
+  reviewLink: string | null | undefined,
+  placeId: string | null | undefined,
+): void {
+  const webUrl = buildGoogleReviewUrl(reviewLink, placeId);
+  if (!webUrl || typeof window === "undefined") return;
+
+  const pid = resolvePlaceId(reviewLink, placeId);
+  const ua = navigator.userAgent;
+  const isAndroid = /Android/i.test(ua);
+
+  if (isAndroid && pid) {
+    const intentUrl = buildAndroidMapsIntent(pid, webUrl);
+    const opened = window.open(intentUrl, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      openNewTab(webUrl);
+    }
     return;
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+
+  const opened = window.open(webUrl, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    openNewTab(webUrl);
+  }
 }

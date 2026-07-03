@@ -205,19 +205,11 @@
   text-decoration: underline;
 }
 
-.cadeo-nav-login-desktop {
-  display: none;
-}
-
 .cadeo-nav-burger {
   display: block;
 }
 
 @media (min-width: 900px) {
-  .cadeo-nav-login-desktop {
-    display: inline-flex;
-  }
-
   .cadeo-nav-burger {
     display: none;
   }

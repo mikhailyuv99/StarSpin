@@ -10,7 +10,7 @@ export default function PublicMerchantLoading() {
           <div className="mx-auto mt-3 h-5 w-40 rounded bg-white border-2 border-black" />
         </div>
         <div className="public-progress-track">
-          <div className="public-progress-fill w-1/3" />
+          <div className="public-progress-fill" style={{ transform: "scaleX(0.33)" }} />
         </div>
         <div className="public-card p-6">
           <div className="mx-auto h-6 w-40 rounded border-2 border-black bg-[var(--c-cream)]" />
