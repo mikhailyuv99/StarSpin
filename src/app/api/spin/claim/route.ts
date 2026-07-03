@@ -11,6 +11,11 @@ import {
 } from "@/lib/redemption-rules";
 import { normalizePhone } from "@/lib/phone";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
+import {
+  getMerchantOwnerEmail,
+  sendMerchantJourneyCompleteEmail,
+  signedReviewScreenshotForEmail,
+} from "@/lib/merchant-journey-email";
 
 function snapshotFromSpin(spin: {
   redeem_next_visit?: boolean | null;
@@ -157,7 +162,7 @@ export async function POST(request: Request) {
 
     const { data: merchant } = await supabase
       .from("merchants")
-      .select("name")
+      .select("name, owner_id")
       .eq("id", spin.merchant_id)
       .maybeSingle();
 
@@ -225,6 +230,31 @@ export async function POST(request: Request) {
         .from("spins")
         .update({ claim_notified_at: new Date().toISOString() })
         .eq("id", spinId);
+    }
+
+    if (merchant?.owner_id) {
+      try {
+        const ownerEmail = await getMerchantOwnerEmail(supabase, merchant.owner_id);
+        if (ownerEmail) {
+          const screenshotSignedUrl = await signedReviewScreenshotForEmail(
+            spin.review_screenshot_url,
+          );
+          await sendMerchantJourneyCompleteEmail({
+            merchantEmail: ownerEmail,
+            merchantName: merchant.name ?? "STARSPIN",
+            customerFirstName: firstName.trim(),
+            customerEmail: emailAddress,
+            customerPhone: phoneNumber?.trim()
+              ? normalizePhone(String(phoneNumber))
+              : spin.phone_number,
+            prizeLabel,
+            prizeCode,
+            reviewScreenshotSignedUrl: screenshotSignedUrl,
+          });
+        }
+      } catch (notifyErr) {
+        console.error("Merchant journey notification error:", notifyErr);
+      }
     }
 
     return NextResponse.json({
