@@ -56,6 +56,7 @@ function socialBrandForStep(step: FlowActionStep): SocialBrand {
 export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const claimFormRef = useRef<HTMLFormElement>(null);
   const stepOrder = useMemo(() => buildPublicStepOrder(merchant), [merchant]);
   const [step, setStep] = useState<PublicStep>(stepOrder[0]);
   const [completedSteps, setCompletedSteps] = useState<FlowActionStep[]>([]);
@@ -96,6 +97,33 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
       setStep(stepOrder[0]);
     }
   }, [step, stepOrder]);
+
+  useEffect(() => {
+    if (step === "claim") setLoading(false);
+  }, [step]);
+
+  const syncClaimField = (
+    field: "claimFirstName" | "claimEmail" | "claimPhone",
+    value: string,
+  ) => {
+    if (field === "claimFirstName") setClaimFirstName(value);
+    if (field === "claimEmail") setClaimEmail(value);
+    if (field === "claimPhone") setClaimPhone(value);
+  };
+
+  const readClaimForm = () => {
+    const form = claimFormRef.current;
+    const firstName =
+      (form?.elements.namedItem("claimFirstName") as HTMLInputElement | null)?.value?.trim() ??
+      claimFirstName.trim();
+    const email =
+      (form?.elements.namedItem("claimEmail") as HTMLInputElement | null)?.value?.trim() ??
+      claimEmail.trim();
+    const phone =
+      (form?.elements.namedItem("claimPhone") as HTMLInputElement | null)?.value?.trim() ??
+      claimPhone.trim();
+    return { firstName, email, phone };
+  };
 
   useEffect(() => {
     if (step === "result" && wonPrize) fireConfetti(accent);
@@ -195,12 +223,27 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
     setStep("claim");
   };
 
-  const submitClaim = async () => {
-    if (!spinId || !wonPrize) return;
-    if (!claimEmail.trim()) {
+  const submitClaim = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (!spinId || !wonPrize) {
+      setError(t("public.error"));
+      return;
+    }
+
+    const { firstName, email, phone } = readClaimForm();
+    setClaimFirstName(firstName);
+    setClaimEmail(email);
+    setClaimPhone(phone);
+
+    if (!email) {
       setError(t("public.claimEmailRequired"));
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(t("api.invalidEmail"));
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -209,9 +252,9 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
         headers: localeHeaders(locale),
         body: JSON.stringify({
           spinId,
-          firstName: claimFirstName,
-          email: claimEmail,
-          phoneNumber: claimPhone.trim() || undefined,
+          firstName: firstName || "Customer",
+          email,
+          phoneNumber: phone || undefined,
         }),
       });
       const data = await res.json();
@@ -446,41 +489,52 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                     <p className="mt-1 text-sm font-medium text-muted">{t("public.claimSubtitle")}</p>
                   </div>
 
+                  <form
+                    ref={claimFormRef}
+                    className="space-y-4"
+                    onSubmit={(event) => void submitClaim(event)}
+                  >
                   <input
                     type="text"
+                    name="claimFirstName"
                     autoComplete="given-name"
                     placeholder={t("public.claimFirstName")}
                     value={claimFirstName}
-                    onChange={(e) => setClaimFirstName(e.target.value)}
+                    onChange={(e) => syncClaimField("claimFirstName", e.target.value)}
+                    onInput={(e) => syncClaimField("claimFirstName", e.currentTarget.value)}
                     className="public-input font-semibold"
                   />
                   <input
                     type="email"
+                    name="claimEmail"
                     autoComplete="email"
                     required
                     placeholder={`${t("public.claimEmail")} *`}
                     value={claimEmail}
-                    onChange={(e) => setClaimEmail(e.target.value)}
+                    onChange={(e) => syncClaimField("claimEmail", e.target.value)}
+                    onInput={(e) => syncClaimField("claimEmail", e.currentTarget.value)}
                     className="public-input font-semibold"
                   />
                   <input
                     type="tel"
+                    name="claimPhone"
                     autoComplete="tel"
                     placeholder={t("public.claimPhoneOptional")}
                     value={claimPhone}
-                    onChange={(e) => setClaimPhone(e.target.value)}
+                    onChange={(e) => syncClaimField("claimPhone", e.target.value)}
+                    onInput={(e) => syncClaimField("claimPhone", e.currentTarget.value)}
                     className="public-input text-center font-semibold"
                   />
 
                   <button
-                    type="button"
-                    onClick={submitClaim}
-                    disabled={loading || claimFirstName.trim().length < 2 || !claimEmail.trim()}
-                    className="public-btn public-touch-target"
+                    type="submit"
+                    disabled={loading}
+                    className="public-btn public-touch-target w-full"
                     style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
                   >
                     {loading ? t("public.claimSending") : t("public.claimSubmit")}
                   </button>
+                  </form>
                 </motion.div>
               )}
 
