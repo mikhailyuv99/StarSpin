@@ -21,6 +21,7 @@ import {
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
+import { buildGoogleReviewUrl, openGoogleReviewUrl } from "@/lib/google-place-id";
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -78,6 +79,10 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const progress = ((stepIndex + 1) / stepOrder.length) * 100;
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
   const followedSocial = completedSteps.some(isSocialFlowStep);
+  const googleReviewUrl = useMemo(
+    () => buildGoogleReviewUrl(merchant.google_review_link, merchant.google_place_id),
+    [merchant.google_review_link, merchant.google_place_id],
+  );
 
   useEffect(() => {
     if (!stepOrder.includes(step)) {
@@ -218,17 +223,16 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
             <p className="mt-1 text-sm font-medium text-muted">{t("public.reviewSubtitle")}</p>
           </div>
 
-          {merchant.google_review_link && (
-            <a
-              href={merchant.google_review_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="public-btn public-touch-target flex items-center justify-center gap-2"
+          {googleReviewUrl && (
+            <button
+              type="button"
+              onClick={() => openGoogleReviewUrl(googleReviewUrl)}
+              className="public-btn public-touch-target flex w-full items-center justify-center gap-2"
               style={{ backgroundColor: "var(--c-yellow)", color: "#0a0a0a" }}
             >
               <SocialIcon brand="google" size={20} />
               {t("public.openGoogle")}
-            </a>
+            </button>
           )}
 
           <input

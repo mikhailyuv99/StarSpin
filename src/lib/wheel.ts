@@ -9,10 +9,6 @@ export function clampPrizeLabel(label: string, max = PRIZE_LABEL_MAX_LENGTH): st
   return trimmed.slice(0, max).trimEnd();
 }
 
-function fitTextToWidth(text: string, maxChars: number): string {
-  if (text.length <= maxChars) return text;
-  return text.slice(0, maxChars);
-}
 
 function arcChordWidth(radius: number, sliceAngleDeg: number): number {
   const halfRad = ((sliceAngleDeg / 2) * Math.PI) / 180;
@@ -29,31 +25,26 @@ function wrapLabelWords(label: string, maxChars: number, maxLines: number): stri
   const lines: string[] = [];
   let current = "";
 
-  const truncate = (text: string) => fitTextToWidth(text, maxChars);
-
   for (const word of words) {
-    const w = truncate(word);
     if (!current) {
-      current = w;
+      current = word;
       continue;
     }
-    const candidate = `${current} ${w}`;
+    const candidate = `${current} ${word}`;
     if (candidate.length <= maxChars) {
       current = candidate;
     } else {
       lines.push(current);
-      current = w;
+      current = word;
     }
   }
   if (current) lines.push(current);
 
-  let result = lines.map((line) => truncate(line));
-  if (result.length > maxLines) {
-    const kept = result.slice(0, maxLines - 1);
-    const tail = truncate(result.slice(maxLines - 1).join(" "));
-    result = [...kept, tail];
-  }
-  return result;
+  if (lines.length <= maxLines) return lines;
+
+  const kept = lines.slice(0, maxLines - 1);
+  kept.push(lines.slice(maxLines - 1).join(" "));
+  return kept;
 }
 
 export type WheelSliceLabelLayout = {
@@ -205,10 +196,7 @@ export function splitSliceLabel(label: string, sliceAngle: number): string[] {
     const candidate = current ? `${current} ${word}` : word;
     if (candidate.length > maxChars && current) {
       lines.push(current);
-      current = word.length > maxChars ? fitTextToWidth(word, maxChars) : word;
-    } else if (candidate.length > maxChars) {
-      lines.push(fitTextToWidth(word, maxChars));
-      current = "";
+      current = word;
     } else {
       current = candidate;
     }
@@ -216,9 +204,9 @@ export function splitSliceLabel(label: string, sliceAngle: number): string[] {
   if (current) lines.push(current);
 
   if (lines.length <= maxLines) return lines;
-  const merged = lines.slice(0, maxLines - 1);
-  merged.push(lines.slice(maxLines - 1).join(" "));
-  return merged;
+  const kept = lines.slice(0, maxLines - 1);
+  kept.push(lines.slice(maxLines - 1).join(" "));
+  return kept;
 }
 
 /** Place label in the readable zone of each slice */

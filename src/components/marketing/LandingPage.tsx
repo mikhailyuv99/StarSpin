@@ -15,6 +15,7 @@ import { PricingPlans } from "@/components/billing/PricingPlans";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { marketingImages } from "@/lib/marketing-images";
+import { BrutalMobileMenu, type MobileMenuItem } from "@/components/BrutalMobileMenu";
 import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import { AdvantageCopy } from "@/components/marketing/AdvantageCopy";
 import { getMarketingAdvantages } from "@/lib/marketing-advantages";
@@ -26,6 +27,13 @@ function Logo() {
 
 function Nav() {
   const { t } = useI18n();
+  const menuItems: MobileMenuItem[] = [
+    { type: "anchor", href: "#features", label: t("marketing.navFeatures") },
+    { type: "anchor", href: "#pricing", label: t("marketing.navPricing") },
+    { type: "anchor", href: "#faq", label: t("marketing.navFaq") },
+    { type: "link", href: "/login", label: t("marketing.footerDemo") },
+  ];
+
   return (
     <div className="cadeo-nav-wrap">
       <nav className="cadeo-nav">
@@ -37,9 +45,10 @@ function Nav() {
         </div>
         <div className="cadeo-nav-actions">
           <LocaleSwitcher variant="brutal" />
-          <Link href="/login" className="cadeo-btn cadeo-btn-yellow !hidden sm:!inline-flex">
+          <Link href="/login" className="cadeo-btn cadeo-btn-yellow cadeo-nav-login-desktop">
             {t("marketing.footerDemo")}
           </Link>
+          <BrutalMobileMenu items={menuItems} className="cadeo-nav-burger" />
         </div>
       </nav>
     </div>

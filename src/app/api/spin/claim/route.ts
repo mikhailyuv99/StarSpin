@@ -24,6 +24,32 @@ function snapshotFromSpin(spin: {
   };
 }
 
+async function persistClaim(
+  supabase: ReturnType<typeof createAdminClient>,
+  spinId: string,
+  updatePayload: Record<string, string | boolean | number | null>,
+): Promise<{ prizeCode: string } | { error: string }> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const prizeCode = generatePrizeCode();
+    const { error: updateError } = await supabase
+      .from("spins")
+      .update({ ...updatePayload, prize_code: prizeCode })
+      .eq("id", spinId)
+      .is("prize_code", null);
+
+    if (!updateError) {
+      return { prizeCode };
+    }
+
+    if (updateError.code === "23505") continue;
+
+    console.error("Claim DB update error:", updateError);
+    return { error: updateError.message };
+  }
+
+  return { error: "prize_code_collision" };
+}
+
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
   const t = apiT(locale);
@@ -82,8 +108,26 @@ export async function POST(request: Request) {
 
     const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin({});
     const ruleLines = formatRedemptionRuleLines(redemptionRules, t, locale);
-    const prizeCode = generatePrizeCode();
     const merchantName = merchant?.name ?? "STARSPIN";
+
+    const updatePayload: Record<string, string | boolean | number | null> = {
+      claim_first_name: firstName.trim(),
+      claim_email: emailAddress,
+      redeem_next_visit: redemptionRules.redeem_next_visit,
+      redeem_min_spend_cents: redemptionRules.redeem_min_spend_cents,
+      redeem_expires_at: redemptionRules.redeem_expires_at,
+    };
+
+    if (phoneNumber?.trim()) {
+      updatePayload.phone_number = normalizePhone(String(phoneNumber));
+    }
+
+    const persisted = await persistClaim(supabase, spinId, updatePayload);
+    if ("error" in persisted) {
+      return NextResponse.json({ error: t("api.claimError") }, { status: 500 });
+    }
+
+    const { prizeCode } = persisted;
 
     const emailSent = await sendPrizeEmail({
       to: emailAddress,
@@ -106,25 +150,11 @@ export async function POST(request: Request) {
       smsSent = await sendSmsMessage(normalized, smsBody);
     }
 
-    const updatePayload: Record<string, string | boolean | number | null> = {
-      claim_first_name: firstName.trim(),
-      claim_email: emailAddress,
-      prize_code: prizeCode,
-      claim_notified_at: new Date().toISOString(),
-      redeem_next_visit: redemptionRules.redeem_next_visit,
-      redeem_min_spend_cents: redemptionRules.redeem_min_spend_cents,
-      redeem_expires_at: redemptionRules.redeem_expires_at,
-    };
-
-    if (phoneNumber?.trim()) {
-      updatePayload.phone_number = normalizePhone(String(phoneNumber));
-    }
-
-    const { error: updateError } = await supabase.from("spins").update(updatePayload).eq("id", spinId);
-
-    if (updateError) {
-      console.error("Claim DB update error:", updateError);
-      return NextResponse.json({ error: t("api.claimError") }, { status: 500 });
+    if (emailSent || smsSent) {
+      await supabase
+        .from("spins")
+        .update({ claim_notified_at: new Date().toISOString() })
+        .eq("id", spinId);
     }
 
     return NextResponse.json({

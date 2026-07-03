@@ -33,3 +33,29 @@ export function extractGooglePlaceId(url: string): string | null {
 function cleanPlaceId(value: string): string {
   return value.replace(/!.*/, "").trim();
 }
+
+/** Canonical Google "write a review" URL — works reliably on mobile. */
+export function buildGoogleReviewUrl(
+  reviewLink: string | null | undefined,
+  placeId: string | null | undefined,
+): string | null {
+  const pid =
+    placeId?.trim() ||
+    (reviewLink?.trim() ? extractGooglePlaceId(reviewLink) : null);
+  if (pid) {
+    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(pid)}`;
+  }
+  const raw = reviewLink?.trim();
+  return raw || null;
+}
+
+export function openGoogleReviewUrl(url: string): void {
+  const mobile =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (mobile) {
+    window.location.assign(url);
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
