@@ -185,9 +185,18 @@ body {
     z-index: 40;
     align-self: flex-start;
     max-height: calc(100dvh - var(--dashboard-sticky-top) - 1rem);
+    overflow-x: visible;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+}
+
+.qr-font-list {
+  scrollbar-width: none;
+}
+
+.qr-font-list::-webkit-scrollbar {
+  display: none;
 }
 
 .brutal-nav {

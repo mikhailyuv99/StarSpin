@@ -225,10 +225,9 @@ export function QRDesignCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className={`block touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`block w-full max-w-full touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
       style={{
-        width: previewWidth,
-        maxWidth: "100%",
+        maxWidth: previewWidth,
         height: "auto",
         aspectRatio: `${canvasBox.width} / ${canvasBox.height}`,
       }}

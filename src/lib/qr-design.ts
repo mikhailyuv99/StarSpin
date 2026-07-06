@@ -632,20 +632,6 @@ async function renderLayoutDesign(
   ctx.fillStyle = normalizeHex(sideCtx.layoutBg, "#ffffff");
   ctx.fillRect(0, 0, width, height);
 
-  if (template === "table_sticker") {
-    ctx.fillStyle = normalizeHex(sideCtx.accentColor, "#9b7fe8");
-    ctx.fillRect(0, 0, width, 56);
-  } else if (sideCtx.splitPanel) {
-    const panelWidth = Math.round(width * 0.42);
-    ctx.fillStyle = normalizeHex(sideCtx.accentColor, "#9b7fe8");
-    ctx.fillRect(0, 0, panelWidth, height);
-    ctx.fillStyle = normalizeHex(sideCtx.layoutBg, "#fafafa");
-    ctx.fillRect(panelWidth, 0, width - panelWidth, height);
-  } else {
-    ctx.fillStyle = normalizeHex(sideCtx.accentColor, "#9b7fe8");
-    ctx.fillRect(0, height - 12, width, 12);
-  }
-
   if (editor?.showGrid) {
     drawAlignmentGrid(ctx, width, height);
   }
