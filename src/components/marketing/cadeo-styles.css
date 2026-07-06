@@ -181,12 +181,24 @@
 }
 
 .cadeo-nav-locale {
+  flex-shrink: 0;
+}
+
+.cadeo-nav-locale .locale-switcher-trigger {
+  padding: 0.4rem 0.5rem;
+}
+
+.cadeo-nav-locale .locale-switcher-label {
   display: none;
 }
 
 @media (min-width: 900px) {
-  .cadeo-nav-locale {
-    display: block;
+  .cadeo-nav-locale .locale-switcher-trigger {
+    padding: 0.45rem 0.7rem;
+  }
+
+  .cadeo-nav-locale .locale-switcher-label {
+    display: inline;
   }
 }
 
