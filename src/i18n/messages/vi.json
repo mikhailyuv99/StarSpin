@@ -353,6 +353,8 @@
     "prizesConfigured": "Phần thưởng đã cấu hình",
     "noPrizes": "Chưa có phần thưởng.",
     "addPrize": "Thêm phần thưởng",
+    "prizeSaveFailed": "Không thể lưu phần thưởng — kiểm tra nhãn và thử lại.",
+    "redeemValidDaysInvalid": "Số ngày hiệu lực phải từ 1 đến 365.",
     "label": "Nhãn",
     "prizeLabelHint": "Nhãn ngắn trên vòng quay — tối đa {max} ký tự. 2–3 từ (vd. \"Nước miễn phí\").",
     "weight": "Trọng số",

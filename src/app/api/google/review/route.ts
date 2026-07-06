@@ -39,9 +39,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No review link configured" }, { status: 404 });
   }
 
-  const placeId = await resolveAndPersistMerchantPlaceId(supabase, merchant);
+  const resolution = await resolveAndPersistMerchantPlaceId(supabase, merchant);
   const userAgent = request.headers.get("user-agent") ?? "";
-  const destination = buildReviewOpenUrl(placeId, merchant.name, userAgent);
+  const destination = buildReviewOpenUrl(
+    resolution.placeId,
+    merchant.name,
+    userAgent,
+    resolution.resolvedUrl,
+  );
 
   if (!destination) {
     return NextResponse.json({ error: "Could not resolve review link" }, { status: 502 });

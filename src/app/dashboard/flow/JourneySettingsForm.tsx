@@ -5,6 +5,7 @@ import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
 import { extractGooglePlaceId, sanitizeGooglePlaceId } from "@/lib/google-place-id";
+import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -180,7 +181,11 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       tripadvisor: form.tripadvisor || undefined,
     };
 
-    const resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, form.google_review_link);
+    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, form.google_review_link);
+    if (!resolvedPlaceId && form.google_review_link.trim()) {
+      const resolved = await resolveGooglePlaceIdViaApi(form.google_review_link);
+      resolvedPlaceId = resolved.placeId;
+    }
 
     const { error: updateError } = await supabase
       .from("merchants")
@@ -201,6 +206,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     if (updateError) {
       setError(updateError.message);
       return;
+    }
+    if (resolvedPlaceId) {
+      setPlaceIdWarning(false);
     }
     setMessage(t("common.saved"));
     router.refresh();

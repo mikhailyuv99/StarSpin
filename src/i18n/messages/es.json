@@ -353,6 +353,8 @@
     "prizesConfigured": "Premios configurados",
     "noPrizes": "Aún no hay premios.",
     "addPrize": "Añadir un premio",
+    "prizeSaveFailed": "No se pudo guardar el premio — revisa la etiqueta e inténtalo de nuevo.",
+    "redeemValidDaysInvalid": "Los días de validez deben estar entre 1 y 365.",
     "label": "Etiqueta",
     "prizeLabelHint": "Texto corto para la ruleta — máx. {max} caracteres. 2–3 palabras (ej. \"Bebida gratis\").",
     "weight": "Peso",

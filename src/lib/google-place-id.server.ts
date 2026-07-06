@@ -1,8 +1,13 @@
 import "server-only";
 import {
+  buildMapsCidUrl,
   buildGoogleWriteReviewUrl,
+  extractFtidFromUrl,
   extractGooglePlaceId,
+  extractMapsQueryFromUrl,
+  isSafeMapsDestination,
   isValidGooglePlaceId,
+  normalizeGoogleReviewLink,
   sanitizeGooglePlaceId,
 } from "@/lib/google-place-id";
 
@@ -12,6 +17,19 @@ const BROWSER_HEADERS = {
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
 };
+
+export type GoogleLinkResolution = {
+  placeId: string | null;
+  resolvedUrl: string | null;
+};
+
+function emptyResolution(): GoogleLinkResolution {
+  return { placeId: null, resolvedUrl: null };
+}
+
+function resolution(placeId: string | null, resolvedUrl: string | null = null): GoogleLinkResolution {
+  return { placeId, resolvedUrl };
+}
 
 function extractPlaceIdFromHtml(html: string): string | null {
   const patterns = [
@@ -29,6 +47,18 @@ function extractPlaceIdFromHtml(html: string): string | null {
   }
 
   return extractGooglePlaceId(html);
+}
+
+function pickResolvedUrl(finalUrl: string): string | null {
+  if (isSafeMapsDestination(finalUrl)) return finalUrl;
+
+  const ftid = extractFtidFromUrl(finalUrl);
+  if (ftid) {
+    const cidUrl = buildMapsCidUrl(ftid);
+    if (cidUrl) return cidUrl;
+  }
+
+  return null;
 }
 
 async function findPlaceIdByTextSearch(query: string): Promise<string | null> {
@@ -71,65 +101,83 @@ async function findPlaceIdByTextSearch(query: string): Promise<string | null> {
   return null;
 }
 
-export async function resolveGooglePlaceIdFromLink(url: string): Promise<string | null> {
-  const quick = extractGooglePlaceId(url);
-  if (quick) return quick;
+export async function resolveGooglePlaceIdFromLink(url: string): Promise<GoogleLinkResolution> {
+  const normalized = normalizeGoogleReviewLink(url) ?? url.trim();
+  if (!normalized) return emptyResolution();
 
-  const trimmed = url.trim();
-  if (!/^https?:\/\//i.test(trimmed)) return null;
+  const quick = extractGooglePlaceId(normalized);
+  if (quick) return resolution(quick);
+
+  if (!/^https?:\/\//i.test(normalized)) return emptyResolution();
 
   try {
-    const res = await fetch(trimmed, {
+    const res = await fetch(normalized, {
       redirect: "follow",
       headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(15_000),
     });
 
-    const fromUrl = extractGooglePlaceId(res.url);
-    if (fromUrl) return fromUrl;
+    const finalUrl = res.url;
+    const resolvedUrl = pickResolvedUrl(finalUrl);
+
+    const fromUrl = extractGooglePlaceId(finalUrl);
+    if (fromUrl) return resolution(fromUrl, resolvedUrl);
 
     const html = await res.text();
     const fromHtml = extractPlaceIdFromHtml(html.slice(0, 200_000));
-    if (fromHtml) return fromHtml;
+    if (fromHtml) return resolution(fromHtml, resolvedUrl);
+
+    const query = extractMapsQueryFromUrl(finalUrl);
+    if (query) {
+      const fromQuery = await findPlaceIdByTextSearch(query);
+      if (fromQuery) return resolution(fromQuery, resolvedUrl);
+    }
+
+    return resolution(null, resolvedUrl);
   } catch (err) {
     console.error("resolveGooglePlaceIdFromLink:", err);
+    return emptyResolution();
   }
-
-  return null;
 }
 
 export async function resolveMerchantGooglePlaceId(merchant: {
   name?: string | null;
   google_place_id: string | null;
   google_review_link: string | null;
-}): Promise<string | null> {
+}): Promise<GoogleLinkResolution> {
   const quick = sanitizeGooglePlaceId(merchant.google_place_id, merchant.google_review_link);
-  if (quick) return quick;
+  if (quick) return resolution(quick);
+
+  let resolvedUrl: string | null = null;
 
   const link = merchant.google_review_link?.trim();
   if (link) {
     const fromLink = await resolveGooglePlaceIdFromLink(link);
-    if (fromLink) return fromLink;
+    resolvedUrl = fromLink.resolvedUrl;
+    if (fromLink.placeId) return fromLink;
   }
 
   const stored = merchant.google_place_id?.trim();
   if (stored && stored.startsWith("http")) {
     const fromStored = await resolveGooglePlaceIdFromLink(stored);
-    if (fromStored) return fromStored;
+    resolvedUrl = resolvedUrl ?? fromStored.resolvedUrl;
+    if (fromStored.placeId) {
+      return resolution(fromStored.placeId, fromStored.resolvedUrl ?? resolvedUrl);
+    }
   }
 
   const name = merchant.name?.trim();
   if (name) {
     const fromName = await findPlaceIdByTextSearch(name);
-    if (fromName) return fromName;
+    if (fromName) return resolution(fromName, resolvedUrl);
   }
 
   if (name && link) {
     const fromCombo = await findPlaceIdByTextSearch(`${name} ${link}`);
-    if (fromCombo) return fromCombo;
+    if (fromCombo) return resolution(fromCombo, resolvedUrl);
   }
 
-  return null;
+  return resolution(null, resolvedUrl);
 }
 
 function buildMapsPlaceUrl(placeId: string): string {
@@ -140,17 +188,22 @@ function buildMapsNameSearchUrl(name: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
 }
 
-/** Final URL customers should open — never a share.google link. */
+/** Final URL customers should open — never a share.google / goo.gl link. */
 export function buildReviewOpenUrl(
   placeId: string | null,
   merchantName: string | null,
   userAgent: string,
+  resolvedUrl?: string | null,
 ): string | null {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
 
   if (placeId) {
     if (isMobile) return buildMapsPlaceUrl(placeId);
     return buildGoogleWriteReviewUrl(placeId);
+  }
+
+  if (resolvedUrl && isSafeMapsDestination(resolvedUrl)) {
+    return resolvedUrl;
   }
 
   if (merchantName?.trim()) {
@@ -168,16 +221,16 @@ export async function resolveAndPersistMerchantPlaceId(
     google_place_id: string | null;
     google_review_link: string | null;
   },
-): Promise<string | null> {
-  const placeId = await resolveMerchantGooglePlaceId(merchant);
+): Promise<GoogleLinkResolution> {
+  const result = await resolveMerchantGooglePlaceId(merchant);
 
-  if (placeId && placeId !== merchant.google_place_id) {
-    await supabase.from("merchants").update({ google_place_id: placeId }).eq("id", merchant.id);
+  if (result.placeId && result.placeId !== merchant.google_place_id) {
+    await supabase.from("merchants").update({ google_place_id: result.placeId }).eq("id", merchant.id);
   }
 
-  if (!placeId && merchant.google_place_id && !isValidGooglePlaceId(merchant.google_place_id)) {
+  if (!result.placeId && merchant.google_place_id && !isValidGooglePlaceId(merchant.google_place_id)) {
     await supabase.from("merchants").update({ google_place_id: null }).eq("id", merchant.id);
   }
 
-  return placeId;
+  return result;
 }

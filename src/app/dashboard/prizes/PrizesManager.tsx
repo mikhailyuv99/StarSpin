@@ -22,6 +22,33 @@ type PrizeForm = {
   redemption: RedemptionFormState;
 };
 
+function normalizeWeight(value: number): number {
+  if (!Number.isFinite(value) || value < 1) return 1;
+  return Math.floor(value);
+}
+
+function buildPrizePayload(form: PrizeForm) {
+  const validDays = form.redemption.redeem_valid_days.trim()
+    ? parseInt(form.redemption.redeem_valid_days, 10)
+    : null;
+
+  if (validDays !== null && (validDays < 1 || validDays > 365)) {
+    throw new Error("invalid_valid_days");
+  }
+
+  const label = clampPrizeLabel(form.label);
+  if (!label) {
+    throw new Error("empty_label");
+  }
+
+  return {
+    label,
+    probability_weight: normalizeWeight(form.probability_weight),
+    stock_remaining: form.stock_remaining ? parseInt(form.stock_remaining, 10) : null,
+    ...buildRedemptionPayload(form.redemption),
+  };
+}
+
 function buildRedemptionPayload(redemption: RedemptionFormState) {
   const validDays = redemption.redeem_valid_days.trim()
     ? parseInt(redemption.redeem_valid_days, 10)
@@ -57,6 +84,7 @@ export function PrizesManager({
   const [editForm, setEditForm] = useState<PrizeForm>(emptyPrizeForm());
   const [newPrize, setNewPrize] = useState<PrizeForm>(emptyPrizeForm());
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = () => router.refresh();
 
@@ -76,16 +104,28 @@ export function PrizesManager({
 
   const saveEdit = async (id: string) => {
     setSaving(true);
+    setError(null);
     const supabase = createClient();
-    const payload = {
-      label: clampPrizeLabel(editForm.label),
-      probability_weight: editForm.probability_weight,
-      stock_remaining: editForm.stock_remaining ? parseInt(editForm.stock_remaining, 10) : null,
-      ...buildRedemptionPayload(editForm.redemption),
-    };
-    const { data, error } = await supabase.from("prizes").update(payload).eq("id", id).select().single();
+    let payload;
+    try {
+      payload = buildPrizePayload(editForm);
+    } catch (e) {
+      setSaving(false);
+      if (e instanceof Error && e.message === "invalid_valid_days") {
+        setError(t("dashboard.redeemValidDaysInvalid"));
+      } else {
+        setError(t("dashboard.prizeSaveFailed"));
+      }
+      return;
+    }
+    const { data, error: saveError } = await supabase.from("prizes").update(payload).eq("id", id).select().single();
 
-    if (!error && data) {
+    if (saveError) {
+      setError(saveError.message);
+      setSaving(false);
+      return;
+    }
+    if (data) {
       setPrizes((p) => p.map((x) => (x.id === id ? (data as Prize) : x)));
       setEditingId(null);
       refresh();
@@ -94,24 +134,41 @@ export function PrizesManager({
   };
 
   const addPrize = async () => {
+    setSaving(true);
+    setError(null);
     const supabase = createClient();
-    const { data, error } = await supabase
+    let payload;
+    try {
+      payload = buildPrizePayload(newPrize);
+    } catch (e) {
+      setSaving(false);
+      if (e instanceof Error && e.message === "invalid_valid_days") {
+        setError(t("dashboard.redeemValidDaysInvalid"));
+      } else {
+        setError(t("dashboard.prizeSaveFailed"));
+      }
+      return;
+    }
+    const { data, error: insertError } = await supabase
       .from("prizes")
       .insert({
         merchant_id: merchantId,
-        label: clampPrizeLabel(newPrize.label),
-        probability_weight: newPrize.probability_weight,
-        stock_remaining: newPrize.stock_remaining ? parseInt(newPrize.stock_remaining, 10) : null,
-        ...buildRedemptionPayload(newPrize.redemption),
+        ...payload,
       })
       .select()
       .single();
 
-    if (!error && data) {
+    if (insertError) {
+      setError(insertError.message);
+      setSaving(false);
+      return;
+    }
+    if (data) {
       setPrizes((p) => [...p, data as Prize]);
       setNewPrize(emptyPrizeForm());
       refresh();
     }
+    setSaving(false);
   };
 
   const toggleActive = async (prize: Prize) => {
@@ -143,6 +200,7 @@ export function PrizesManager({
 
   return (
     <div className="space-y-8">
+      {error && <p className={ui.alertError}>{error}</p>}
       <div className={ui.card}>
         <h2 className={ui.h2}>{t("dashboard.prizesConfigured")}</h2>
         {prizes.length === 0 ? (
@@ -271,7 +329,10 @@ export function PrizesManager({
               type="number"
               value={newPrize.probability_weight}
               onChange={(e) =>
-                setNewPrize((p) => ({ ...p, probability_weight: parseInt(e.target.value, 10) }))
+                setNewPrize((p) => ({
+                  ...p,
+                  probability_weight: normalizeWeight(parseInt(e.target.value, 10)),
+                }))
               }
               className={ui.input}
             />
@@ -294,10 +355,10 @@ export function PrizesManager({
         <button
           type="button"
           onClick={addPrize}
-          disabled={!newPrize.label}
+          disabled={saving || !newPrize.label.trim()}
           className={`mt-5 ${ui.btn}`}
         >
-          {t("common.add")}
+          {saving ? t("common.saving") : t("common.add")}
         </button>
       </div>
     </div>

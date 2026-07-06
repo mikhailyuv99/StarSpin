@@ -1,16 +1,98 @@
+const GOOGLE_MAPS_HOST_RE =
+  /^https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|share\.google|(?:www\.)?google\.[a-z.]+\/maps)/i;
+
+/** Pull the first Google Maps / review URL from messy pasted text (duplicate links, extra text). */
+export function normalizeGoogleReviewLink(raw: string | null | undefined): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) return null;
+
+  const chunks = trimmed
+    .split(/(?=https?:\/\/)/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  for (const chunk of chunks.length > 0 ? chunks : [trimmed]) {
+    const url = chunk.replace(/[),.;]+$/, "");
+    if (GOOGLE_MAPS_HOST_RE.test(url)) return url;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    const first = trimmed.split(/(?=https?:\/\/)/i)[0]?.replace(/[),.;]+$/, "");
+    return first || null;
+  }
+
+  return null;
+}
+
 /** Google Place IDs always start with ChI and are alphanumeric. */
 export function isValidGooglePlaceId(value: string | null | undefined): value is string {
   if (!value?.trim()) return false;
   return /^ChI[Jk][A-Za-z0-9_-]{20,}$/.test(value.trim());
 }
 
-function isUnsafeReviewLink(url: string): boolean {
+export function isUnsafeReviewLink(url: string): boolean {
   const lower = url.toLowerCase();
   return (
     lower.includes("share.google") ||
     lower.includes("maps.app.goo.gl") ||
     lower.includes("goo.gl/maps")
   );
+}
+
+/** Maps destination safe to send customers to (not short/share links). */
+export function isSafeMapsDestination(url: string): boolean {
+  if (isUnsafeReviewLink(url)) return false;
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    if (!host.endsWith("google.com")) return false;
+    if (host === "search.google.com") return u.pathname.includes("/local/writereview");
+    return (
+      host.startsWith("maps.") ||
+      u.pathname.includes("/maps") ||
+      u.searchParams.has("cid") ||
+      u.searchParams.has("ftid") ||
+      u.searchParams.has("q") ||
+      u.searchParams.has("query_place_id")
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Business name from a resolved Google Maps URL (?q=…). */
+export function extractMapsQueryFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const q = u.searchParams.get("q") ?? u.searchParams.get("query");
+    if (!q?.trim()) return null;
+    return decodeURIComponent(q.replace(/\+/g, " ")).trim();
+  } catch {
+    return null;
+  }
+}
+
+/** Feature id from Maps URLs (e.g. ftid=0xabc:0xdef). */
+export function extractFtidFromUrl(url: string): string | null {
+  try {
+    const decoded = decodeURIComponent(url);
+    const match = decoded.match(/[?&]ftid=(0x[a-f0-9]+:0x[a-f0-9]+)/i);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Stable Maps listing URL from an ftid pair. */
+export function buildMapsCidUrl(ftid: string): string | null {
+  const hex = ftid.split(":")[1];
+  if (!hex) return null;
+  try {
+    const cid = BigInt(hex).toString(10);
+    return `https://maps.google.com/maps?cid=${cid}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Extract a Google Place ID from common Maps / review URLs. */

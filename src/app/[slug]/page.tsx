@@ -33,7 +33,7 @@ export default async function PublicMerchantPage({
 
   if (error || !merchantRow) notFound();
 
-  const resolvedPlaceId = await resolveAndPersistMerchantPlaceId(supabase, {
+  const resolution = await resolveAndPersistMerchantPlaceId(supabase, {
     id: merchantRow.id,
     name: merchantRow.name,
     google_place_id: merchantRow.google_place_id,
@@ -42,7 +42,7 @@ export default async function PublicMerchantPage({
 
   const merchant = {
     ...merchantRow,
-    google_place_id: resolvedPlaceId ?? null,
+    google_place_id: resolution.placeId ?? null,
   } as Merchant;
 
   const { data: prizes } = await supabase
