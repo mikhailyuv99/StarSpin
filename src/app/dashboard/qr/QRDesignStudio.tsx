@@ -280,7 +280,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   );
 
   return (
-    <div className="qr-design-studio space-y-4 pb-0 lg:space-y-8">
+    <div className="qr-design-studio space-y-4 lg:space-y-8">
       <div className="flex flex-wrap gap-2 pb-1">
         {TEMPLATES.map((value) => (
           <button
@@ -301,12 +301,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
-        <div className="order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20">
-          {previewPanel}
-        </div>
-
-        <div className="order-2 min-w-0 space-y-4 pb-0 lg:order-1 lg:space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+        <div className="order-2 min-w-0 flex-1 space-y-4 lg:order-1 lg:space-y-6">
           <form
             onSubmit={(e) => e.preventDefault()}
             className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
@@ -447,7 +443,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             </div>
           </form>
 
-          <section className={`${ui.card} mb-0 flex items-start justify-between gap-4 max-lg:p-4 lg:mb-0`}>
+          <section className={`${ui.card} flex items-start justify-between gap-4 max-lg:p-4`}>
             <div className="min-w-0">
               <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
               <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
@@ -456,6 +452,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               {t("dashboard.qrOrderBadge")}
             </span>
           </section>
+        </div>
+
+        <div className="order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20">
+          {previewPanel}
         </div>
       </div>
     </div>

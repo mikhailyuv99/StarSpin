@@ -189,17 +189,11 @@ body {
   }
 }
 
-/* QR studio: end page at content — no 100vh stretch or shell padding gap */
+/* QR studio: no forced viewport stretch; room for card shadows at the bottom */
 .brutal-page:has(.qr-design-studio-page) {
   min-height: 0 !important;
   height: auto !important;
-  padding-bottom: env(safe-area-inset-bottom, 0) !important;
-}
-
-.qr-design-studio-page,
-.qr-design-studio {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 @media (max-width: 1023px) {
@@ -208,6 +202,8 @@ body {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    /* overflow clips neo-brutalist shadows — keep bottom breathing room */
+    padding-bottom: 1.25rem;
   }
 }
 
