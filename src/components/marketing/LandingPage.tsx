@@ -31,6 +31,8 @@ function Nav() {
     { type: "anchor", href: "#features", label: t("marketing.navFeatures") },
     { type: "anchor", href: "#pricing", label: t("marketing.navPricing") },
     { type: "anchor", href: "#faq", label: t("marketing.navFaq") },
+    { type: "link", href: "/login", label: t("marketing.navLogin") },
+    { type: "link", href: "/login?mode=signup", label: t("marketing.navSignup") },
   ];
 
   return (
@@ -43,6 +45,12 @@ function Nav() {
           <a href="#faq">{t("marketing.navFaq")}</a>
         </div>
         <div className="cadeo-nav-actions">
+          <Link href="/login" className="cadeo-btn cadeo-btn-outline cadeo-nav-auth-btn">
+            {t("marketing.navLogin")}
+          </Link>
+          <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-nav-auth-btn">
+            {t("marketing.navSignup")}
+          </Link>
           <LocaleSwitcher variant="brutal" />
           <BrutalMobileMenu items={menuItems} className="cadeo-nav-burger" />
         </div>
@@ -94,13 +102,22 @@ function Hero() {
           <p className="cadeo-hero-lead">{t("marketing.heroSubtitle")}</p>
           <p className="cadeo-sub cadeo-hero-body">{t("marketing.heroBody")}</p>
           <div className="cadeo-hero-actions">
-            <Link href="/login" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
-              ✨ {t("marketing.magicRecipe")}
+            <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
+              {t("marketing.heroSignup")}
+            </Link>
+            <Link href="/login" className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
+              {t("marketing.heroLogin")}
             </Link>
             <a href="#pricing" className="cadeo-btn cadeo-btn-outline cadeo-btn-lg">
-              {t("marketing.heroDemo")}
+              {t("marketing.heroPricing")}
             </a>
           </div>
+          <p className="cadeo-hero-mini-trust">
+            <span className="cadeo-hero-mini-trust-stars" aria-hidden>
+              ★★★★★
+            </span>
+            {t("marketing.heroTrialNote")}
+          </p>
         </Reveal>
 
         <Reveal className="cadeo-hero-visual" y={40} delay={0.08}>

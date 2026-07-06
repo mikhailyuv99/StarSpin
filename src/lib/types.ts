@@ -25,6 +25,11 @@ export interface Merchant {
   billing_plan?: "monthly" | "quarterly" | "annual" | null;
   spin_cooldown_days?: number;
   flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
+  qr_fg_color?: string;
+  qr_bg_color?: string;
+  customer_page_headline?: string | null;
+  customer_page_subtitle?: string | null;
+  spin_button_label?: string | null;
   created_at: string;
 }
 

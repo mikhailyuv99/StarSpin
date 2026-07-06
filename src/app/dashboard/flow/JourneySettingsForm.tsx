@@ -76,6 +76,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     tiktok: merchant.social_links.tiktok ?? "",
     tripadvisor: merchant.social_links.tripadvisor ?? "",
     logo_url: merchant.logo_url ?? "",
+    customer_page_headline: merchant.customer_page_headline ?? "",
+    customer_page_subtitle: merchant.customer_page_subtitle ?? "",
+    spin_button_label: merchant.spin_button_label ?? "",
   });
   const [placeIdWarning, setPlaceIdWarning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -201,6 +204,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         social_links,
         logo_url: form.logo_url || null,
         flow_steps: steps,
+        customer_page_headline: form.customer_page_headline.trim() || null,
+        customer_page_subtitle: form.customer_page_subtitle.trim() || null,
+        spin_button_label: form.spin_button_label.trim() || null,
       })
       .eq("id", merchant.id);
 
@@ -273,6 +279,44 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
             label={t("dashboard.colorPreviewSecondary")}
             value={form.secondary_color}
             onChange={(v) => update("secondary_color", v)}
+          />
+        </div>
+      </section>
+
+      <section className={`${ui.card} space-y-5`}>
+        <div>
+          <h2 className={ui.h2}>{t("dashboard.journeyCopyTitle")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("dashboard.journeyCopySubtitle")}</p>
+        </div>
+
+        <div>
+          <label className={ui.label}>{t("dashboard.customerPageHeadline")}</label>
+          <input
+            value={form.customer_page_headline}
+            onChange={(e) => update("customer_page_headline", e.target.value)}
+            className={ui.input}
+            placeholder={form.name || merchant.name}
+          />
+          <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.customerPageHeadlineHint")}</p>
+        </div>
+
+        <div>
+          <label className={ui.label}>{t("dashboard.customerPageSubtitle")}</label>
+          <input
+            value={form.customer_page_subtitle}
+            onChange={(e) => update("customer_page_subtitle", e.target.value)}
+            className={ui.input}
+            placeholder={t("public.headerSubtitle")}
+          />
+        </div>
+
+        <div>
+          <label className={ui.label}>{t("dashboard.spinButtonLabel")}</label>
+          <input
+            value={form.spin_button_label}
+            onChange={(e) => update("spin_button_label", e.target.value)}
+            className={ui.input}
+            placeholder={t("public.spinButton")}
           />
         </div>
       </section>

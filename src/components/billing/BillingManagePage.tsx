@@ -301,29 +301,37 @@ export function BillingManagePage({
 
         {actionError && <p className={ui.alertError}>{actionError}</p>}
 
+        {canManageSubscription && (
+          <section className="space-y-3 rounded-[14px] border-2 border-red-300 bg-red-50/80 p-4">
+            <h3 className="text-sm font-extrabold uppercase tracking-wide text-red-900">
+              {t("billing.manageCancelSection")}
+            </h3>
+            <p className="text-sm font-medium text-red-900/80">{t("billing.manageCancelHelp")}</p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              {!live.cancelAtPeriodEnd ? (
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={actionLoading !== null}
+                  className={`${ui.btnDanger} !w-auto`}
+                >
+                  {actionLoading === "cancel" ? t("common.loading") : t("billing.manageCancel")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResume}
+                  disabled={actionLoading !== null}
+                  className={`${ui.btnSuccess} !w-auto`}
+                >
+                  {actionLoading === "resume" ? t("common.loading") : t("billing.manageResume")}
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
         <div className="flex flex-wrap gap-3 border-t-2 border-black/10 pt-4">
-          {canManageSubscription && !live.cancelAtPeriodEnd && (
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={actionLoading !== null}
-              className={`${ui.btnDanger} !w-auto`}
-            >
-              {actionLoading === "cancel" ? t("common.loading") : t("billing.manageCancel")}
-            </button>
-          )}
-
-          {canManageSubscription && live.cancelAtPeriodEnd && (
-            <button
-              type="button"
-              onClick={handleResume}
-              disabled={actionLoading !== null}
-              className={`${ui.btnSuccess} !w-auto`}
-            >
-              {actionLoading === "resume" ? t("common.loading") : t("billing.manageResume")}
-            </button>
-          )}
-
           {!canManageSubscription && !isSubscribed && (
             <Link href="/subscribe" className={`${ui.btnYellow} !w-auto px-5 inline-flex`}>
               {t("dashboard.subscribeCta")}

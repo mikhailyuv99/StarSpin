@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 import type { User } from "@supabase/supabase-js";
 import type { BillingPlan } from "@/lib/billing";
+import { SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
 
 export async function ensureStripeCustomer(
@@ -97,7 +98,7 @@ export async function createSubscriptionPaymentSecret(
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceIdForPlan(plan) }],
-    trial_period_days: 7,
+    trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
     payment_behavior: "default_incomplete",
     payment_settings: {
       save_default_payment_method: "on_subscription",

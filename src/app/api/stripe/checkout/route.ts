@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
-import { isBillingPlan } from "@/lib/billing";
+import { isBillingPlan, SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
 
 export async function POST(request: Request) {
   try {
@@ -60,6 +60,7 @@ export async function POST(request: Request) {
         plan: body.plan,
       },
       subscription_data: {
+        trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
         metadata: {
           merchant_id: merchant.id,
           plan: body.plan,

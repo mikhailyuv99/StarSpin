@@ -179,6 +179,19 @@
   flex-shrink: 0;
 }
 
+.cadeo-nav-auth-btn {
+  display: none;
+  white-space: nowrap;
+  padding-inline: 0.85rem;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .cadeo-nav-auth-btn {
+    display: inline-flex;
+  }
+}
+
 .cadeo-nav-links {
   display: none;
   align-items: center;
@@ -2011,6 +2024,13 @@
   font-weight: 700;
   opacity: 0.55;
   line-height: 1.2;
+}
+
+.cadeo-pricing-trial {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.7;
 }
 
 .cadeo-pricing-wallets {

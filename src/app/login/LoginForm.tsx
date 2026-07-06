@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "@/i18n/client";
@@ -50,6 +50,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
   const planParam = searchParams.get("plan");
+  const signupMode = searchParams.get("mode") === "signup";
   const postAuthPath =
     planParam && isBillingPlan(planParam)
       ? `/subscribe/checkout?plan=${planParam as BillingPlan}`
@@ -57,11 +58,15 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(signupMode);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsSignup(searchParams.get("mode") === "signup");
+  }, [searchParams]);
 
   const handleOAuth = async (provider: "google" | "apple") => {
     setOauthLoading(provider);

@@ -5,6 +5,9 @@ import { useTranslations } from "@/i18n/client";
 
 export function MerchantHeader({ merchant }: { merchant: Merchant }) {
   const t = useTranslations();
+  const headline = merchant.customer_page_headline?.trim() || merchant.name;
+  const subtitle = merchant.customer_page_subtitle?.trim() || t("public.headerSubtitle");
+
   return (
     <header className="mb-5 text-center sm:mb-6">
       {merchant.logo_url && (
@@ -15,9 +18,9 @@ export function MerchantHeader({ merchant }: { merchant: Merchant }) {
         />
       )}
       <h1 className="font-[family-name:var(--font-display)] text-balance text-xl font-extrabold uppercase leading-tight text-ink sm:text-2xl">
-        {merchant.name}
+        {headline}
       </h1>
-      <p className="mt-1.5 text-sm font-semibold text-muted sm:mt-2">{t("public.headerSubtitle")}</p>
+      <p className="mt-1.5 text-sm font-semibold text-muted sm:mt-2">{subtitle}</p>
     </header>
   );
 }

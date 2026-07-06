@@ -79,6 +79,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
   const spinPrefetchStarted = useRef(false);
 
   const accent = merchant.primary_color;
+  const spinLabel = merchant.spin_button_label?.trim() || t("public.spinButton");
   const stepIndex = stepOrder.indexOf(step);
   const progress = ((stepIndex + 1) / stepOrder.length) * 100;
   const btnStyle = { backgroundColor: accent, color: contrastTextColor(accent) };
@@ -465,7 +466,7 @@ export function PublicFlow({ merchant, prizes }: PublicFlowProps) {
                         ? t("public.spinPreparing")
                         : spinning
                           ? t("public.wheelSpinning")
-                          : t("public.spinButton")}
+                          : spinLabel}
                     </button>
                   )}
                 </motion.div>

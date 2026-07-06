@@ -42,6 +42,8 @@ export function PricingPlans({ ctaClassName = "cadeo-btn cadeo-btn-purple cadeo-
 
       <PlanPriceDisplay plan={plan} />
 
+      <p className="cadeo-pricing-trial">{t("marketing.pricingTrialNote")}</p>
+
       <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
 
       <SubscribeButton plan={plan} className={ctaClassName}>
