@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
-import { sanitizeGooglePlaceId } from "@/lib/google-place-id";
+import { normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 
 export function BrandingForm({
@@ -68,10 +68,12 @@ export function BrandingForm({
 
     const supabase = createClient();
 
-    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, form.google_review_link);
-    if (!resolvedPlaceId && form.google_review_link.trim()) {
-      const resolved = await resolveGooglePlaceIdViaApi(form.google_review_link);
+    let googleReviewLink = normalizeGoogleReviewLink(form.google_review_link) ?? form.google_review_link.trim();
+    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, googleReviewLink);
+    if (!resolvedPlaceId && googleReviewLink) {
+      const resolved = await resolveGooglePlaceIdViaApi(googleReviewLink);
       resolvedPlaceId = resolved.placeId;
+      if (resolved.normalizedLink) googleReviewLink = resolved.normalizedLink;
     }
 
     const { error } = await supabase
@@ -80,7 +82,7 @@ export function BrandingForm({
         name: form.name,
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
-        google_review_link: form.google_review_link || null,
+        google_review_link: googleReviewLink || null,
         google_place_id: resolvedPlaceId,
         social_links,
         logo_url: form.logo_url || null,

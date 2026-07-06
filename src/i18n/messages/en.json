@@ -354,6 +354,8 @@
     "noPrizes": "No prizes yet.",
     "addPrize": "Add a prize",
     "prizeSaveFailed": "Could not save prize — check the label and try again.",
+    "prizeDeleteHasSpins": "This prize has spin history and could not be removed. Deactivate it instead, or run the latest database migration.",
+    "prizeStockInvalid": "Stock must be a whole number of 0 or more.",
     "redeemValidDaysInvalid": "Validity days must be between 1 and 365.",
     "label": "Label",
     "prizeLabelHint": "Short label for the wheel — max {max} characters. Use 2–3 words (e.g. \"Free drink\").",

@@ -1,6 +1,8 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
 import { resolveAndPersistMerchantPlaceId } from "@/lib/google-place-id.server";
+import { activeWheelPrizes } from "@/lib/prizes";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import type { Merchant, Prize } from "@/lib/types";
@@ -12,6 +14,7 @@ export default async function PublicMerchantPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  noStore();
   const { slug: rawSlug } = await params;
   const slug = rawSlug.trim().toLowerCase();
 
@@ -49,7 +52,10 @@ export default async function PublicMerchantPage({
     .from("prizes")
     .select("*")
     .eq("merchant_id", merchant.id)
-    .eq("active", true);
+    .eq("active", true)
+    .order("created_at");
 
-  return <PublicFlow merchant={merchant} prizes={(prizes ?? []) as Prize[]} />;
+  return (
+    <PublicFlow merchant={merchant} prizes={activeWheelPrizes((prizes ?? []) as Prize[])} />
+  );
 }

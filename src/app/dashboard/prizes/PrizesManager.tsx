@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { Prize } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -36,6 +35,16 @@ function buildPrizePayload(form: PrizeForm) {
     throw new Error("invalid_valid_days");
   }
 
+  const stockRaw = form.stock_remaining.trim();
+  let stock_remaining: number | null = null;
+  if (stockRaw) {
+    const parsed = parseInt(stockRaw, 10);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      throw new Error("invalid_stock");
+    }
+    stock_remaining = parsed;
+  }
+
   const label = clampPrizeLabel(form.label);
   if (!label) {
     throw new Error("empty_label");
@@ -44,7 +53,7 @@ function buildPrizePayload(form: PrizeForm) {
   return {
     label,
     probability_weight: normalizeWeight(form.probability_weight),
-    stock_remaining: form.stock_remaining ? parseInt(form.stock_remaining, 10) : null,
+    stock_remaining,
     ...buildRedemptionPayload(form.redemption),
   };
 }
@@ -68,6 +77,16 @@ function emptyPrizeForm(): PrizeForm {
     stock_remaining: "",
     redemption: emptyRedemptionForm(),
   };
+}
+
+function mapPrizeApiError(code: string | undefined, t: (key: string) => string): string {
+  if (code === "prize_has_spins") return t("dashboard.prizeDeleteHasSpins");
+  if (code === "empty_label" || code === "invalid_valid_days" || code === "invalid_stock") {
+    if (code === "invalid_valid_days") return t("dashboard.redeemValidDaysInvalid");
+    if (code === "invalid_stock") return t("dashboard.prizeStockInvalid");
+    return t("dashboard.prizeSaveFailed");
+  }
+  return code ?? t("dashboard.prizeSaveFailed");
 }
 
 export function PrizesManager({
@@ -105,7 +124,6 @@ export function PrizesManager({
   const saveEdit = async (id: string) => {
     setSaving(true);
     setError(null);
-    const supabase = createClient();
     let payload;
     try {
       payload = buildPrizePayload(editForm);
@@ -113,20 +131,38 @@ export function PrizesManager({
       setSaving(false);
       if (e instanceof Error && e.message === "invalid_valid_days") {
         setError(t("dashboard.redeemValidDaysInvalid"));
+      } else if (e instanceof Error && e.message === "invalid_stock") {
+        setError(t("dashboard.prizeStockInvalid"));
       } else {
         setError(t("dashboard.prizeSaveFailed"));
       }
       return;
     }
-    const { data, error: saveError } = await supabase.from("prizes").update(payload).eq("id", id).select().single();
 
-    if (saveError) {
-      setError(saveError.message);
+    const apiRes = await fetch("/api/dashboard/prizes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        label: payload.label,
+        probability_weight: payload.probability_weight,
+        stock_remaining: payload.stock_remaining,
+        redeem_next_visit: payload.redeem_next_visit,
+        redeem_min_spend: editForm.redemption.redeem_min_spend,
+        redeem_valid_days: payload.redeem_valid_days,
+      }),
+    });
+
+    if (!apiRes.ok) {
+      const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setError(mapPrizeApiError(errBody.error, t));
       setSaving(false);
       return;
     }
-    if (data) {
-      setPrizes((p) => p.map((x) => (x.id === id ? (data as Prize) : x)));
+
+    const apiData = (await apiRes.json()) as { prize?: Prize };
+    if (apiData.prize) {
+      setPrizes((p) => p.map((x) => (x.id === id ? apiData.prize! : x)));
       setEditingId(null);
       refresh();
     }
@@ -136,7 +172,6 @@ export function PrizesManager({
   const addPrize = async () => {
     setSaving(true);
     setError(null);
-    const supabase = createClient();
     let payload;
     try {
       payload = buildPrizePayload(newPrize);
@@ -144,27 +179,36 @@ export function PrizesManager({
       setSaving(false);
       if (e instanceof Error && e.message === "invalid_valid_days") {
         setError(t("dashboard.redeemValidDaysInvalid"));
+      } else if (e instanceof Error && e.message === "invalid_stock") {
+        setError(t("dashboard.prizeStockInvalid"));
       } else {
         setError(t("dashboard.prizeSaveFailed"));
       }
       return;
     }
-    const { data, error: insertError } = await supabase
-      .from("prizes")
-      .insert({
-        merchant_id: merchantId,
-        ...payload,
-      })
-      .select()
-      .single();
+    const apiRes = await fetch("/api/dashboard/prizes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        label: payload.label,
+        probability_weight: payload.probability_weight,
+        stock_remaining: payload.stock_remaining,
+        redeem_next_visit: payload.redeem_next_visit,
+        redeem_min_spend: newPrize.redemption.redeem_min_spend,
+        redeem_valid_days: payload.redeem_valid_days,
+      }),
+    });
 
-    if (insertError) {
-      setError(insertError.message);
+    if (!apiRes.ok) {
+      const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setError(mapPrizeApiError(errBody.error, t));
       setSaving(false);
       return;
     }
-    if (data) {
-      setPrizes((p) => [...p, data as Prize]);
+
+    const apiData = (await apiRes.json()) as { prize?: Prize };
+    if (apiData.prize) {
+      setPrizes((p) => [...p, apiData.prize!]);
       setNewPrize(emptyPrizeForm());
       refresh();
     }
@@ -172,15 +216,40 @@ export function PrizesManager({
   };
 
   const toggleActive = async (prize: Prize) => {
-    const supabase = createClient();
-    await supabase.from("prizes").update({ active: !prize.active }).eq("id", prize.id);
-    setPrizes((p) => p.map((x) => (x.id === prize.id ? { ...x, active: !x.active } : x)));
+    setError(null);
+    const apiRes = await fetch("/api/dashboard/prizes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: prize.id, active: !prize.active }),
+    });
+
+    if (!apiRes.ok) {
+      const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setError(mapPrizeApiError(errBody.error, t));
+      return;
+    }
+
+    const apiData = (await apiRes.json()) as { prize?: Prize };
+    if (apiData.prize) {
+      setPrizes((p) => p.map((x) => (x.id === prize.id ? apiData.prize! : x)));
+    } else {
+      setPrizes((p) => p.map((x) => (x.id === prize.id ? { ...x, active: !x.active } : x)));
+    }
     refresh();
   };
 
   const deletePrize = async (id: string) => {
-    const supabase = createClient();
-    await supabase.from("prizes").delete().eq("id", id);
+    setError(null);
+    const apiRes = await fetch(`/api/dashboard/prizes?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+
+    if (!apiRes.ok) {
+      const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setError(mapPrizeApiError(errBody.error, t));
+      return;
+    }
+
     setPrizes((p) => p.filter((x) => x.id !== id));
     if (editingId === id) setEditingId(null);
     refresh();

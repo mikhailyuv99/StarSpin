@@ -354,6 +354,8 @@
     "noPrizes": "Chưa có phần thưởng.",
     "addPrize": "Thêm phần thưởng",
     "prizeSaveFailed": "Không thể lưu phần thưởng — kiểm tra nhãn và thử lại.",
+    "prizeDeleteHasSpins": "Phần thưởng này đã có lịch sử quay và không thể xóa. Hãy tắt kích hoạt hoặc chạy migration cơ sở dữ liệu mới nhất.",
+    "prizeStockInvalid": "Tồn kho phải là số nguyên từ 0 trở lên.",
     "redeemValidDaysInvalid": "Số ngày hiệu lực phải từ 1 đến 365.",
     "label": "Nhãn",
     "prizeLabelHint": "Nhãn ngắn trên vòng quay — tối đa {max} ký tự. 2–3 từ (vd. \"Nước miễn phí\").",
