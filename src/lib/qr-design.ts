@@ -540,39 +540,40 @@ function drawCenteredTextBlock(
   });
 }
 
+/** Canva-style grid density (lines every 1/GRID_SEGMENTS). Snap lines align at 25 / 50 / 75 %. */
+const GRID_SEGMENTS = 20;
+
+function gridLineStyle(fraction: number): { color: string; width: number } {
+  const onCenter = Math.abs(fraction - 0.5) < 0.001;
+  const onSnap = ALIGNMENT_GRID.some((g) => Math.abs(g - fraction) < 0.001);
+  if (onCenter) return { color: "rgba(0, 0, 0, 0.11)", width: 1 };
+  if (onSnap) return { color: "rgba(0, 0, 0, 0.07)", width: 1 };
+  return { color: "rgba(0, 0, 0, 0.035)", width: 1 };
+}
+
 function drawAlignmentGrid(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.save();
-  for (const fraction of ALIGNMENT_GRID) {
-    const isCenter = fraction === 0.5;
-    ctx.strokeStyle = isCenter ? "rgba(155, 127, 232, 0.6)" : "rgba(10, 10, 10, 0.14)";
-    ctx.lineWidth = isCenter ? 2.5 : 1;
-    ctx.setLineDash(isCenter ? [] : [5, 7]);
+  ctx.setLineDash([]);
 
-    const x = fraction * width;
+  for (let i = 1; i < GRID_SEGMENTS; i++) {
+    const fraction = i / GRID_SEGMENTS;
+    const { color, width: lineWidth } = gridLineStyle(fraction);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+
+    const x = Math.round(fraction * width) + 0.5;
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, height);
     ctx.stroke();
 
-    const y = fraction * height;
+    const y = Math.round(fraction * height) + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(width, y);
     ctx.stroke();
   }
 
-  for (const xf of ALIGNMENT_GRID) {
-    for (const yf of ALIGNMENT_GRID) {
-      const isCenter = xf === 0.5 && yf === 0.5;
-      ctx.fillStyle = isCenter ? "#9b7fe8" : "rgba(10, 10, 10, 0.22)";
-      ctx.strokeStyle = isCenter ? "#0a0a0a" : "transparent";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(xf * width, yf * height, isCenter ? 6 : 4, 0, Math.PI * 2);
-      ctx.fill();
-      if (isCenter) ctx.stroke();
-    }
-  }
   ctx.restore();
 }
 
@@ -584,16 +585,19 @@ function drawEditorGuides(
   for (const [key, box] of Object.entries(bounds) as [DesignElementKey, ElementBounds][]) {
     const isSelected = key === selected;
     ctx.save();
-    ctx.strokeStyle = isSelected ? "#9b7fe8" : "rgba(10,10,10,0.25)";
-    ctx.lineWidth = isSelected ? 3 : 2;
-    ctx.setLineDash(isSelected ? [] : [6, 4]);
-    ctx.strokeRect(box.x, box.y, box.w, box.h);
+    ctx.strokeStyle = isSelected ? "rgba(139, 92, 246, 0.95)" : "rgba(0, 0, 0, 0.12)";
+    ctx.lineWidth = isSelected ? 1.5 : 1;
+    ctx.setLineDash([]);
+    ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w, box.h);
     if (isSelected) {
-      ctx.fillStyle = "#9b7fe8";
-      ctx.fillRect(box.x + box.w - 8, box.y + box.h - 8, 16, 16);
-      ctx.strokeStyle = "#0a0a0a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(box.x + box.w - 8, box.y + box.h - 8, 16, 16);
+      const handle = 10;
+      const hx = box.x + box.w - handle / 2;
+      const hy = box.y + box.h - handle / 2;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(hx, hy, handle, handle);
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.95)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(hx + 0.5, hy + 0.5, handle - 1, handle - 1);
     }
     ctx.restore();
   }
