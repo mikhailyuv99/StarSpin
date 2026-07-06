@@ -281,7 +281,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   return (
     <div className="qr-design-studio space-y-4 pb-0 lg:space-y-8">
-      <div className="qr-template-tabs lg:flex lg:flex-wrap lg:gap-2">
+      <div className="flex flex-wrap gap-2 pb-1">
         {TEMPLATES.map((value) => (
           <button
             key={value}
@@ -292,7 +292,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               setSelectedElement(null);
               setVisitCardSide("front");
             }}
-            className={`mb-1 shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] max-lg:snap-start lg:mb-0 ${
+            className={`rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold shadow-[3px_3px_0_0_#0a0a0a] ${
               template === value ? "bg-[var(--c-yellow)]" : "bg-white"
             }`}
           >
