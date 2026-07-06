@@ -10,6 +10,7 @@ import {
   patchLayoutElement,
   PREVIEW_MAX_WIDTH,
   renderDesignToCanvas,
+  snapToAlignmentGrid,
   type DesignElementKey,
   type QRDesignConfig,
   type QRDesignTemplate,
@@ -179,10 +180,10 @@ export function QRDesignCanvas({
     if (drag.mode === "move") {
       const dx = (pt.x - drag.startX) / canvasBox.width;
       const dy = (pt.y - drag.startY) / canvasBox.height;
-      patchElement(drag.key, {
-        x: drag.startPlacement.x + dx,
-        y: drag.startPlacement.y + dy,
-      });
+      const rawX = drag.startPlacement.x + dx;
+      const rawY = drag.startPlacement.y + dy;
+      const snapped = snapToAlignmentGrid(rawX, rawY);
+      patchElement(drag.key, snapped);
       return;
     }
 
@@ -198,6 +199,16 @@ export function QRDesignCanvas({
   };
 
   const endDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (drag?.mode === "move") {
+      const layout =
+        template === "table_sticker"
+          ? design.layouts.table_sticker[drag.key]
+          : design.visitCard[visitCardSide].layout[drag.key];
+      const snapped = snapToAlignmentGrid(layout.x, layout.y);
+      if (snapped.x !== layout.x || snapped.y !== layout.y) {
+        patchElement(drag.key, snapped);
+      }
+    }
     if (drag) {
       setDrag(null);
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {

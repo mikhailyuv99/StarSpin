@@ -71,10 +71,38 @@ export const CANVAS_SIZE: Record<QRDesignTemplate, { width: number; height: numb
 };
 
 export const PREVIEW_MAX_WIDTH: Record<QRDesignTemplate, number> = {
-  qr: 220,
-  table_sticker: 260,
-  visit_card: 320,
+  qr: 300,
+  table_sticker: 420,
+  visit_card: 520,
 };
+
+/** Symmetric 3×3 alignment grid (25 % / 50 % / 75 %). */
+export const ALIGNMENT_GRID = [0.25, 0.5, 0.75] as const;
+
+const SNAP_THRESHOLD = 0.04;
+
+export function snapToAlignmentGrid(x: number, y: number): { x: number; y: number } {
+  const snapAxis = (value: number) => {
+    for (const line of ALIGNMENT_GRID) {
+      if (Math.abs(value - line) < SNAP_THRESHOLD) return line;
+    }
+    return value;
+  };
+  return { x: snapAxis(x), y: snapAxis(y) };
+}
+
+export function nearestGridIndex(value: number): number {
+  let best = 0;
+  let bestDist = Infinity;
+  ALIGNMENT_GRID.forEach((line, i) => {
+    const dist = Math.abs(value - line);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  });
+  return best;
+}
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, Record<DesignElementKey, number>> = {
   table_sticker: { logo: 88, name: 28, qr: 280, tagline: 22 },
@@ -512,6 +540,42 @@ function drawCenteredTextBlock(
   });
 }
 
+function drawAlignmentGrid(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save();
+  for (const fraction of ALIGNMENT_GRID) {
+    const isCenter = fraction === 0.5;
+    ctx.strokeStyle = isCenter ? "rgba(155, 127, 232, 0.6)" : "rgba(10, 10, 10, 0.14)";
+    ctx.lineWidth = isCenter ? 2.5 : 1;
+    ctx.setLineDash(isCenter ? [] : [5, 7]);
+
+    const x = fraction * width;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+
+    const y = fraction * height;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  for (const xf of ALIGNMENT_GRID) {
+    for (const yf of ALIGNMENT_GRID) {
+      const isCenter = xf === 0.5 && yf === 0.5;
+      ctx.fillStyle = isCenter ? "#9b7fe8" : "rgba(10, 10, 10, 0.22)";
+      ctx.strokeStyle = isCenter ? "#0a0a0a" : "transparent";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(xf * width, yf * height, isCenter ? 6 : 4, 0, Math.PI * 2);
+      ctx.fill();
+      if (isCenter) ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 function drawEditorGuides(
   ctx: CanvasRenderingContext2D,
   bounds: Partial<Record<DesignElementKey, ElementBounds>>,
@@ -580,6 +644,10 @@ async function renderLayoutDesign(
   } else {
     ctx.fillStyle = normalizeHex(sideCtx.accentColor, "#9b7fe8");
     ctx.fillRect(0, height - 12, width, 12);
+  }
+
+  if (editor?.showGuides) {
+    drawAlignmentGrid(ctx, width, height);
   }
 
   if (logoUrl) {

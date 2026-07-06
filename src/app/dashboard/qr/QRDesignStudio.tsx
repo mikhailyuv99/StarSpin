@@ -9,6 +9,7 @@ import {
   getRenderContext,
   normalizeHex,
   parseQRDesign,
+  patchLayoutElement,
   patchVisitCardSide,
   renderDesignToCanvas,
   resetTemplateLayout,
@@ -20,6 +21,7 @@ import {
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { ELEMENT_KEYS, QRDesignCanvas } from "./QRDesignCanvas";
+import { QRAlignmentPicker } from "./QRAlignmentPicker";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
@@ -183,8 +185,18 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     downloadCanvas(canvas, `${merchant.slug}-qr.png`);
   };
 
+  const selectedPlacement =
+    selectedElement && template !== "qr" && renderSideCtx
+      ? renderSideCtx.layout[selectedElement]
+      : null;
+
+  const alignSelected = (x: number, y: number) => {
+    if (!selectedElement || template === "qr") return;
+    setDesign(patchLayoutElement(design, template, selectedElement, { x, y }, visitCardSide));
+  };
+
   const previewPanel = (
-    <div className={`${ui.card} w-fit max-w-full space-y-3 p-4`}>
+    <div className={`${ui.card} w-fit max-w-full space-y-3 p-4 xl:min-w-[28rem]`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className={ui.h2}>{t("dashboard.qrPreviewTitle")}</h2>
         {rendering && <span className="text-xs font-bold text-muted">{t("common.loading")}</span>}
@@ -228,11 +240,19 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       {template !== "qr" && (
-        <p className="max-w-[20rem] text-xs font-medium text-muted">{t("dashboard.qrDragHint")}</p>
+        <p className="text-xs font-medium text-muted">{t("dashboard.qrDragHint")}</p>
+      )}
+
+      {template !== "qr" && selectedElement && selectedPlacement && (
+        <QRAlignmentPicker
+          x={selectedPlacement.x}
+          y={selectedPlacement.y}
+          onPick={alignSelected}
+        />
       )}
 
       {template !== "qr" && (
-        <div className="flex max-w-[20rem] flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {ELEMENT_KEYS.map((key) => {
             if (key === "logo" && !design.logoUrl) return null;
             if (key === "name" && !renderSideCtx?.showName) return null;
@@ -263,9 +283,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         </div>
       )}
 
-      <p className="max-w-[20rem] truncate font-mono text-xs text-muted">{displayUrl}</p>
+      <p className="truncate font-mono text-xs text-muted">{displayUrl}</p>
 
-      <div className="flex max-w-[20rem] flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <button type="button" onClick={() => void handleDownload()} className={ui.btn}>
           {template === "visit_card"
             ? t("dashboard.qrDownloadSide", { side: t(`dashboard.qrVisitCard_${visitCardSide}`) })
@@ -391,35 +411,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                         template === "visit_card"
                           ? patchSide({ layoutBg: e.target.value })
                           : patchDesign({ layoutBg: e.target.value })
-                      }
-                      className={`${ui.input} max-w-[7rem] font-mono text-xs`}
-                      spellCheck={false}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={ui.label}>{t("dashboard.qrAccentColor")}</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={normalizeHex(
-                        template === "visit_card" ? sideSettings!.accentColor : design.accentColor,
-                        merchant.primary_color,
-                      )}
-                      onChange={(e) =>
-                        template === "visit_card"
-                          ? patchSide({ accentColor: e.target.value })
-                          : patchDesign({ accentColor: e.target.value })
-                      }
-                      className="h-12 w-full min-w-0 flex-1 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-                    />
-                    <input
-                      value={template === "visit_card" ? sideSettings!.accentColor : design.accentColor}
-                      onChange={(e) =>
-                        template === "visit_card"
-                          ? patchSide({ accentColor: e.target.value })
-                          : patchDesign({ accentColor: e.target.value })
                       }
                       className={`${ui.input} max-w-[7rem] font-mono text-xs`}
                       spellCheck={false}
