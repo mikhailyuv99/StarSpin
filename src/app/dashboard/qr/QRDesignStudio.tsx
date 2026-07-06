@@ -19,7 +19,6 @@ import {
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
-import { QRScrollRow } from "./QRScrollRow";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
@@ -282,37 +281,35 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   return (
     <div className="qr-design-studio space-y-4 pb-0 lg:space-y-8">
-      <QRScrollRow>
-        <div className="qr-scroll-row__inner qr-scroll-row__inner--wrap-lg">
-          {TEMPLATES.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => {
-                setTemplate(value);
-                patchDesign({ template: value });
-                setSelectedElement(null);
-                setVisitCardSide("front");
-              }}
-              className={`mb-1 shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] ${
-                template === value ? "bg-[var(--c-yellow)]" : "bg-white"
-              }`}
-            >
-              {t(`dashboard.qrTemplate_${value}`)}
-            </button>
-          ))}
-        </div>
-      </QRScrollRow>
+      <div className="qr-template-tabs lg:flex lg:flex-wrap lg:gap-2">
+        {TEMPLATES.map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => {
+              setTemplate(value);
+              patchDesign({ template: value });
+              setSelectedElement(null);
+              setVisitCardSide("front");
+            }}
+            className={`mb-1 shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] max-lg:snap-start lg:mb-0 ${
+              template === value ? "bg-[var(--c-yellow)]" : "bg-white"
+            }`}
+          >
+            {t(`dashboard.qrTemplate_${value}`)}
+          </button>
+        ))}
+      </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
         <div className="order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20">
           {previewPanel}
         </div>
 
-        <div className="order-2 min-w-0 space-y-4 pb-0 lg:order-1 lg:space-y-6">
+        <div className="order-2 min-w-0 space-y-4 lg:order-1 lg:space-y-6">
           <form
             onSubmit={(e) => e.preventDefault()}
-            className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
+            className={`${ui.card} space-y-5 max-lg:p-4`}
           >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -448,17 +445,19 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
-          </form>
 
-          <section className={`${ui.card} mb-0 flex items-start justify-between gap-4 max-lg:p-4 lg:mb-0`}>
-            <div className="min-w-0">
-              <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
-              <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
+            <div className="flex items-start justify-between gap-4 border-t-2 border-black/10 pt-4">
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold uppercase tracking-tight text-ink">
+                  {t("dashboard.qrOrderTitle")}
+                </h3>
+                <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
+              </div>
+              <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
+                {t("dashboard.qrOrderBadge")}
+              </span>
             </div>
-            <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
-              {t("dashboard.qrOrderBadge")}
-            </span>
-          </section>
+          </form>
         </div>
       </div>
     </div>
