@@ -49,7 +49,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
   const [selectedElement, setSelectedElement] = useState<DesignElementKey | null>(null);
-  const [rendering, setRendering] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const skipAutosaveRef = useRef(true);
@@ -58,6 +57,13 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
+
+  const canvasDesign = useMemo(() => {
+    if (activeLogoUrl && activeLogoUrl !== design.logoUrl) {
+      return { ...design, logoUrl: activeLogoUrl };
+    }
+    return design;
+  }, [design, activeLogoUrl]);
 
   const displayUrl =
     typeof window !== "undefined"
@@ -208,7 +214,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   const previewPanel = (
-    <div className="qr-preview-sticky shrink-0" style={{ width: `min(100%, ${previewWidth + 20}px)` }}>
+    <div className="qr-preview-panel shrink-0" style={{ width: `min(100%, ${previewWidth + 20}px)` }}>
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -238,12 +244,11 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             businessName={merchant.name}
             qrFg={normalizeHex(qrFg, "#0a0a0a")}
             qrBg={normalizeHex(qrBg, "#ffffff")}
-            design={{ ...design, logoUrl: activeLogoUrl }}
+            design={canvasDesign}
             editable={template !== "qr"}
             selected={selectedElement}
             onSelect={setSelectedElement}
             onLayoutChange={setDesign}
-            onRenderingChange={setRendering}
           />
         </div>
       </div>
@@ -293,21 +298,23 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_max-content]">
-        <div className="min-w-0 space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
+        <div className="order-1 flex shrink-0 justify-center lg:order-2 lg:justify-start">
+          {previewPanel}
+        </div>
+
+        <div className="order-2 min-w-0 space-y-6 lg:order-1">
           <form
             onSubmit={(e) => e.preventDefault()}
-            className={`${ui.card} space-y-5`}
+            className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
           >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
-                {saveStatus === "saving" && (
-                  <span className="text-xs font-bold text-muted">{t("common.saving")}</span>
-                )}
-                {saveStatus === "saved" && (
-                  <span className="text-xs font-bold text-green-700">{t("common.saved")}</span>
-                )}
+                <div className="min-h-5 text-xs font-bold">
+                  {saveStatus === "saving" && <span className="text-muted">{t("common.saving")}</span>}
+                  {saveStatus === "saved" && <span className="text-green-700">{t("common.saved")}</span>}
+                </div>
               </div>
               <p className="mt-1 text-sm text-muted">
                 {template === "visit_card"
@@ -316,9 +323,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                     })
                   : t("dashboard.qrStudioSubtitle")}
               </p>
-              {rendering && (
-                <p className="mt-1 text-xs font-bold text-muted">{t("common.loading")}</p>
-              )}
             </div>
 
             {error && <p className={ui.alertError}>{error}</p>}
@@ -427,7 +431,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
                 <div>
                   <label className={ui.label}>{t("dashboard.qrLogo")}</label>
-                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                  <div className="mt-2 flex items-center gap-4">
                     {activeLogoUrl ? (
                       <img
                         src={activeLogoUrl}
@@ -439,14 +443,14 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                         —
                       </div>
                     )}
-                    <div className="min-w-0 space-y-2">
-                      <p className="text-sm font-semibold text-ink">
+                    <div className="flex min-w-0 flex-col items-start justify-center gap-2">
+                      <p className="text-sm font-semibold leading-snug text-ink">
                         {activeLogoUrl ? t("dashboard.qrLogoActive") : t("dashboard.qrLogoNone")}
                       </p>
                       <button
                         type="button"
                         onClick={() => logoInputRef.current?.click()}
-                        className={`${ui.btnOutline} !w-auto px-4`}
+                        className={`${ui.btnOutline} !w-auto shrink-0 px-4 py-2 text-sm`}
                       >
                         {activeLogoUrl ? t("dashboard.qrChangeLogo") : t("dashboard.qrUploadLogo")}
                       </button>
@@ -498,8 +502,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             <p className="text-xs font-medium text-muted">{t("dashboard.qrOrderSoon")}</p>
           </section>
         </div>
-
-        <div className="shrink-0">{previewPanel}</div>
       </div>
     </div>
   );

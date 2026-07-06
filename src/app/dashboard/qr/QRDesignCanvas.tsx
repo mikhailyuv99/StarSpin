@@ -28,6 +28,7 @@ type DragState = {
 };
 
 const ELEMENT_KEYS: DesignElementKey[] = ["logo", "name", "qr", "tagline"];
+const RENDER_DEBOUNCE_MS = 120;
 
 export function QRDesignCanvas({
   template,
@@ -41,7 +42,6 @@ export function QRDesignCanvas({
   selected,
   onSelect,
   onLayoutChange,
-  onRenderingChange,
 }: {
   template: QRDesignTemplate;
   visitCardSide?: VisitCardSide;
@@ -54,14 +54,23 @@ export function QRDesignCanvas({
   selected: DesignElementKey | null;
   onSelect: (key: DesignElementKey | null) => void;
   onLayoutChange: (next: QRDesignConfig) => void;
-  onRenderingChange?: (rendering: boolean) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderVersion = useRef(0);
+  const dragRef = useRef<DragState | null>(null);
+  const selectedRef = useRef(selected);
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const canvasBox = CANVAS_SIZE[template];
   const previewWidth = PREVIEW_MAX_WIDTH[template];
+
+  useEffect(() => {
+    dragRef.current = drag;
+  }, [drag]);
+
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
 
   const sideCtx =
     template !== "qr" ? getRenderContext(design, template, visitCardSide) : null;
@@ -70,7 +79,9 @@ export function QRDesignCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const version = ++renderVersion.current;
-    onRenderingChange?.(true);
+    const currentDrag = dragRef.current;
+    const currentSelected = selectedRef.current;
+
     try {
       await renderDesignToCanvas(canvas, {
         template,
@@ -83,33 +94,22 @@ export function QRDesignCanvas({
         editor:
           editable && template !== "qr"
             ? {
-                selected,
-                showGuides: Boolean(selected) || Boolean(drag),
-                showGrid: drag?.mode === "move",
+                selected: currentSelected,
+                showGuides: Boolean(currentSelected) || Boolean(currentDrag),
+                showGrid: currentDrag?.mode === "move",
               }
             : undefined,
       });
     } finally {
-      if (version === renderVersion.current) onRenderingChange?.(false);
+      void version;
     }
-  }, [
-    businessName,
-    design,
-    displayUrl,
-    drag,
-    editable,
-    onRenderingChange,
-    qrBg,
-    qrFg,
-    selected,
-    template,
-    visitCardSide,
-  ]);
+  }, [businessName, design, displayUrl, editable, qrBg, qrFg, template, visitCardSide]);
 
   useEffect(() => {
+    const delay = drag ? 0 : RENDER_DEBOUNCE_MS;
     const timer = window.setTimeout(() => {
       void renderPreview();
-    }, drag ? 0 : 40);
+    }, delay);
     return () => window.clearTimeout(timer);
   }, [renderPreview, drag]);
 

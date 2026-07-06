@@ -178,13 +178,27 @@ body {
   padding: 0 1rem;
 }
 
-@media (min-width: 1280px) {
-  .qr-preview-sticky {
+.qr-preview-panel {
+  align-self: flex-start;
+}
+
+@media (max-width: 1023px) {
+  .qr-preview-panel {
     position: sticky;
-    top: var(--dashboard-sticky-top);
-    z-index: 40;
-    align-self: flex-start;
-    overflow: visible;
+    top: calc(var(--dashboard-sticky-top) + 0.25rem);
+    z-index: 20;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: auto;
+    padding-bottom: 0.25rem;
+    background: var(--c-gray);
+  }
+
+  .qr-customize-panel {
+    max-height: min(44vh, 28rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
