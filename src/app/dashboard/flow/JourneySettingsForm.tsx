@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
-import { extractGooglePlaceId, sanitizeGooglePlaceId } from "@/lib/google-place-id";
+import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -181,10 +181,12 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       tripadvisor: form.tripadvisor || undefined,
     };
 
-    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, form.google_review_link);
-    if (!resolvedPlaceId && form.google_review_link.trim()) {
-      const resolved = await resolveGooglePlaceIdViaApi(form.google_review_link);
+    let googleReviewLink = normalizeGoogleReviewLink(form.google_review_link) ?? form.google_review_link.trim();
+    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, googleReviewLink);
+    if (!resolvedPlaceId && googleReviewLink) {
+      const resolved = await resolveGooglePlaceIdViaApi(googleReviewLink);
       resolvedPlaceId = resolved.placeId;
+      if (resolved.normalizedLink) googleReviewLink = resolved.normalizedLink;
     }
 
     const { error: updateError } = await supabase
@@ -194,7 +196,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         slug,
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
-        google_review_link: form.google_review_link || null,
+        google_review_link: googleReviewLink || null,
         google_place_id: resolvedPlaceId,
         social_links,
         logo_url: form.logo_url || null,
@@ -358,6 +360,14 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
                       </label>
                       <input
                         value={form[linkKey]}
+                        onBlur={() => {
+                          if (step !== "google_review") return;
+                          const normalized = normalizeGoogleReviewLink(form.google_review_link);
+                          if (normalized && normalized !== form.google_review_link) {
+                            update("google_review_link", normalized);
+                            syncPlaceIdFromLink(normalized);
+                          }
+                        }}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (step === "google_review") {

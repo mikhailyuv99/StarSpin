@@ -150,7 +150,7 @@ export async function resolveMerchantGooglePlaceId(merchant: {
 
   let resolvedUrl: string | null = null;
 
-  const link = merchant.google_review_link?.trim();
+  const link = normalizeGoogleReviewLink(merchant.google_review_link) ?? merchant.google_review_link?.trim();
   if (link) {
     const fromLink = await resolveGooglePlaceIdFromLink(link);
     resolvedUrl = fromLink.resolvedUrl;

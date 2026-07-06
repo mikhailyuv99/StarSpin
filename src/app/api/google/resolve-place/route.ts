@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
+import { normalizeGoogleReviewLink } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdFromLink } from "@/lib/google-place-id.server";
 
 export async function POST(request: Request) {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   let link: string | undefined;
   try {
     const body = (await request.json()) as { link?: string };
-    link = body.link?.trim();
+    link = normalizeGoogleReviewLink(body.link) ?? body.link?.trim();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -21,5 +22,5 @@ export async function POST(request: Request) {
   }
 
   const resolution = await resolveGooglePlaceIdFromLink(link);
-  return NextResponse.json(resolution);
+  return NextResponse.json({ ...resolution, normalizedLink: link });
 }
