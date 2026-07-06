@@ -17,7 +17,7 @@ export default async function SetupPage() {
       </header>
       <div className={ui.shellNarrow}>
         <h1 className={ui.h1}>{t("setup.title")}</h1>
-        <p className={`mt-2 ${ui.muted}`}>{t("setup.subtitle")}</p>
+        <p className={`mt-2 ${ui.muted}`}>{t("setup.onboardingIntro")}</p>
         <div className="mt-8">
           <SetupForm />
         </div>
