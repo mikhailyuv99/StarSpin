@@ -184,23 +184,30 @@ body {
 
 @media (min-width: 1024px) {
   .qr-preview-panel {
+    position: sticky;
+    top: var(--dashboard-sticky-top);
+    z-index: 20;
     width: var(--qr-preview-width, auto);
     max-width: none;
+    align-self: flex-start;
   }
 }
 
 .qr-scroll-row {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   min-width: 0;
 }
 
 .qr-scroll-row__track {
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
-  overflow-y: visible;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-block: 0.15rem 0.65rem;
+  padding-block: 0.15rem 0.75rem;
 }
 
 .qr-scroll-row__track::-webkit-scrollbar {
@@ -211,21 +218,16 @@ body {
   display: flex;
   width: max-content;
   gap: 0.5rem;
-  padding-inline: 0.25rem;
-  padding-bottom: 0.15rem;
-}
-
-.qr-scroll-row:has(.qr-scroll-arrow--left) .qr-scroll-row__inner {
-  padding-left: 2.1rem;
-}
-
-.qr-scroll-row:has(.qr-scroll-arrow--right) .qr-scroll-row__inner {
-  padding-right: 2.1rem;
 }
 
 @media (min-width: 1024px) {
+  .qr-scroll-row {
+    display: block;
+  }
+
   .qr-scroll-row__track {
     overflow: visible;
+    padding-block: 0;
   }
 
   .qr-scroll-row__inner--wrap-lg {
@@ -235,9 +237,7 @@ body {
 }
 
 .qr-scroll-arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,15 +251,6 @@ body {
   font-weight: 800;
   color: #0a0a0a;
   cursor: pointer;
-  transform: translateY(-50%);
-}
-
-.qr-scroll-arrow--left {
-  left: 0.15rem;
-}
-
-.qr-scroll-arrow--right {
-  right: 0.15rem;
 }
 
 @media (max-width: 1023px) {
@@ -270,15 +261,13 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
-  .qr-design-studio {
-    padding-bottom: 0.5rem;
+  .brutal-page.pb-10:has(.qr-design-studio-page) {
+    min-height: 0;
+    padding-bottom: 0.75rem;
   }
-}
 
-@media (max-width: 1023px) {
-  .brutal-page:has(.qr-design-studio-page) {
-    min-height: auto;
-    padding-bottom: 1.25rem;
+  .qr-design-studio-page {
+    padding-bottom: 0;
   }
 }
 

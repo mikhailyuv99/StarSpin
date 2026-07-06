@@ -43,27 +43,27 @@ export function QRScrollRow({
 
   return (
     <div className={`qr-scroll-row ${className}`.trim()}>
-      <div ref={trackRef} className="qr-scroll-row__track">
-        {children}
-      </div>
-
       {canScrollLeft && (
         <button
           type="button"
           aria-label={t("common.scrollLeft")}
           onClick={() => scrollBy(-SCROLL_STEP)}
-          className="qr-scroll-arrow qr-scroll-arrow--left lg:hidden"
+          className="qr-scroll-arrow lg:hidden"
         >
           ◀
         </button>
       )}
+
+      <div ref={trackRef} className="qr-scroll-row__track">
+        {children}
+      </div>
 
       {canScrollRight && (
         <button
           type="button"
           aria-label={t("common.scrollRight")}
           onClick={() => scrollBy(SCROLL_STEP)}
-          className="qr-scroll-arrow qr-scroll-arrow--right lg:hidden"
+          className="qr-scroll-arrow lg:hidden"
         >
           ▶
         </button>
