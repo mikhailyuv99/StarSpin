@@ -1,8 +1,21 @@
 import QRCode from "qrcode";
+import {
+  canvasFontString,
+  DEFAULT_NAME_FONT_ID,
+  DEFAULT_TAGLINE_FONT_ID,
+  ensureQRFontsForRender,
+  getQRFont,
+  isQRFontId,
+} from "@/lib/qr-fonts";
 
 export type QRDesignTemplate = "qr" | "table_sticker" | "visit_card";
 export type VisitCardSide = "front" | "back";
 export type DesignElementKey = "logo" | "name" | "qr" | "tagline";
+
+export type TextStyle = {
+  fontId: string;
+  color: string;
+};
 
 export type ElementPlacement = {
   x: number;
@@ -20,6 +33,8 @@ export type CardSideSettings = {
   showQr: boolean;
   splitPanel: boolean;
   layout: TemplateLayout;
+  nameStyle: TextStyle;
+  taglineStyle: TextStyle;
 };
 
 export type QRDesignConfig = {
@@ -29,6 +44,8 @@ export type QRDesignConfig = {
   showName: boolean;
   tagline: string;
   logoUrl: string | null;
+  nameStyle: TextStyle;
+  taglineStyle: TextStyle;
   layouts: { table_sticker: TemplateLayout };
   visitCard: { front: CardSideSettings; back: CardSideSettings };
 };
@@ -43,6 +60,8 @@ export type RenderSideContext = {
   showQr: boolean;
   splitPanel: boolean;
   layout: TemplateLayout;
+  nameStyle: TextStyle;
+  taglineStyle: TextStyle;
 };
 
 export const CANVAS_SIZE: Record<QRDesignTemplate, { width: number; height: number }> = {
@@ -88,6 +107,22 @@ export const DEFAULT_LAYOUTS = {
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 2.5;
 
+export function defaultTextStyles(): { nameStyle: TextStyle; taglineStyle: TextStyle } {
+  return {
+    nameStyle: { fontId: DEFAULT_NAME_FONT_ID, color: "#0a0a0a" },
+    taglineStyle: { fontId: DEFAULT_TAGLINE_FONT_ID, color: "#0a0a0a" },
+  };
+}
+
+function parseTextStyle(raw: unknown, fallback: TextStyle): TextStyle {
+  if (!raw || typeof raw !== "object") return fallback;
+  const data = raw as Record<string, unknown>;
+  return {
+    fontId: typeof data.fontId === "string" && isQRFontId(data.fontId) ? data.fontId : fallback.fontId,
+    color: typeof data.color === "string" ? normalizeHex(data.color, fallback.color) : fallback.color,
+  };
+}
+
 export function clampPlacement(placement: ElementPlacement): ElementPlacement {
   return {
     x: Math.min(0.98, Math.max(0.02, placement.x)),
@@ -129,6 +164,7 @@ function defaultVisitCardSide(
   side: VisitCardSide,
 ): CardSideSettings {
   const accent = merchant.primary_color || "#9b7fe8";
+  const textStyles = defaultTextStyles();
   if (side === "front") {
     return {
       layoutBg: "#fafafa",
@@ -138,6 +174,7 @@ function defaultVisitCardSide(
       showQr: true,
       splitPanel: true,
       layout: { ...DEFAULT_VISIT_CARD_LAYOUT },
+      ...textStyles,
     };
   }
   return {
@@ -148,6 +185,8 @@ function defaultVisitCardSide(
     showQr: false,
     splitPanel: false,
     layout: { ...DEFAULT_VISIT_CARD_BACK_LAYOUT },
+    nameStyle: textStyles.nameStyle,
+    taglineStyle: { ...textStyles.taglineStyle, color: "#52525b" },
   };
 }
 
@@ -155,6 +194,7 @@ export function defaultQRDesign(merchant: {
   primary_color: string;
   logo_url?: string | null;
 }): QRDesignConfig {
+  const textStyles = defaultTextStyles();
   return {
     template: "table_sticker",
     layoutBg: "#ffffff",
@@ -162,6 +202,7 @@ export function defaultQRDesign(merchant: {
     showName: true,
     tagline: "Scan · Review · Spin",
     logoUrl: merchant.logo_url ?? null,
+    ...textStyles,
     layouts: {
       table_sticker: { ...DEFAULT_LAYOUTS.table_sticker },
     },
@@ -188,6 +229,8 @@ function parseCardSide(raw: unknown, fallback: CardSideSettings): CardSideSettin
     showQr: typeof data.showQr === "boolean" ? data.showQr : fallback.showQr,
     splitPanel: typeof data.splitPanel === "boolean" ? data.splitPanel : fallback.splitPanel,
     layout: parseTemplateLayout(data.layout, fallback.layout),
+    nameStyle: parseTextStyle(data.nameStyle, fallback.nameStyle),
+    taglineStyle: parseTextStyle(data.taglineStyle, fallback.taglineStyle),
   };
 }
 
@@ -251,6 +294,8 @@ export function parseQRDesign(
       typeof data.logoUrl === "string" && data.logoUrl.trim()
         ? data.logoUrl
         : merchant.logo_url ?? null,
+    nameStyle: parseTextStyle(data.nameStyle, base.nameStyle),
+    taglineStyle: parseTextStyle(data.taglineStyle, base.taglineStyle),
     layouts: {
       table_sticker: parseTemplateLayout(layoutsObj.table_sticker, DEFAULT_LAYOUTS.table_sticker),
     },
@@ -272,6 +317,8 @@ export function getRenderContext(
       showQr: true,
       splitPanel: false,
       layout: design.layouts.table_sticker,
+      nameStyle: design.nameStyle,
+      taglineStyle: design.taglineStyle,
     };
   }
   const side = design.visitCard[visitCardSide];
@@ -283,6 +330,8 @@ export function getRenderContext(
     showQr: side.showQr,
     splitPanel: side.splitPanel,
     layout: side.layout,
+    nameStyle: side.nameStyle,
+    taglineStyle: side.taglineStyle,
   };
 }
 
@@ -295,8 +344,10 @@ function measureTextBlock(
   text: string,
   fontSize: number,
   maxWidth: number,
+  fontFamily: string,
+  weight: number,
 ): { width: number; height: number; lines: string[] } {
-  ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+  ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
   const words = text.split(" ");
   const lines: string[] = [];
   let line = "";
@@ -347,7 +398,15 @@ export function computeElementBounds(
   if (ctx.showName && businessName) {
     const fontSize = scaledSize(template, "name", layout.name.scale);
     const maxWidth = canvasWidth * (template === "visit_card" && ctx.splitPanel ? 0.32 : 0.85);
-    const block = measureTextBlock(c, businessName.toUpperCase(), fontSize, maxWidth);
+    const nameFont = getQRFont(ctx.nameStyle.fontId);
+    const block = measureTextBlock(
+      c,
+      businessName.toUpperCase(),
+      fontSize,
+      maxWidth,
+      `"${nameFont.googleFamily}", system-ui, sans-serif`,
+      nameFont.nameWeight,
+    );
     bounds.name = toRect("name", Math.max(block.width, 40), Math.max(block.height, fontSize));
   }
 
@@ -358,7 +417,8 @@ export function computeElementBounds(
 
   if (ctx.tagline) {
     const fontSize = scaledSize(template, "tagline", layout.tagline.scale);
-    c.font = `700 ${fontSize}px system-ui, sans-serif`;
+    const taglineFont = getQRFont(ctx.taglineStyle.fontId);
+    c.font = `${taglineFont.taglineWeight} ${fontSize}px "${taglineFont.googleFamily}", system-ui, sans-serif`;
     const w = c.measureText(ctx.tagline).width;
     bounds.tagline = toRect("tagline", Math.max(w, 40), fontSize * 1.2);
   }
@@ -436,16 +496,17 @@ function drawCenteredTextBlock(
   centerY: number,
   fontSize: number,
   maxWidth: number,
-  color = "#0a0a0a",
-  weight = "800",
+  style: TextStyle,
 ) {
-  ctx.fillStyle = color;
+  const font = getQRFont(style.fontId);
+  const fontFamily = `"${font.googleFamily}", system-ui, sans-serif`;
+  ctx.fillStyle = normalizeHex(style.color, "#0a0a0a");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const block = measureTextBlock(ctx, text, fontSize, maxWidth);
+  const block = measureTextBlock(ctx, text, fontSize, maxWidth, fontFamily, font.nameWeight);
   const lineHeight = fontSize * 1.25;
   const startY = centerY - block.height / 2 + lineHeight / 2;
-  ctx.font = `${weight} ${fontSize}px system-ui, sans-serif`;
+  ctx.font = `${font.nameWeight} ${fontSize}px ${fontFamily}`;
   block.lines.forEach((line, i) => {
     ctx.fillText(line, centerX, startY + i * lineHeight);
   });
@@ -539,6 +600,7 @@ async function renderLayoutDesign(
       layout.name.y * height,
       fontSize,
       maxWidth,
+      sideCtx.nameStyle,
     );
   }
 
@@ -557,8 +619,9 @@ async function renderLayoutDesign(
 
   if (sideCtx.tagline) {
     const fontSize = scaledSize(template, "tagline", layout.tagline.scale);
-    ctx.font = `700 ${fontSize}px system-ui, sans-serif`;
-    ctx.fillStyle = "#0a0a0a";
+    const taglineFont = getQRFont(sideCtx.taglineStyle.fontId);
+    ctx.font = canvasFontString(taglineFont, "tagline", fontSize);
+    ctx.fillStyle = normalizeHex(sideCtx.taglineStyle.color, "#0a0a0a");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(sideCtx.tagline, layout.tagline.x * width, layout.tagline.y * height);
@@ -593,6 +656,7 @@ export async function renderDesignToCanvas(
     return;
   }
   const sideCtx = getRenderContext(design, template, visitCardSide);
+  await ensureQRFontsForRender(sideCtx.nameStyle.fontId, sideCtx.taglineStyle.fontId);
   await renderLayoutDesign(
     canvas,
     template,
@@ -632,12 +696,15 @@ export function resetTemplateLayout(
     };
   }
   const side = visitCardSide ?? "front";
-  const defaults = defaultVisitCardSide({ primary_color: design.accentColor }, side);
+  const layoutDefault = side === "front" ? DEFAULT_VISIT_CARD_LAYOUT : DEFAULT_VISIT_CARD_BACK_LAYOUT;
   return {
     ...design,
     visitCard: {
       ...design.visitCard,
-      [side]: { ...defaults, accentColor: design.visitCard[side].accentColor },
+      [side]: {
+        ...design.visitCard[side],
+        layout: { ...layoutDefault },
+      },
     },
   };
 }

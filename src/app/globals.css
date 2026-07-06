@@ -63,6 +63,7 @@ body {
   min-height: 100vh;
   background: var(--c-gray);
   color: var(--c-black);
+  --dashboard-sticky-top: 6.5rem;
 }
 
 .brutal-logo-dark {
@@ -175,6 +176,18 @@ body {
   top: 0.75rem;
   z-index: 50;
   padding: 0 1rem;
+}
+
+@media (min-width: 1280px) {
+  .qr-preview-sticky {
+    position: sticky;
+    top: var(--dashboard-sticky-top);
+    z-index: 40;
+    align-self: flex-start;
+    max-height: calc(100dvh - var(--dashboard-sticky-top) - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 .brutal-nav {

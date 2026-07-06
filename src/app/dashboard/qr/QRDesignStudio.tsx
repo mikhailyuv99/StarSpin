@@ -16,9 +16,11 @@ import {
   type DesignElementKey,
   type QRDesignConfig,
   type QRDesignTemplate,
+  type TextStyle,
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { ELEMENT_KEYS, QRDesignCanvas } from "./QRDesignCanvas";
+import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
 import type { Merchant } from "@/lib/types";
@@ -68,6 +70,27 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const patchSide = (patch: Partial<CardSideSettings>) => {
     if (template !== "visit_card") return;
     setDesign((prev) => patchVisitCardSide(prev, visitCardSide, patch));
+  };
+
+  const activeNameStyle =
+    template === "visit_card" ? design.visitCard[visitCardSide].nameStyle : design.nameStyle;
+  const activeTaglineStyle =
+    template === "visit_card" ? design.visitCard[visitCardSide].taglineStyle : design.taglineStyle;
+
+  const patchNameStyle = (patch: Partial<TextStyle>) => {
+    if (template === "visit_card") {
+      patchSide({ nameStyle: { ...activeNameStyle, ...patch } });
+    } else {
+      patchDesign({ nameStyle: { ...design.nameStyle, ...patch } });
+    }
+  };
+
+  const patchTaglineStyle = (patch: Partial<TextStyle>) => {
+    if (template === "visit_card") {
+      patchSide({ taglineStyle: { ...activeTaglineStyle, ...patch } });
+    } else {
+      patchDesign({ taglineStyle: { ...design.taglineStyle, ...patch } });
+    }
   };
 
   const applyBrandColors = () => {
@@ -417,6 +440,62 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                   />
                 </div>
 
+                <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
+                  <p className="text-sm font-extrabold text-ink">{t("dashboard.qrTypographyTitle")}</p>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <QRFontPicker
+                      id="qr-name-font"
+                      label={t("dashboard.qrNameFont")}
+                      value={activeNameStyle.fontId}
+                      onChange={(fontId) => patchNameStyle({ fontId })}
+                    />
+                    <div>
+                      <label className={ui.label}>{t("dashboard.qrNameColor")}</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={normalizeHex(activeNameStyle.color, "#0a0a0a")}
+                          onChange={(e) => patchNameStyle({ color: e.target.value })}
+                          className="h-12 w-full min-w-0 flex-1 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
+                        />
+                        <input
+                          value={activeNameStyle.color}
+                          onChange={(e) => patchNameStyle({ color: e.target.value })}
+                          className={`${ui.input} max-w-[7rem] font-mono text-xs`}
+                          spellCheck={false}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <QRFontPicker
+                      id="qr-tagline-font"
+                      label={t("dashboard.qrTaglineFont")}
+                      value={activeTaglineStyle.fontId}
+                      onChange={(fontId) => patchTaglineStyle({ fontId })}
+                    />
+                    <div>
+                      <label className={ui.label}>{t("dashboard.qrTaglineColor")}</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={normalizeHex(activeTaglineStyle.color, "#0a0a0a")}
+                          onChange={(e) => patchTaglineStyle({ color: e.target.value })}
+                          className="h-12 w-full min-w-0 flex-1 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
+                        />
+                        <input
+                          value={activeTaglineStyle.color}
+                          onChange={(e) => patchTaglineStyle({ color: e.target.value })}
+                          className={`${ui.input} max-w-[7rem] font-mono text-xs`}
+                          spellCheck={false}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <label className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -497,7 +576,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           </section>
         </div>
 
-        <div className="order-1 shrink-0 xl:order-2 xl:sticky xl:top-4 xl:self-start">{previewPanel}</div>
+        <div className="order-1 shrink-0 xl:order-2 qr-preview-sticky">{previewPanel}</div>
       </div>
     </div>
   );
