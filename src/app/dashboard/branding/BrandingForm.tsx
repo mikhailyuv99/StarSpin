@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
+import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { contrastTextColor } from "@/lib/wheel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -160,25 +161,11 @@ export function BrandingForm({
         </span>
       </div>
 
-      <div>
-        <label className={ui.label}>{t("dashboard.logo")}</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleLogoUpload(f);
-          }}
-          className={ui.file}
-        />
-        {form.logo_url && (
-          <img
-            src={form.logo_url}
-            alt="Logo"
-            className="mt-3 h-16 w-16 rounded-[14px] border-2 border-black object-cover"
-          />
-        )}
-      </div>
+      <LogoUploadField
+        label={t("dashboard.logo")}
+        logoUrl={form.logo_url || null}
+        onUpload={handleLogoUpload}
+      />
 
       {(
         [

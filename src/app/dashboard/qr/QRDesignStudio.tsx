@@ -18,6 +18,7 @@ import {
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
+import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { QRScrollRow } from "./QRScrollRow";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
@@ -55,7 +56,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const skipAutosaveRef = useRef(true);
   const saveSeqRef = useRef(0);
   const savedStatusTimerRef = useRef<number | null>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
 
@@ -305,7 +305,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </QRScrollRow>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
-        <div className="order-1 w-full min-w-0 lg:order-2 lg:flex lg:justify-start">
+        <div className="order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20">
           {previewPanel}
         </div>
 
@@ -435,45 +435,11 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                   </label>
                 )}
 
-                <div>
-                  <label className={ui.label}>{t("dashboard.qrLogo")}</label>
-                  <div className="mt-2 flex items-center gap-4">
-                    {activeLogoUrl ? (
-                      <img
-                        src={activeLogoUrl}
-                        alt=""
-                        className="h-16 w-16 shrink-0 rounded-[14px] border-2 border-black object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] border-2 border-dashed border-black/30 bg-[var(--c-cream)] text-xs font-bold text-muted">
-                        —
-                      </div>
-                    )}
-                    <div className="flex min-w-0 flex-col items-start justify-center gap-2">
-                      <p className="text-sm font-semibold leading-snug text-ink">
-                        {activeLogoUrl ? t("dashboard.qrLogoActive") : t("dashboard.qrLogoNone")}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => logoInputRef.current?.click()}
-                        className={`${ui.btnOutline} !w-auto shrink-0 px-4 py-2 text-sm`}
-                      >
-                        {activeLogoUrl ? t("dashboard.qrChangeLogo") : t("dashboard.qrUploadLogo")}
-                      </button>
-                    </div>
-                  </div>
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void handleLogoUpload(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
+                <LogoUploadField
+                  label={t("dashboard.qrLogo")}
+                  logoUrl={activeLogoUrl}
+                  onUpload={handleLogoUpload}
+                />
               </>
             )}
 

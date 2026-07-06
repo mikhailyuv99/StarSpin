@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
+import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 import { createClient } from "@/lib/supabase/client";
@@ -249,25 +250,11 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.slugHint")}</p>
         </div>
 
-        <div>
-          <label className={ui.label}>{t("dashboard.logo")}</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleLogoUpload(f);
-            }}
-            className={ui.file}
-          />
-          {form.logo_url && (
-            <img
-              src={form.logo_url}
-              alt="Logo"
-              className="mt-3 h-16 w-16 rounded-[14px] border-2 border-black object-cover"
-            />
-          )}
-        </div>
+        <LogoUploadField
+          label={t("dashboard.logo")}
+          logoUrl={form.logo_url || null}
+          onUpload={handleLogoUpload}
+        />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ColorPickButton

@@ -184,12 +184,8 @@ body {
 
 @media (min-width: 1024px) {
   .qr-preview-panel {
-    position: sticky;
-    top: var(--dashboard-sticky-top);
-    z-index: 20;
     width: var(--qr-preview-width, auto);
     max-width: none;
-    align-self: flex-start;
   }
 }
 
@@ -241,16 +237,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 2px solid #0a0a0a;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 2px 2px 0 0 #0a0a0a;
-  font-size: 0.55rem;
+  width: 1.25rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+  line-height: 1;
   font-weight: 800;
   color: #0a0a0a;
   cursor: pointer;
+  opacity: 0.45;
+}
+
+.qr-scroll-arrow:active {
+  opacity: 1;
 }
 
 @media (max-width: 1023px) {
