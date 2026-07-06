@@ -306,10 +306,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           {previewPanel}
         </div>
 
-        <div className="order-2 min-w-0 space-y-4 lg:order-1 lg:space-y-6">
+        <div className="order-2 min-w-0 space-y-4 pb-0 lg:order-1 lg:space-y-6">
           <form
             onSubmit={(e) => e.preventDefault()}
-            className={`${ui.card} space-y-5 max-lg:p-4`}
+            className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
           >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -445,19 +445,17 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
-
-            <div className="flex items-start justify-between gap-4 border-t-2 border-black/10 pt-4">
-              <div className="min-w-0">
-                <h3 className="text-sm font-extrabold uppercase tracking-tight text-ink">
-                  {t("dashboard.qrOrderTitle")}
-                </h3>
-                <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
-              </div>
-              <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
-                {t("dashboard.qrOrderBadge")}
-              </span>
-            </div>
           </form>
+
+          <section className={`${ui.card} mb-0 flex items-start justify-between gap-4 max-lg:p-4 lg:mb-0`}>
+            <div className="min-w-0">
+              <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
+              <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
+            </div>
+            <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
+              {t("dashboard.qrOrderBadge")}
+            </span>
+          </section>
         </div>
       </div>
     </div>

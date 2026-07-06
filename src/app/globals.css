@@ -196,12 +196,19 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0) !important;
 }
 
-.brutal-page:has(.qr-design-studio-page) > .mx-auto,
-.brutal-page:has(.qr-design-studio-page) main,
 .qr-design-studio-page,
 .qr-design-studio {
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
+}
+
+@media (max-width: 1023px) {
+  .qr-customize-panel {
+    max-height: min(50vh, 32rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .qr-preview-frame {
