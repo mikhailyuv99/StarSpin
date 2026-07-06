@@ -187,6 +187,18 @@ body {
     width: var(--qr-preview-width, auto);
     max-width: none;
   }
+
+  /* Taller previews must not extend page height below the settings column */
+  .qr-preview-slot {
+    width: var(--qr-preview-width, auto);
+    height: 0;
+    align-self: flex-start;
+    overflow: visible;
+  }
+
+  .qr-preview-sticky {
+    width: var(--qr-preview-width, auto);
+  }
 }
 
 /* QR studio: no forced viewport stretch; room for card shadows at the bottom */
