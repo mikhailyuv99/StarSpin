@@ -96,17 +96,34 @@ export default function LoginPage() {
     const supabase = createClient();
 
     if (isSignup) {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = (await res.json()) as { error?: string };
+
+      if (!res.ok) {
+        if (data.error === "email_taken") {
+          setError(t("login.emailTaken"));
+        } else if (data.error === "invalid_credentials") {
+          setError(t("login.invalidCredentials"));
+        } else {
+          setError(t("login.signupError"));
+        }
+        setLoading(false);
+        return;
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/setup`,
-        },
       });
-      if (signUpError) {
-        setError(signUpError.message);
+      if (signInError) {
+        setError(signInError.message);
       } else {
-        setMessage(t("login.verifyEmail"));
+        router.push("/setup");
+        router.refresh();
       }
     } else {
       const { error: signInError } = await supabase.auth.signInWithPassword({
