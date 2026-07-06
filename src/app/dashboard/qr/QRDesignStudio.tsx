@@ -236,7 +236,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       )}
 
       <div className="qr-preview-frame">
-        <div className="rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]">
+        <div className="qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]">
           <QRDesignCanvas
             template={template}
             visitCardSide={visitCardSide}
@@ -298,17 +298,15 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
-        <div
-          className="qr-preview-slot w-full min-w-0 shrink-0 lg:order-2"
-          style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
-        >
-          <div className="qr-preview-sticky lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20">
-            {previewPanel}
-          </div>
+      <div
+        className="qr-studio-layout relative flex flex-col gap-4 lg:block lg:gap-0"
+        style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
+      >
+        <div className="qr-studio-preview w-full min-w-0 shrink-0">
+          <div className="qr-studio-preview-inner">{previewPanel}</div>
         </div>
 
-        <div className="min-w-0 w-full space-y-4 lg:order-1 lg:flex-1 lg:space-y-6">
+        <div className="qr-studio-settings min-w-0 w-full">
           <form
             onSubmit={(e) => e.preventDefault()}
             className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
@@ -448,18 +446,18 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               </button>
             </div>
           </form>
-
-          <section className={`${ui.card} flex items-start justify-between gap-4 max-lg:p-4`}>
-            <div className="min-w-0">
-              <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
-              <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
-            </div>
-            <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
-              {t("dashboard.qrOrderBadge")}
-            </span>
-          </section>
         </div>
       </div>
+
+      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
+        <div className="min-w-0">
+          <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
+        </div>
+        <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
+          {t("dashboard.qrOrderBadge")}
+        </span>
+      </section>
     </div>
   );
 }
