@@ -1972,6 +1972,17 @@
   box-shadow: 2px 2px 0 0 var(--c-black);
 }
 
+.cadeo-pricing-toggle--3 {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.cadeo-pricing-toggle--3 .cadeo-pricing-toggle-btn {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+}
+
 .cadeo-pricing-save {
   font-size: 0.62rem;
   font-weight: 900;

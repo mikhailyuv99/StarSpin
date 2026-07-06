@@ -5,6 +5,7 @@ export type { BillingPlan } from "./billing";
 export { isBillingPlan } from "./billing";
 
 const DEFAULT_MONTHLY = "price_1ToRrQLdigJa0nWpx8uevojZ";
+const DEFAULT_QUARTERLY = "price_1TqBMoLdigJa0nWpclYOWf5X";
 const DEFAULT_ANNUAL = "price_1ToRssLdigJa0nWpw83MJwLW";
 
 export function getStripe(): Stripe {
@@ -22,12 +23,18 @@ export function getMonthlyPriceId(): string {
   return process.env.STRIPE_PRICE_MONTHLY ?? DEFAULT_MONTHLY;
 }
 
+export function getQuarterlyPriceId(): string {
+  return process.env.STRIPE_PRICE_QUARTERLY ?? DEFAULT_QUARTERLY;
+}
+
 export function getAnnualPriceId(): string {
   return process.env.STRIPE_PRICE_ANNUAL ?? DEFAULT_ANNUAL;
 }
 
 export function priceIdForPlan(plan: BillingPlan): string {
-  return plan === "annual" ? getAnnualPriceId() : getMonthlyPriceId();
+  if (plan === "annual") return getAnnualPriceId();
+  if (plan === "quarterly") return getQuarterlyPriceId();
+  return getMonthlyPriceId();
 }
 
 export function subscriptionStatusFromStripe(

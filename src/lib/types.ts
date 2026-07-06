@@ -22,7 +22,7 @@ export interface Merchant {
   subscription_status: SubscriptionStatus;
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
-  billing_plan?: "monthly" | "annual" | null;
+  billing_plan?: "monthly" | "quarterly" | "annual" | null;
   spin_cooldown_days?: number;
   flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
   created_at: string;

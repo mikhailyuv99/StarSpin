@@ -9,6 +9,11 @@ import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
 import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import type { BillingPlan } from "@/lib/billing";
+import {
+  checkoutPayForPlan,
+  marketingPeriodForPlan,
+  marketingPriceForPlan,
+} from "@/lib/billing-display";
 import "@/components/marketing/cadeo-styles.css";
 
 function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
@@ -51,11 +56,7 @@ function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
       />
       {error && <p className="cadeo-subscribe-btn-error">{error}</p>}
       <button type="submit" disabled={!stripe || submitting} className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
-        {submitting
-          ? t("billing.checkoutProcessing")
-          : plan === "monthly"
-            ? t("billing.checkoutPayMonthly")
-            : t("billing.checkoutPayAnnual")}
+        {submitting ? t("billing.checkoutProcessing") : checkoutPayForPlan(plan, t)}
       </button>
       <p className="cadeo-checkout-footnote">{t("billing.checkoutFootnote")}</p>
     </form>
@@ -102,10 +103,8 @@ export function StarspinCheckout({
     };
   }, [plan, t]);
 
-  const amountLabel =
-    plan === "monthly" ? t("marketing.pricingPriceMonthly") : t("marketing.pricingPriceAnnual");
-  const periodLabel =
-    plan === "monthly" ? t("marketing.pricingPeriodMonthly") : t("marketing.pricingPeriodAnnual");
+  const amountLabel = marketingPriceForPlan(plan, t);
+  const periodLabel = marketingPeriodForPlan(plan, t);
 
   return (
     <div className="cadeo-page cadeo-page--subscribe cadeo-page--checkout">

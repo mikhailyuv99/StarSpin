@@ -7,6 +7,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
 import type { BillingSummary } from "@/lib/billing-summary";
+import { managePlanLabelForPlan, marketingPeriodForPlan } from "@/lib/billing-display";
 import { ui } from "@/components/ui/styles";
 
 function formatDate(iso: string, locale: string) {
@@ -114,19 +115,18 @@ export function BillingManagePage({
 
   const refresh = () => router.refresh();
 
-  const planLabel =
-    live.plan === "annual"
-      ? t("marketing.pricingPriceAnnual")
-      : live.plan === "monthly"
-        ? t("marketing.pricingPriceMonthly")
-        : t("billing.managePlanUnknown");
+  const planLabel = managePlanLabelForPlan(live.plan, t);
 
   const periodLabel =
     live.interval === "year"
       ? t("marketing.pricingPeriodAnnual")
-      : live.interval === "month"
-        ? t("marketing.pricingPeriodMonthly")
-        : "";
+      : live.interval === "quarter"
+        ? t("marketing.pricingPeriodQuarterly")
+        : live.interval === "month"
+          ? t("marketing.pricingPeriodMonthly")
+          : live.plan
+            ? marketingPeriodForPlan(live.plan, t)
+            : "";
 
   const priceLabel =
     live.amountCents && live.currency

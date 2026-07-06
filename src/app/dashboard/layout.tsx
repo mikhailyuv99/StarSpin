@@ -13,12 +13,11 @@ export default async function DashboardLayout({
   const t = await getTranslations();
 
   const NAV = [
-    { href: "/dashboard", label: t("common.dashboard") },
-    { href: "/dashboard/flow", label: t("dashboard.navFlow") },
+    { href: "/dashboard", label: t("dashboard.navHome") },
+    { href: "/dashboard/flow", label: t("dashboard.navSetup") },
     { href: "/dashboard/prizes", label: t("dashboard.navPrizes") },
-    { href: "/dashboard/reviews", label: t("dashboard.navReviews") },
-    { href: "/dashboard/crm", label: t("dashboard.navCrm") },
     { href: "/dashboard/qr", label: t("dashboard.navQr") },
+    { href: "/dashboard/crm", label: t("dashboard.navCustomers") },
     { href: "/dashboard/billing", label: t("dashboard.navBilling") },
   ];
 

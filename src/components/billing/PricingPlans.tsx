@@ -4,49 +4,51 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { SubscribeButton } from "@/components/billing/SubscribeButton";
 import type { BillingPlan } from "@/lib/billing";
+import {
+  marketingPeriodForPlan,
+  marketingPriceForPlan,
+  marketingSubscribeForPlan,
+} from "@/lib/billing-display";
+
+const PLANS: BillingPlan[] = ["monthly", "quarterly", "annual"];
 
 export function PricingPlans({ ctaClassName = "cadeo-btn cadeo-btn-purple cadeo-btn-lg" }: { ctaClassName?: string }) {
   const { t } = useI18n();
   const [plan, setPlan] = useState<BillingPlan>("monthly");
 
+  const planLabel = (value: BillingPlan) => {
+    if (value === "monthly") return t("marketing.pricingMonthly");
+    if (value === "quarterly") return t("marketing.pricingQuarterly");
+    return t("marketing.pricingAnnual");
+  };
+
   return (
     <div className="cadeo-pricing-billing">
-      <div className="cadeo-pricing-toggle" role="tablist" aria-label={t("marketing.pricingToggleLabel")}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={plan === "monthly"}
-          className={`cadeo-pricing-toggle-btn ${plan === "monthly" ? "cadeo-pricing-toggle-btn--active" : ""}`}
-          onClick={() => setPlan("monthly")}
-        >
-          {t("marketing.pricingMonthly")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={plan === "annual"}
-          className={`cadeo-pricing-toggle-btn ${plan === "annual" ? "cadeo-pricing-toggle-btn--active" : ""}`}
-          onClick={() => setPlan("annual")}
-        >
-          {t("marketing.pricingAnnual")}
-          <span className="cadeo-pricing-save">{t("marketing.pricingAnnualBadge")}</span>
-        </button>
+      <div className="cadeo-pricing-toggle cadeo-pricing-toggle--3" role="tablist" aria-label={t("marketing.pricingToggleLabel")}>
+        {PLANS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={plan === value}
+            className={`cadeo-pricing-toggle-btn ${plan === value ? "cadeo-pricing-toggle-btn--active" : ""}`}
+            onClick={() => setPlan(value)}
+          >
+            {planLabel(value)}
+            {value === "annual" && <span className="cadeo-pricing-save">{t("marketing.pricingAnnualBadge")}</span>}
+          </button>
+        ))}
       </div>
 
       <div className="cadeo-pricing-amount">
-        <span className="cadeo-pricing-price">
-          {plan === "monthly" ? t("marketing.pricingPriceMonthly") : t("marketing.pricingPriceAnnual")}
-        </span>
-        <span className="cadeo-pricing-period">
-          {" "}
-          {plan === "monthly" ? t("marketing.pricingPeriodMonthly") : t("marketing.pricingPeriodAnnual")}
-        </span>
+        <span className="cadeo-pricing-price">{marketingPriceForPlan(plan, t)}</span>
+        <span className="cadeo-pricing-period"> {marketingPeriodForPlan(plan, t)}</span>
       </div>
 
       <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
 
       <SubscribeButton plan={plan} className={ctaClassName}>
-        {plan === "monthly" ? t("marketing.subscribeMonthly") : t("marketing.subscribeAnnual")}
+        {marketingSubscribeForPlan(plan, t)}
       </SubscribeButton>
     </div>
   );

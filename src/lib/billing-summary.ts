@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import type { BillingPlan } from "@/lib/billing";
 import { isBillingPlan } from "@/lib/billing";
-import { getAnnualPriceId, getMonthlyPriceId } from "@/lib/stripe";
+import { getAnnualPriceId, getMonthlyPriceId, getQuarterlyPriceId } from "@/lib/stripe";
 
 export type BillingSummary = {
   hasAccount: boolean;
@@ -12,14 +12,24 @@ export type BillingSummary = {
   trialEnd: string | null;
   amountCents: number | null;
   currency: string | null;
-  interval: "month" | "year" | null;
+  interval: "month" | "quarter" | "year" | null;
   paymentMethodBrand: string | null;
   paymentMethodLast4: string | null;
 };
 
 function planFromPriceId(priceId: string): BillingPlan | null {
   if (priceId === getMonthlyPriceId()) return "monthly";
+  if (priceId === getQuarterlyPriceId()) return "quarterly";
   if (priceId === getAnnualPriceId()) return "annual";
+  return null;
+}
+
+function intervalFromPrice(price: Stripe.Price | undefined): BillingSummary["interval"] {
+  const recurring = price?.recurring;
+  if (!recurring) return null;
+  if (recurring.interval === "year") return "year";
+  if (recurring.interval === "month" && (recurring.interval_count ?? 1) >= 3) return "quarter";
+  if (recurring.interval === "month") return "month";
   return null;
 }
 
@@ -110,7 +120,7 @@ export async function getBillingSummary(
       : null,
     amountCents: price?.unit_amount ?? null,
     currency: price?.currency ?? null,
-    interval: price?.recurring?.interval === "year" ? "year" : price?.recurring?.interval === "month" ? "month" : null,
+    interval: intervalFromPrice(price),
     paymentMethodBrand: pm.brand,
     paymentMethodLast4: pm.last4,
   };
