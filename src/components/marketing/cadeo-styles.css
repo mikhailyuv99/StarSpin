@@ -1998,6 +1998,21 @@
   line-height: 1.1;
 }
 
+.cadeo-pricing-vnd-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem;
+}
+
+.cadeo-pricing-eur {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  opacity: 0.55;
+  line-height: 1.2;
+}
+
 .cadeo-pricing-wallets {
   margin: 0;
   font-size: 0.78rem;
@@ -2746,11 +2761,22 @@
 }
 
 .cadeo-checkout-price {
-  margin-top: 0.35rem;
   font-family: var(--font-game), system-ui, sans-serif;
   font-size: 2rem;
   font-weight: 800;
   line-height: 1.1;
+}
+
+.cadeo-checkout-price-block {
+  margin-top: 0.35rem;
+}
+
+.cadeo-checkout-eur {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 0.55;
+  line-height: 1.2;
 }
 
 .cadeo-checkout-period {

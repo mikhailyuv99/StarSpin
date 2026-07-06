@@ -1,11 +1,10 @@
 import type { BillingPlan } from "@/lib/billing";
+import { PLAN_PRICING, formatPlanVnd } from "@/lib/plan-pricing";
 
 type Translator = (key: string) => string;
 
-export function marketingPriceForPlan(plan: BillingPlan, t: Translator): string {
-  if (plan === "monthly") return t("marketing.pricingPriceMonthly");
-  if (plan === "quarterly") return t("marketing.pricingPriceQuarterly");
-  return t("marketing.pricingPriceAnnual");
+export function marketingPriceForPlan(plan: BillingPlan): string {
+  return formatPlanVnd(PLAN_PRICING[plan].vnd);
 }
 
 export function marketingPeriodForPlan(plan: BillingPlan, t: Translator): string {
@@ -15,15 +14,23 @@ export function marketingPeriodForPlan(plan: BillingPlan, t: Translator): string
 }
 
 export function marketingSubscribeForPlan(plan: BillingPlan, t: Translator): string {
-  if (plan === "monthly") return t("marketing.subscribeMonthly");
-  if (plan === "quarterly") return t("marketing.subscribeQuarterly");
-  return t("marketing.subscribeAnnual");
+  const action =
+    plan === "monthly"
+      ? t("marketing.subscribeMonthly")
+      : plan === "quarterly"
+        ? t("marketing.subscribeQuarterly")
+        : t("marketing.subscribeAnnual");
+  return `${action} — ${formatPlanVnd(PLAN_PRICING[plan].vnd)}`;
 }
 
 export function checkoutPayForPlan(plan: BillingPlan, t: Translator): string {
-  if (plan === "monthly") return t("billing.checkoutPayMonthly");
-  if (plan === "quarterly") return t("billing.checkoutPayQuarterly");
-  return t("billing.checkoutPayAnnual");
+  const action =
+    plan === "monthly"
+      ? t("billing.checkoutPayMonthly")
+      : plan === "quarterly"
+        ? t("billing.checkoutPayQuarterly")
+        : t("billing.checkoutPayAnnual");
+  return `${action} · ${formatPlanVnd(PLAN_PRICING[plan].vnd)}`;
 }
 
 export function managePlanLabelForPlan(plan: BillingPlan | null, t: Translator): string {

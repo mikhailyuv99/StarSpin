@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import { SubscribeButton } from "@/components/billing/SubscribeButton";
 import type { BillingPlan } from "@/lib/billing";
-import {
-  marketingPeriodForPlan,
-  marketingPriceForPlan,
-  marketingSubscribeForPlan,
-} from "@/lib/billing-display";
+import { marketingSubscribeForPlan } from "@/lib/billing-display";
 
 const PLANS: BillingPlan[] = ["monthly", "quarterly", "annual"];
 
@@ -35,15 +32,15 @@ export function PricingPlans({ ctaClassName = "cadeo-btn cadeo-btn-purple cadeo-
             onClick={() => setPlan(value)}
           >
             {planLabel(value)}
+            {value === "quarterly" && (
+              <span className="cadeo-pricing-save">{t("marketing.pricingQuarterlyBadge")}</span>
+            )}
             {value === "annual" && <span className="cadeo-pricing-save">{t("marketing.pricingAnnualBadge")}</span>}
           </button>
         ))}
       </div>
 
-      <div className="cadeo-pricing-amount">
-        <span className="cadeo-pricing-price">{marketingPriceForPlan(plan, t)}</span>
-        <span className="cadeo-pricing-period"> {marketingPeriodForPlan(plan, t)}</span>
-      </div>
+      <PlanPriceDisplay plan={plan} />
 
       <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
 

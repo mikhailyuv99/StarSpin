@@ -8,12 +8,9 @@ import { useI18n } from "@/i18n/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
 import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
+import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import type { BillingPlan } from "@/lib/billing";
-import {
-  checkoutPayForPlan,
-  marketingPeriodForPlan,
-  marketingPriceForPlan,
-} from "@/lib/billing-display";
+import { checkoutPayForPlan } from "@/lib/billing-display";
 import "@/components/marketing/cadeo-styles.css";
 
 function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
@@ -103,9 +100,6 @@ export function StarspinCheckout({
     };
   }, [plan, t]);
 
-  const amountLabel = marketingPriceForPlan(plan, t);
-  const periodLabel = marketingPeriodForPlan(plan, t);
-
   return (
     <div className="cadeo-page cadeo-page--subscribe cadeo-page--checkout">
       <MobileAppBanner />
@@ -132,10 +126,13 @@ export function StarspinCheckout({
 
           <div className="cadeo-checkout-summary">
             <p className="cadeo-checkout-plan">{t("marketing.pricingName")}</p>
-            <p className="cadeo-checkout-price">
-              {amountLabel}
-              <span className="cadeo-checkout-period"> {periodLabel}</span>
-            </p>
+            <PlanPriceDisplay
+              plan={plan}
+              className="cadeo-checkout-price-block"
+              priceClassName="cadeo-checkout-price"
+              periodClassName="cadeo-checkout-period"
+              eurClassName="cadeo-checkout-eur"
+            />
             <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
           </div>
 
