@@ -299,6 +299,16 @@ body {
   color: #b91c1c;
 }
 
+.brutal-mobile-menu-item--cta {
+  margin-top: 0.25rem;
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  box-shadow: var(--brutal-shadow);
+  background: var(--c-yellow, #fbbf24);
+  text-align: center;
+  font-weight: 800;
+}
+
 .brutal-card {
   border: var(--brutal-border);
   border-radius: var(--brutal-radius);

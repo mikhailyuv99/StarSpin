@@ -5,7 +5,7 @@ import { useEffect, useId, useState } from "react";
 import { useTranslations } from "@/i18n/client";
 
 export type MobileMenuItem =
-  | { type: "link"; href: string; label: string }
+  | { type: "link"; href: string; label: string; emphasis?: boolean }
   | { type: "anchor"; href: string; label: string }
   | { type: "button"; label: string; onClick: () => void | Promise<void>; danger?: boolean };
 
@@ -64,7 +64,7 @@ export function BrutalMobileMenu({
                   <Link
                     key={`${item.type}-${item.href}`}
                     href={item.href}
-                    className="brutal-mobile-menu-item"
+                    className={`brutal-mobile-menu-item${item.emphasis ? " brutal-mobile-menu-item--cta" : ""}`}
                     onClick={() => setOpen(false)}
                   >
                     {item.label}

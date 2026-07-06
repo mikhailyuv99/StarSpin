@@ -177,18 +177,16 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
-.cadeo-nav-auth-btn {
+.cadeo-nav-locale {
   display: none;
-  white-space: nowrap;
-  padding-inline: 0.85rem;
-  font-size: 0.9rem;
 }
 
 @media (min-width: 900px) {
-  .cadeo-nav-auth-btn {
-    display: inline-flex;
+  .cadeo-nav-locale {
+    display: block;
   }
 }
 
@@ -254,6 +252,18 @@
 .cadeo-btn:active {
   transform: translate(2px, 2px);
   box-shadow: none;
+}
+
+.cadeo-nav-actions .cadeo-btn.cadeo-nav-auth-btn {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .cadeo-nav-actions .cadeo-btn.cadeo-nav-auth-btn {
+    display: inline-flex;
+    padding-inline: 0.85rem;
+    font-size: 0.9rem;
+  }
 }
 
 .cadeo-btn-yellow {

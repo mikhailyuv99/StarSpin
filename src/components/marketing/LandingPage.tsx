@@ -32,7 +32,7 @@ function Nav() {
     { type: "anchor", href: "#pricing", label: t("marketing.navPricing") },
     { type: "anchor", href: "#faq", label: t("marketing.navFaq") },
     { type: "link", href: "/login", label: t("marketing.navLogin") },
-    { type: "link", href: "/login?mode=signup", label: t("marketing.navSignup") },
+    { type: "link", href: "/login?mode=signup", label: t("marketing.navSignup"), emphasis: true },
   ];
 
   return (
@@ -51,7 +51,9 @@ function Nav() {
           <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-nav-auth-btn">
             {t("marketing.navSignup")}
           </Link>
-          <LocaleSwitcher variant="brutal" />
+          <div className="cadeo-nav-locale">
+            <LocaleSwitcher variant="brutal" />
+          </div>
           <BrutalMobileMenu items={menuItems} className="cadeo-nav-burger" />
         </div>
       </nav>
