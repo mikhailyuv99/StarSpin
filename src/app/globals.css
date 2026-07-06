@@ -60,7 +60,7 @@ body {
 
 /* ── Neo-brutalist primitives (app-wide) ── */
 .brutal-page {
-  min-height: 100vh;
+  min-height: auto;
   background: var(--c-gray);
   color: var(--c-black);
   --dashboard-sticky-top: 6.5rem;
@@ -180,60 +180,33 @@ body {
 
 .qr-preview-panel {
   align-self: flex-start;
-}
-
-.qr-studio-layout {
-  position: relative;
-}
-
-.qr-studio-preview {
   width: 100%;
 }
 
-.qr-studio-preview-inner {
-  width: 100%;
+@media (min-width: 1024px) {
+  .qr-preview-panel {
+    width: var(--qr-preview-width, auto);
+    max-width: none;
+  }
 }
 
-.brutal-page--qr-studio,
-.brutal-page:has(.qr-design-studio-page) {
+.brutal-page--qr-studio {
   min-height: 0 !important;
   height: auto !important;
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 @media (max-width: 1023px) {
-  html.qr-studio-active,
-  body.qr-studio-active {
-    height: auto !important;
-    min-height: 0 !important;
-  }
-
-  .qr-design-studio-page,
-  .qr-design-studio,
-  .qr-studio-layout,
-  .qr-studio-settings,
-  .qr-studio-preview,
-  .qr-studio-order {
-    flex: 0 0 auto;
-    min-height: 0;
-    height: auto;
+  .qr-preview-aspect {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    contain: layout paint;
   }
 
   .qr-preview-panel {
     max-width: min(100%, var(--qr-preview-width, 100%));
     margin-inline: auto;
-  }
-
-  .qr-preview-aspect {
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .qr-preview-aspect canvas {
-    display: block;
-    width: 100% !important;
-    height: auto !important;
-    max-width: 100%;
   }
 
   .qr-customize-panel {
@@ -242,33 +215,6 @@ body {
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1.25rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .qr-preview-panel {
-    width: var(--qr-preview-width, auto);
-    max-width: none;
-  }
-
-  .qr-studio-settings {
-    padding-right: calc(var(--qr-preview-width, 28rem) + 2rem);
-  }
-
-  .qr-studio-preview {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: var(--qr-preview-width, auto);
-    pointer-events: none;
-  }
-
-  .qr-studio-preview-inner {
-    position: sticky;
-    top: var(--dashboard-sticky-top);
-    z-index: 20;
-    width: var(--qr-preview-width, auto);
-    pointer-events: auto;
   }
 }
 

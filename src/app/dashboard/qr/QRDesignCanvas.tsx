@@ -223,8 +223,7 @@ export function QRDesignCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className={`block h-full w-full max-w-full touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
-      style={{ aspectRatio: `${canvasBox.width} / ${canvasBox.height}` }}
+      className={`absolute inset-0 h-full w-full touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}

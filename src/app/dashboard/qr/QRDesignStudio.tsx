@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
+  CANVAS_SIZE,
   downloadCanvas,
   normalizeHex,
   parseQRDesign,
@@ -214,7 +215,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   const previewPanel = (
-    <div className="qr-preview-panel w-full max-w-full lg:shrink-0">
+    <div className="w-full max-w-full lg:shrink-0">
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -236,7 +237,12 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       )}
 
       <div className="qr-preview-frame">
-        <div className="qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]">
+        <div
+          className="qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]"
+          style={{
+            aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
+          }}
+        >
           <QRDesignCanvas
             template={template}
             visitCardSide={visitCardSide}
@@ -298,15 +304,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div
-        className="qr-studio-layout relative flex flex-col gap-4 lg:block lg:gap-0"
-        style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
-      >
-        <div className="qr-studio-preview w-full min-w-0 shrink-0">
-          <div className="qr-studio-preview-inner">{previewPanel}</div>
-        </div>
-
-        <div className="qr-studio-settings min-w-0 w-full">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-8">
+        <div className="order-2 min-w-0 lg:order-1">
           <form
             onSubmit={(e) => e.preventDefault()}
             className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
@@ -447,9 +446,16 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             </div>
           </form>
         </div>
+
+        <div
+          className="qr-preview-panel order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
+          style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
+        >
+          {previewPanel}
+        </div>
       </div>
 
-      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
+      <section className={`${ui.card} flex items-start justify-between gap-4 max-lg:p-4`}>
         <div className="min-w-0">
           <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>

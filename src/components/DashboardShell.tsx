@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { DashboardHeader } from "@/components/DashboardHeader";
 
 type NavItem = { href: string; label: string };
@@ -9,8 +12,11 @@ export function DashboardShell({
   nav: NavItem[];
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const qrStudio = pathname === "/dashboard/qr";
+
   return (
-    <div className="brutal-page pb-10">
+    <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
       <div className="brutal-nav-wrap">
         <DashboardHeader nav={nav} />
       </div>

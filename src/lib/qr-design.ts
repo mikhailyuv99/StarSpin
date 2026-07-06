@@ -105,30 +105,31 @@ export function nearestGridIndex(value: number): number {
 }
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, Record<DesignElementKey, number>> = {
-  table_sticker: { logo: 88, name: 28, qr: 280, tagline: 22 },
-  visit_card: { logo: 96, name: 26, qr: 220, tagline: 18 },
+  // Sized ~1.62× vs original defaults to match larger sticker/visit-card preview (420 / 520px)
+  table_sticker: { logo: 142, name: 45, qr: 420, tagline: 36 },
+  visit_card: { logo: 156, name: 42, qr: 358, tagline: 29 },
 };
 
 const DEFAULT_VISIT_CARD_LAYOUT: TemplateLayout = {
-  logo: { x: 0.17, y: 0.22, scale: 1 },
-  name: { x: 0.17, y: 0.48, scale: 1 },
-  qr: { x: 0.71, y: 0.44, scale: 1 },
-  tagline: { x: 0.71, y: 0.72, scale: 1 },
+  logo: { x: 0.17, y: 0.18, scale: 1.1 },
+  name: { x: 0.17, y: 0.44, scale: 1.1 },
+  qr: { x: 0.71, y: 0.42, scale: 1.05 },
+  tagline: { x: 0.71, y: 0.82, scale: 1.1 },
 };
 
 const DEFAULT_VISIT_CARD_BACK_LAYOUT: TemplateLayout = {
-  logo: { x: 0.5, y: 0.32, scale: 1.1 },
-  name: { x: 0.5, y: 0.5, scale: 1 },
-  tagline: { x: 0.5, y: 0.68, scale: 1 },
-  qr: { x: 0.5, y: 0.84, scale: 0.5 },
+  logo: { x: 0.5, y: 0.3, scale: 1.2 },
+  name: { x: 0.5, y: 0.48, scale: 1.1 },
+  tagline: { x: 0.5, y: 0.66, scale: 1.1 },
+  qr: { x: 0.5, y: 0.84, scale: 0.55 },
 };
 
 export const DEFAULT_LAYOUTS = {
   table_sticker: {
-    logo: { x: 0.5, y: 0.11, scale: 1 },
-    name: { x: 0.5, y: 0.28, scale: 1 },
-    qr: { x: 0.5, y: 0.52, scale: 1 },
-    tagline: { x: 0.5, y: 0.78, scale: 1 },
+    logo: { x: 0.5, y: 0.1, scale: 1.15 },
+    name: { x: 0.5, y: 0.25, scale: 1.1 },
+    qr: { x: 0.5, y: 0.54, scale: 1.05 },
+    tagline: { x: 0.5, y: 0.87, scale: 1.1 },
   } satisfies TemplateLayout,
 };
 
