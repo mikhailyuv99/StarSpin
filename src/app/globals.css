@@ -184,11 +184,21 @@ body {
     top: var(--dashboard-sticky-top);
     z-index: 40;
     align-self: flex-start;
-    max-height: calc(100dvh - var(--dashboard-sticky-top) - 1rem);
-    overflow-x: visible;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow: visible;
   }
+}
+
+.qr-preview-frame {
+  box-sizing: content-box;
+  padding-right: 6px;
+  padding-bottom: 6px;
+  overflow: visible;
+}
+
+.qr-preview-download {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .qr-font-list {

@@ -5,14 +5,11 @@ import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
   downloadCanvas,
-  getRenderContext,
   normalizeHex,
   parseQRDesign,
-  patchLayoutElement,
   patchVisitCardSide,
   PREVIEW_MAX_WIDTH,
   renderDesignToCanvas,
-  resetTemplateLayout,
   type CardSideSettings,
   type DesignElementKey,
   type QRDesignConfig,
@@ -20,8 +17,7 @@ import {
   type TextStyle,
   type VisitCardSide,
 } from "@/lib/qr-design";
-import { ELEMENT_KEYS, QRDesignCanvas } from "./QRDesignCanvas";
-import { QRAlignmentPicker } from "./QRAlignmentPicker";
+import { QRDesignCanvas } from "./QRDesignCanvas";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
@@ -59,6 +55,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const skipAutosaveRef = useRef(true);
   const saveSeqRef = useRef(0);
   const savedStatusTimerRef = useRef<number | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
 
   const displayUrl =
     typeof window !== "undefined"
@@ -67,9 +66,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   const sideSettings: CardSideSettings | null =
     template === "visit_card" ? design.visitCard[visitCardSide] : null;
-
-  const renderSideCtx =
-    template !== "qr" ? getRenderContext(design, template, visitCardSide) : null;
 
   const patchDesign = (patch: Partial<QRDesignConfig>) => {
     setDesign((prev) => ({ ...prev, ...patch }));
@@ -188,7 +184,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       businessName: merchant.name,
       qrFg: normalizeHex(qrFg, "#0a0a0a"),
       qrBg: normalizeHex(qrBg, "#ffffff"),
-      design: { ...design, template: exportTemplate },
+      design: { ...design, template: exportTemplate, logoUrl: activeLogoUrl },
       visitCardSide: side,
     });
     return exportCanvasEl;
@@ -209,22 +205,12 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     }
   };
 
-  const selectedPlacement =
-    selectedElement && template !== "qr" && renderSideCtx
-      ? renderSideCtx.layout[selectedElement]
-      : null;
-
-  const alignSelected = (x: number, y: number) => {
-    if (!selectedElement || template === "qr") return;
-    setDesign(patchLayoutElement(design, template, selectedElement, { x, y }, visitCardSide));
-  };
-
   const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   const previewPanel = (
-    <div className="qr-preview-sticky min-w-0 w-full max-w-full lg:w-auto">
+    <div className="qr-preview-sticky shrink-0" style={{ width: `min(100%, ${previewWidth + 20}px)` }}>
       {template === "visit_card" && (
-        <div className="mb-3 flex flex-wrap gap-2" style={{ maxWidth: previewWidth }}>
+        <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
             <button
               key={side}
@@ -243,11 +229,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         </div>
       )}
 
-      <div
-        className="overflow-visible rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]"
-        style={{ maxWidth: previewWidth + 12 }}
-      >
-        <div className="w-full" style={{ maxWidth: previewWidth }}>
+      <div className="qr-preview-frame">
+        <div className="rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]">
           <QRDesignCanvas
             template={template}
             visitCardSide={visitCardSide}
@@ -255,7 +238,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             businessName={merchant.name}
             qrFg={normalizeHex(qrFg, "#0a0a0a")}
             qrBg={normalizeHex(qrBg, "#ffffff")}
-            design={design}
+            design={{ ...design, logoUrl: activeLogoUrl }}
             editable={template !== "qr"}
             selected={selectedElement}
             onSelect={setSelectedElement}
@@ -265,62 +248,28 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         </div>
       </div>
 
-      <div className="mt-3 flex w-full flex-col gap-2" style={{ maxWidth: previewWidth }}>
-        <button type="button" onClick={() => void handleDownload()} className={ui.btn}>
+      <div className="qr-preview-frame mt-3 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => void handleDownload()}
+          className={`${ui.btn} qr-preview-download !w-full`}
+        >
           {template === "visit_card"
             ? t("dashboard.qrDownloadSide", { side: t(`dashboard.qrVisitCard_${visitCardSide}`) })
             : t("dashboard.downloadPng")}
         </button>
         {template === "visit_card" && (
-          <button type="button" onClick={() => void handleDownloadBothSides()} className={ui.btnOutline}>
+          <button
+            type="button"
+            onClick={() => void handleDownloadBothSides()}
+            className={`${ui.btnOutline} qr-preview-download !w-full`}
+          >
             {t("dashboard.qrDownloadBothSides")}
           </button>
         )}
       </div>
     </div>
   );
-
-  const layoutControls =
-    template !== "qr" ? (
-      <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
-        <p className="text-sm font-extrabold text-ink">{t("dashboard.qrLayoutTitle")}</p>
-        <p className="text-xs font-medium text-muted">{t("dashboard.qrDragHint")}</p>
-
-        <div className="flex flex-wrap gap-2">
-          {ELEMENT_KEYS.map((key) => {
-            if (key === "logo" && !design.logoUrl) return null;
-            if (key === "name" && !renderSideCtx?.showName) return null;
-            if (key === "qr" && !renderSideCtx?.showQr) return null;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelectedElement(key)}
-                className={`rounded-[10px] border-2 border-black px-3 py-1.5 text-xs font-extrabold uppercase shadow-[2px_2px_0_0_#0a0a0a] ${
-                  selectedElement === key ? "bg-[var(--c-yellow)]" : "bg-white"
-                }`}
-              >
-                {t(`dashboard.qrElement_${key}`)}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => {
-              setDesign(resetTemplateLayout(design, template, visitCardSide));
-              setSelectedElement(null);
-            }}
-            className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs`}
-          >
-            {t("dashboard.qrResetLayout")}
-          </button>
-        </div>
-
-        {selectedElement && selectedPlacement && (
-          <QRAlignmentPicker x={selectedPlacement.x} y={selectedPlacement.y} onPick={alignSelected} />
-        )}
-      </div>
-    ) : null;
 
   return (
     <div className="space-y-8">
@@ -344,7 +293,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_max-content]">
         <div className="min-w-0 space-y-6">
           <form
             onSubmit={(e) => e.preventDefault()}
@@ -387,21 +336,22 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 fallback="#ffffff"
                 onChange={setQrBg}
               />
-            </div>
-
-            {template !== "qr" && (
-              <>
-                {layoutControls}
-
+              {template !== "qr" && (
                 <QRColorSwatch
                   label={t("dashboard.qrLayoutBackground")}
                   value={template === "visit_card" ? sideSettings!.layoutBg : design.layoutBg}
                   fallback="#ffffff"
                   onChange={(color) =>
-                    template === "visit_card" ? patchSide({ layoutBg: color }) : patchDesign({ layoutBg: color })
+                    template === "visit_card"
+                      ? patchSide({ layoutBg: color })
+                      : patchDesign({ layoutBg: color })
                   }
                 />
+              )}
+            </div>
 
+            {template !== "qr" && (
+              <>
                 <div>
                   <label className={ui.label}>{t("dashboard.qrTagline")}</label>
                   <input
@@ -477,22 +427,42 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
                 <div>
                   <label className={ui.label}>{t("dashboard.qrLogo")}</label>
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                    {activeLogoUrl ? (
+                      <img
+                        src={activeLogoUrl}
+                        alt=""
+                        className="h-16 w-16 shrink-0 rounded-[14px] border-2 border-black object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] border-2 border-dashed border-black/30 bg-[var(--c-cream)] text-xs font-bold text-muted">
+                        —
+                      </div>
+                    )}
+                    <div className="min-w-0 space-y-2">
+                      <p className="text-sm font-semibold text-ink">
+                        {activeLogoUrl ? t("dashboard.qrLogoActive") : t("dashboard.qrLogoNone")}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        className={`${ui.btnOutline} !w-auto px-4`}
+                      >
+                        {activeLogoUrl ? t("dashboard.qrChangeLogo") : t("dashboard.qrUploadLogo")}
+                      </button>
+                    </div>
+                  </div>
                   <input
+                    ref={logoInputRef}
                     type="file"
                     accept="image/*"
-                    className={ui.file}
+                    className="sr-only"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) void handleLogoUpload(file);
+                      e.target.value = "";
                     }}
                   />
-                  {design.logoUrl && (
-                    <img
-                      src={design.logoUrl}
-                      alt=""
-                      className="mt-3 h-16 w-16 rounded-[14px] border-2 border-black object-cover"
-                    />
-                  )}
                 </div>
               </>
             )}
@@ -529,7 +499,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           </section>
         </div>
 
-        <div className="min-w-0 shrink lg:shrink-0">{previewPanel}</div>
+        <div className="shrink-0">{previewPanel}</div>
       </div>
     </div>
   );
