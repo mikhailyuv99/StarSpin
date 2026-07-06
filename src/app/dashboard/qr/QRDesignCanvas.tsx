@@ -82,7 +82,11 @@ export function QRDesignCanvas({
         visitCardSide,
         editor:
           editable && template !== "qr"
-            ? { selected, showGuides: true }
+            ? {
+                selected,
+                showGuides: Boolean(selected) || Boolean(drag),
+                showGrid: drag?.mode === "move",
+              }
             : undefined,
       });
     } finally {
@@ -92,6 +96,7 @@ export function QRDesignCanvas({
     businessName,
     design,
     displayUrl,
+    drag,
     editable,
     onRenderingChange,
     qrBg,

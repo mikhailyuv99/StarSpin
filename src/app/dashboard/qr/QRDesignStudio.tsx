@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,6 +10,7 @@ import {
   parseQRDesign,
   patchLayoutElement,
   patchVisitCardSide,
+  PREVIEW_MAX_WIDTH,
   renderDesignToCanvas,
   resetTemplateLayout,
   type CardSideSettings,
@@ -29,10 +29,13 @@ import type { Merchant } from "@/lib/types";
 
 const TEMPLATES: QRDesignTemplate[] = ["qr", "table_sticker", "visit_card"];
 const VISIT_CARD_SIDES: VisitCardSide[] = ["front", "back"];
+const AUTOSAVE_DELAY_MS = 800;
+const SAVED_STATUS_MS = 2500;
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const t = useTranslations();
-  const router = useRouter();
 
   const initialDesign = useMemo(
     () =>
@@ -49,10 +52,12 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
   const [selectedElement, setSelectedElement] = useState<DesignElementKey | null>(null);
-  const [loading, setLoading] = useState(false);
   const [rendering, setRendering] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const skipAutosaveRef = useRef(true);
+  const saveSeqRef = useRef(0);
+  const savedStatusTimerRef = useRef<number | null>(null);
 
   const displayUrl =
     typeof window !== "undefined"
@@ -128,28 +133,55 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     patchDesign({ logoUrl: data.publicUrl });
   };
 
-  const handleSave = async () => {
-    setLoading(true);
-    setMessage(null);
-    setError(null);
-
-    const payload = {
-      qr_fg_color: normalizeHex(qrFg, "#0a0a0a"),
-      qr_bg_color: normalizeHex(qrBg, "#ffffff"),
-      qr_design: { ...design, template },
-    };
-
-    const supabase = createClient();
-    const { error: updateError } = await supabase.from("merchants").update(payload).eq("id", merchant.id);
-
-    setLoading(false);
-    if (updateError) {
-      setError(updateError.message);
+  useEffect(() => {
+    if (skipAutosaveRef.current) {
+      skipAutosaveRef.current = false;
       return;
     }
-    setMessage(t("common.saved"));
-    router.refresh();
-  };
+
+    const timer = window.setTimeout(() => {
+      const seq = ++saveSeqRef.current;
+      setSaveStatus("saving");
+      setError(null);
+
+      void (async () => {
+        const payload = {
+          qr_fg_color: normalizeHex(qrFg, "#0a0a0a"),
+          qr_bg_color: normalizeHex(qrBg, "#ffffff"),
+          qr_design: { ...design, template },
+        };
+
+        const supabase = createClient();
+        const { error: updateError } = await supabase
+          .from("merchants")
+          .update(payload)
+          .eq("id", merchant.id);
+
+        if (seq !== saveSeqRef.current) return;
+
+        if (updateError) {
+          setSaveStatus("error");
+          setError(updateError.message);
+          return;
+        }
+
+        setSaveStatus("saved");
+        if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
+        savedStatusTimerRef.current = window.setTimeout(() => {
+          setSaveStatus((current) => (current === "saved" ? "idle" : current));
+        }, SAVED_STATUS_MS);
+      })();
+    }, AUTOSAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [design, template, qrFg, qrBg, merchant.id]);
+
+  useEffect(
+    () => () => {
+      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
+    },
+    [],
+  );
 
   const exportCanvas = async (exportTemplate: QRDesignTemplate, side: VisitCardSide = "front") => {
     const exportCanvasEl = document.createElement("canvas");
@@ -195,34 +227,11 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     setDesign(patchLayoutElement(design, template, selectedElement, { x, y }, visitCardSide));
   };
 
+  const previewWidth = PREVIEW_MAX_WIDTH[template];
+
   const previewPanel = (
-    <div className={`${ui.card} w-fit max-w-full space-y-3 p-4 xl:min-w-[28rem]`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className={ui.h2}>{t("dashboard.qrPreviewTitle")}</h2>
-        {rendering && <span className="text-xs font-bold text-muted">{t("common.loading")}</span>}
-      </div>
-
-      {template === "visit_card" && (
-        <div className="flex gap-2">
-          {VISIT_CARD_SIDES.map((side) => (
-            <button
-              key={side}
-              type="button"
-              onClick={() => {
-                setVisitCardSide(side);
-                setSelectedElement(null);
-              }}
-              className={`rounded-[10px] border-2 border-black px-3 py-1.5 text-xs font-extrabold uppercase shadow-[2px_2px_0_0_#0a0a0a] ${
-                visitCardSide === side ? "bg-[var(--c-yellow)]" : "bg-white"
-              }`}
-            >
-              {t(`dashboard.qrVisitCard_${side}`)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="w-fit rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5">
+    <div className="qr-preview-sticky w-fit max-w-full">
+      <div className="rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]">
         <QRDesignCanvas
           template={template}
           visitCardSide={visitCardSide}
@@ -238,20 +247,52 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           onRenderingChange={setRendering}
         />
       </div>
+      <div className="mt-3 flex flex-col gap-2" style={{ width: previewWidth, maxWidth: "100%" }}>
+        <button type="button" onClick={() => void handleDownload()} className={ui.btn}>
+          {template === "visit_card"
+            ? t("dashboard.qrDownloadSide", { side: t(`dashboard.qrVisitCard_${visitCardSide}`) })
+            : t("dashboard.downloadPng")}
+        </button>
+        {template === "visit_card" && (
+          <button type="button" onClick={() => void handleDownloadBothSides()} className={ui.btnOutline}>
+            {t("dashboard.qrDownloadBothSides")}
+          </button>
+        )}
+        {template !== "qr" && (
+          <button type="button" onClick={() => void handleDownloadQrOnly()} className={ui.btnOutline}>
+            {t("dashboard.qrDownloadQrOnly")}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
-      {template !== "qr" && (
+  const layoutControls =
+    template !== "qr" ? (
+      <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
+        <p className="text-sm font-extrabold text-ink">{t("dashboard.qrLayoutTitle")}</p>
         <p className="text-xs font-medium text-muted">{t("dashboard.qrDragHint")}</p>
-      )}
 
-      {template !== "qr" && selectedElement && selectedPlacement && (
-        <QRAlignmentPicker
-          x={selectedPlacement.x}
-          y={selectedPlacement.y}
-          onPick={alignSelected}
-        />
-      )}
+        {template === "visit_card" && (
+          <div className="flex flex-wrap gap-2">
+            {VISIT_CARD_SIDES.map((side) => (
+              <button
+                key={side}
+                type="button"
+                onClick={() => {
+                  setVisitCardSide(side);
+                  setSelectedElement(null);
+                }}
+                className={`rounded-[10px] border-2 border-black px-3 py-1.5 text-xs font-extrabold uppercase shadow-[2px_2px_0_0_#0a0a0a] ${
+                  visitCardSide === side ? "bg-[var(--c-yellow)]" : "bg-white"
+                }`}
+              >
+                {t(`dashboard.qrVisitCard_${side}`)}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {template !== "qr" && (
         <div className="flex flex-wrap gap-2">
           {ELEMENT_KEYS.map((key) => {
             if (key === "logo" && !design.logoUrl) return null;
@@ -281,29 +322,12 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             {t("dashboard.qrResetLayout")}
           </button>
         </div>
-      )}
 
-      <p className="truncate font-mono text-xs text-muted">{displayUrl}</p>
-
-      <div className="flex flex-col gap-2">
-        <button type="button" onClick={() => void handleDownload()} className={ui.btn}>
-          {template === "visit_card"
-            ? t("dashboard.qrDownloadSide", { side: t(`dashboard.qrVisitCard_${visitCardSide}`) })
-            : t("dashboard.downloadPng")}
-        </button>
-        {template === "visit_card" && (
-          <button type="button" onClick={() => void handleDownloadBothSides()} className={ui.btnOutline}>
-            {t("dashboard.qrDownloadBothSides")}
-          </button>
-        )}
-        {template !== "qr" && (
-          <button type="button" onClick={() => void handleDownloadQrOnly()} className={ui.btnOutline}>
-            {t("dashboard.qrDownloadQrOnly")}
-          </button>
+        {selectedElement && selectedPlacement && (
+          <QRAlignmentPicker x={selectedPlacement.x} y={selectedPlacement.y} onPick={alignSelected} />
         )}
       </div>
-    </div>
-  );
+    ) : null;
 
   return (
     <div className="space-y-8">
@@ -327,17 +351,22 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="order-2 min-w-0 space-y-6 xl:order-1">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="min-w-0 space-y-6">
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void handleSave();
-            }}
+            onSubmit={(e) => e.preventDefault()}
             className={`${ui.card} space-y-5`}
           >
             <div>
-              <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
+                {saveStatus === "saving" && (
+                  <span className="text-xs font-bold text-muted">{t("common.saving")}</span>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="text-xs font-bold text-green-700">{t("common.saved")}</span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-muted">
                 {template === "visit_card"
                   ? t("dashboard.qrVisitCardCustomizeHint", {
@@ -345,9 +374,11 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                     })
                   : t("dashboard.qrStudioSubtitle")}
               </p>
+              {rendering && (
+                <p className="mt-1 text-xs font-bold text-muted">{t("common.loading")}</p>
+              )}
             </div>
 
-            {message && <p className={ui.alertSuccess}>{message}</p>}
             {error && <p className={ui.alertError}>{error}</p>}
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -389,6 +420,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
             {template !== "qr" && (
               <>
+                {layoutControls}
+
                 <div>
                   <label className={ui.label}>{t("dashboard.qrLayoutBackground")}</label>
                   <div className="flex items-center gap-3">
@@ -544,22 +577,27 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               <button type="button" onClick={applyBrandColors} className={`${ui.btnOutline} !w-auto px-5`}>
                 {t("dashboard.qrUseBrandColors")}
               </button>
-              <button type="submit" disabled={loading} className={`${ui.btn} !w-auto px-5`}>
-                {loading ? t("common.saving") : t("common.save")}
-              </button>
             </div>
           </form>
 
-          <section className={`${ui.card} space-y-4 border-dashed`}>
+          <section className={`${ui.card} space-y-4`}>
             <div>
               <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
               <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSubtitle")}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <button type="button" disabled className={`${ui.btnOutline} opacity-60`}>
+              <button
+                type="button"
+                disabled
+                className={`${ui.btnOutline} !w-full !cursor-not-allowed !opacity-100 !text-ink/70`}
+              >
                 {t("dashboard.qrOrderStickers")}
               </button>
-              <button type="button" disabled className={`${ui.btnOutline} opacity-60`}>
+              <button
+                type="button"
+                disabled
+                className={`${ui.btnOutline} !w-full !cursor-not-allowed !opacity-100 !text-ink/70`}
+              >
                 {t("dashboard.qrOrderCards")}
               </button>
             </div>
@@ -567,7 +605,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           </section>
         </div>
 
-        <div className="order-1 shrink-0 xl:order-2 qr-preview-sticky">{previewPanel}</div>
+        <div className="shrink-0">{previewPanel}</div>
       </div>
     </div>
   );

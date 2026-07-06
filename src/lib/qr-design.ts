@@ -619,7 +619,7 @@ async function renderLayoutDesign(
   qrBg: string,
   sideCtx: RenderSideContext,
   logoUrl: string | null,
-  editor?: { selected: DesignElementKey | null; showGuides: boolean },
+  editor?: { selected: DesignElementKey | null; showGuides: boolean; showGrid: boolean },
 ) {
   const { width, height } = CANVAS_SIZE[template];
   canvas.width = width;
@@ -646,7 +646,7 @@ async function renderLayoutDesign(
     ctx.fillRect(0, height - 12, width, 12);
   }
 
-  if (editor?.showGuides) {
+  if (editor?.showGrid) {
     drawAlignmentGrid(ctx, width, height);
   }
 
@@ -715,7 +715,7 @@ export async function renderDesignToCanvas(
     qrBg: string;
     design: QRDesignConfig;
     visitCardSide?: VisitCardSide;
-    editor?: { selected: DesignElementKey | null; showGuides: boolean };
+    editor?: { selected: DesignElementKey | null; showGuides: boolean; showGrid: boolean };
   },
 ): Promise<void> {
   const { template, url, businessName, qrFg, qrBg, design, visitCardSide = "front", editor } = options;

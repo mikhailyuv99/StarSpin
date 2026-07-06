@@ -57,7 +57,6 @@ export function DashboardHeader({ nav }: { nav: NavItem[] }) {
   };
 
   const menuItems: MobileMenuItem[] = [
-    { type: "link", href: "/", label: t("common.backHome") },
     ...nav.map(
       (item): MobileMenuItem => ({
         type: "link",
