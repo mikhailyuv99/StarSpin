@@ -196,9 +196,11 @@ body {
 
 .qr-scroll-row__track {
   overflow-x: auto;
+  overflow-y: visible;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding-block: 0.15rem 0.65rem;
 }
 
 .qr-scroll-row__track::-webkit-scrollbar {
@@ -210,6 +212,7 @@ body {
   width: max-content;
   gap: 0.5rem;
   padding-inline: 0.25rem;
+  padding-bottom: 0.15rem;
 }
 
 .qr-scroll-row:has(.qr-scroll-arrow--left) .qr-scroll-row__inner {

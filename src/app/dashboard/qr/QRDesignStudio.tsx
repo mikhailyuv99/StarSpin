@@ -294,7 +294,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 setSelectedElement(null);
                 setVisitCardSide("front");
               }}
-              className={`shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] ${
+              className={`mb-1 shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] ${
                 template === value ? "bg-[var(--c-yellow)]" : "bg-white"
               }`}
             >
@@ -484,28 +484,14 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             </div>
           </form>
 
-          <section className={`${ui.card} space-y-3 max-lg:p-4 lg:space-y-4`}>
-            <div>
+          <section className={`${ui.card} flex items-start justify-between gap-4 max-lg:p-4`}>
+            <div className="min-w-0">
               <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
-              <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSubtitle")}</p>
+              <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                disabled
-                className={`${ui.btnOutline} !w-full !cursor-not-allowed !opacity-100 !text-ink/70`}
-              >
-                {t("dashboard.qrOrderStickers")}
-              </button>
-              <button
-                type="button"
-                disabled
-                className={`${ui.btnOutline} !w-full !cursor-not-allowed !opacity-100 !text-ink/70`}
-              >
-                {t("dashboard.qrOrderCards")}
-              </button>
-            </div>
-            <p className="text-xs font-medium text-muted">{t("dashboard.qrOrderSoon")}</p>
+            <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
+              {t("dashboard.qrOrderBadge")}
+            </span>
           </section>
         </div>
       </div>
