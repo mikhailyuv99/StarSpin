@@ -8,7 +8,6 @@ import {
   hitTestElement,
   hitTestResizeHandle,
   patchLayoutElement,
-  PREVIEW_MAX_WIDTH,
   renderDesignToCanvas,
   snapToAlignmentGrid,
   type DesignElementKey,
@@ -62,7 +61,6 @@ export function QRDesignCanvas({
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const canvasBox = CANVAS_SIZE[template];
-  const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   useEffect(() => {
     dragRef.current = drag;
@@ -225,9 +223,9 @@ export function QRDesignCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className={`block w-full max-w-full touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`block w-full touch-none ${editable && template !== "qr" ? "cursor-grab active:cursor-grabbing" : ""}`}
       style={{
-        maxWidth: previewWidth,
+        width: "100%",
         height: "auto",
         aspectRatio: `${canvasBox.width} / ${canvasBox.height}`,
       }}

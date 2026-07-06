@@ -215,7 +215,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   const previewPanel = (
-    <div className="qr-preview-panel shrink-0" style={{ width: previewWidth + 20 }}>
+    <div
+      className="qr-preview-panel w-full max-w-full lg:shrink-0"
+      style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
+    >
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -302,10 +305,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </QRScrollRow>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
-        <div className="order-1 min-w-0 lg:order-2">
-          <QRScrollRow>
-            {previewPanel}
-          </QRScrollRow>
+        <div className="order-1 w-full min-w-0 lg:order-2 lg:flex lg:justify-start">
+          {previewPanel}
         </div>
 
         <div className="order-2 min-w-0 space-y-4 lg:order-1 lg:space-y-6">

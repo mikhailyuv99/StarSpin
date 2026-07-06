@@ -182,16 +182,19 @@ body {
   align-self: flex-start;
 }
 
+@media (min-width: 1024px) {
+  .qr-preview-panel {
+    width: var(--qr-preview-width, auto);
+    max-width: none;
+  }
+}
+
 .qr-scroll-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  position: relative;
   min-width: 0;
 }
 
 .qr-scroll-row__track {
-  flex: 1;
-  min-width: 0;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
@@ -206,14 +209,19 @@ body {
   display: flex;
   width: max-content;
   gap: 0.5rem;
+  padding-inline: 0.25rem;
+}
+
+.qr-scroll-row:has(.qr-scroll-arrow--left) .qr-scroll-row__inner {
+  padding-left: 2.1rem;
+}
+
+.qr-scroll-row:has(.qr-scroll-arrow--right) .qr-scroll-row__inner {
+  padding-right: 2.1rem;
 }
 
 @media (min-width: 1024px) {
   .qr-scroll-row__track {
-    overflow: visible;
-  }
-
-  .qr-scroll-row__track--wrap-lg {
     overflow: visible;
   }
 
@@ -224,44 +232,36 @@ body {
 }
 
 .qr-scroll-arrow {
-  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border: 2px solid #0a0a0a;
-  border-radius: 10px;
+  border-radius: 999px;
   background: #fff;
   box-shadow: 2px 2px 0 0 #0a0a0a;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   font-weight: 800;
-  color: #52525b;
+  color: #0a0a0a;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  transform: translateY(-50%);
 }
 
-.qr-scroll-arrow:hover:not(:disabled) {
-  background: var(--c-lavender);
+.qr-scroll-arrow--left {
+  left: 0.15rem;
 }
 
-.qr-scroll-arrow:disabled {
-  opacity: 0.3;
-  cursor: default;
+.qr-scroll-arrow--right {
+  right: 0.15rem;
 }
 
 @media (max-width: 1023px) {
-  .qr-preview-panel {
-    position: sticky;
-    top: calc(var(--dashboard-sticky-top) + 0.25rem);
-    z-index: 20;
-    margin-inline: auto;
-    padding-bottom: 0.25rem;
-    background: var(--c-gray);
-  }
-
   .qr-customize-panel {
-    max-height: min(44vh, 28rem);
+    max-height: min(50vh, 32rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;

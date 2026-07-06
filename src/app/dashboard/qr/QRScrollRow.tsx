@@ -3,16 +3,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "@/i18n/client";
 
-const SCROLL_STEP = 160;
+const SCROLL_STEP = 140;
 
 export function QRScrollRow({
   children,
   className = "",
-  mobileOnly = true,
 }: {
   children: ReactNode;
   className?: string;
-  mobileOnly?: boolean;
 }) {
   const t = useTranslations();
   const trackRef = useRef<HTMLDivElement>(null);
@@ -43,33 +41,33 @@ export function QRScrollRow({
     trackRef.current?.scrollBy({ left: delta, behavior: "smooth" });
   };
 
-  const arrowClass = mobileOnly ? "qr-scroll-arrow lg:hidden" : "qr-scroll-arrow";
-
   return (
     <div className={`qr-scroll-row ${className}`.trim()}>
-      <button
-        type="button"
-        aria-label={t("common.scrollLeft")}
-        disabled={!canScrollLeft}
-        onClick={() => scrollBy(-SCROLL_STEP)}
-        className={`${arrowClass} qr-scroll-arrow--left`}
-      >
-        ◀
-      </button>
-
       <div ref={trackRef} className="qr-scroll-row__track">
         {children}
       </div>
 
-      <button
-        type="button"
-        aria-label={t("common.scrollRight")}
-        disabled={!canScrollRight}
-        onClick={() => scrollBy(SCROLL_STEP)}
-        className={`${arrowClass} qr-scroll-arrow--right`}
-      >
-        ▶
-      </button>
+      {canScrollLeft && (
+        <button
+          type="button"
+          aria-label={t("common.scrollLeft")}
+          onClick={() => scrollBy(-SCROLL_STEP)}
+          className="qr-scroll-arrow qr-scroll-arrow--left lg:hidden"
+        >
+          ◀
+        </button>
+      )}
+
+      {canScrollRight && (
+        <button
+          type="button"
+          aria-label={t("common.scrollRight")}
+          onClick={() => scrollBy(SCROLL_STEP)}
+          className="qr-scroll-arrow qr-scroll-arrow--right lg:hidden"
+        >
+          ▶
+        </button>
+      )}
     </div>
   );
 }
