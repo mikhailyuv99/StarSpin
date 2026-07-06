@@ -8,7 +8,7 @@ export default async function QRPage() {
   const t = await getTranslations();
 
   return (
-    <div className="space-y-8">
+    <div className="qr-design-studio-page space-y-4 lg:space-y-8">
       <div>
         <h1 className={ui.h1}>{t("dashboard.qrTitle")}</h1>
         <p className={ui.muted}>{t("dashboard.qrSubtitle")}</p>

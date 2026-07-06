@@ -18,6 +18,7 @@ import {
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
+import { QRScrollRow } from "./QRScrollRow";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
@@ -214,7 +215,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const previewWidth = PREVIEW_MAX_WIDTH[template];
 
   const previewPanel = (
-    <div className="qr-preview-panel shrink-0" style={{ width: `min(100%, ${previewWidth + 20}px)` }}>
+    <div className="qr-preview-panel shrink-0" style={{ width: previewWidth + 20 }}>
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -277,33 +278,37 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   );
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap gap-2">
-        {TEMPLATES.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              setTemplate(value);
-              patchDesign({ template: value });
-              setSelectedElement(null);
-              setVisitCardSide("front");
-            }}
-            className={`rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] ${
-              template === value ? "bg-[var(--c-yellow)]" : "bg-white"
-            }`}
-          >
-            {t(`dashboard.qrTemplate_${value}`)}
-          </button>
-        ))}
-      </div>
+    <div className="qr-design-studio space-y-4 lg:space-y-8">
+      <QRScrollRow>
+        <div className="qr-scroll-row__inner qr-scroll-row__inner--wrap-lg">
+          {TEMPLATES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                setTemplate(value);
+                patchDesign({ template: value });
+                setSelectedElement(null);
+                setVisitCardSide("front");
+              }}
+              className={`shrink-0 rounded-[14px] border-2 border-black px-4 py-2 text-sm font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a] ${
+                template === value ? "bg-[var(--c-yellow)]" : "bg-white"
+              }`}
+            >
+              {t(`dashboard.qrTemplate_${value}`)}
+            </button>
+          ))}
+        </div>
+      </QRScrollRow>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
-        <div className="order-1 flex shrink-0 justify-center lg:order-2 lg:justify-start">
-          {previewPanel}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-8">
+        <div className="order-1 min-w-0 lg:order-2">
+          <QRScrollRow>
+            {previewPanel}
+          </QRScrollRow>
         </div>
 
-        <div className="order-2 min-w-0 space-y-6 lg:order-1">
+        <div className="order-2 min-w-0 space-y-4 lg:order-1 lg:space-y-6">
           <form
             onSubmit={(e) => e.preventDefault()}
             className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
@@ -478,7 +483,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             </div>
           </form>
 
-          <section className={`${ui.card} space-y-4`}>
+          <section className={`${ui.card} space-y-3 max-lg:p-4 lg:space-y-4`}>
             <div>
               <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
               <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSubtitle")}</p>
