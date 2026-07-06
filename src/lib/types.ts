@@ -27,6 +27,7 @@ export interface Merchant {
   flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
   qr_fg_color?: string;
   qr_bg_color?: string;
+  qr_design?: Record<string, unknown> | null;
   customer_page_headline?: string | null;
   customer_page_subtitle?: string | null;
   spin_button_label?: string | null;

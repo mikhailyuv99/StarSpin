@@ -1,3 +1,5 @@
+/** Minimum spend is stored as whole VND in `redeem_min_spend_cents` (legacy column name). */
+
 export type RedemptionRulesSnapshot = {
   redeem_next_visit: boolean;
   redeem_min_spend_cents: number | null;
@@ -25,12 +27,13 @@ export function snapshotFromPrize(prize: PrizeRedemptionConfig): RedemptionRules
   };
 }
 
-export function formatMoneyFromCents(cents: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
+export function formatMinSpendVnd(amount: number, locale: string): string {
+  const loc = locale === "vi" ? "vi-VN" : locale;
+  return new Intl.NumberFormat(loc, {
     style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  }).format(cents / 100);
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export function formatExpiryDate(iso: string, locale: string): string {
@@ -55,7 +58,7 @@ export function formatRedemptionRuleLines(
   if (rules.redeem_min_spend_cents != null && rules.redeem_min_spend_cents > 0) {
     lines.push(
       t("public.redeemMinSpend", {
-        amount: formatMoneyFromCents(rules.redeem_min_spend_cents, locale),
+        amount: formatMinSpendVnd(rules.redeem_min_spend_cents, locale),
       }),
     );
   }
@@ -72,15 +75,14 @@ export function formatRedemptionRuleLines(
 }
 
 export function parseMinSpendInput(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const normalized = trimmed.replace(",", ".");
-  const euros = Number.parseFloat(normalized);
-  if (Number.isNaN(euros) || euros < 0) return null;
-  return Math.round(euros * 100);
+  const digits = value.trim().replace(/[^\d]/g, "");
+  if (!digits) return null;
+  const vnd = Number.parseInt(digits, 10);
+  if (Number.isNaN(vnd) || vnd < 0) return null;
+  return vnd;
 }
 
-export function formatMinSpendInput(cents: number | null | undefined): string {
-  if (cents == null || cents <= 0) return "";
-  return (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+export function formatMinSpendInput(vnd: number | null | undefined): string {
+  if (vnd == null || vnd <= 0) return "";
+  return new Intl.NumberFormat("vi-VN").format(vnd);
 }

@@ -4,8 +4,8 @@ import { useState } from "react";
 import type { Prize } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
-import { useTranslations } from "@/i18n/client";
-import { parseMinSpendInput } from "@/lib/redemption-rules";
+import { useI18n } from "@/i18n/client";
+import { formatMinSpendVnd, parseMinSpendInput } from "@/lib/redemption-rules";
 import {
   emptyRedemptionForm,
   redemptionFormFromPrize,
@@ -96,7 +96,7 @@ export function PrizesManager({
   merchantId: string;
   initialPrizes: Prize[];
 }) {
-  const t = useTranslations();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [prizes, setPrizes] = useState(initialPrizes);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -259,7 +259,11 @@ export function PrizesManager({
     const parts: string[] = [];
     if (prize.redeem_next_visit) parts.push(t("dashboard.redeemNextVisitShort"));
     if (prize.redeem_min_spend_cents && prize.redeem_min_spend_cents > 0) {
-      parts.push(t("dashboard.redeemMinSpendShort", { amount: prize.redeem_min_spend_cents / 100 }));
+      parts.push(
+        t("dashboard.redeemMinSpendShort", {
+          amount: formatMinSpendVnd(prize.redeem_min_spend_cents, locale),
+        }),
+      );
     }
     if (prize.redeem_valid_days && prize.redeem_valid_days > 0) {
       parts.push(t("dashboard.redeemValidDaysShort", { days: prize.redeem_valid_days }));

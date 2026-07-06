@@ -1,6 +1,7 @@
 "use client";
 
 import { ui } from "@/components/ui/styles";
+import { formatMinSpendInput } from "@/lib/redemption-rules";
 import { useTranslations } from "@/i18n/client";
 
 export type RedemptionFormState = {
@@ -24,7 +25,7 @@ export function redemptionFormFromPrize(prize: {
     redeem_next_visit: Boolean(prize.redeem_next_visit),
     redeem_min_spend:
       prize.redeem_min_spend_cents != null && prize.redeem_min_spend_cents > 0
-        ? String(prize.redeem_min_spend_cents / 100)
+        ? formatMinSpendInput(prize.redeem_min_spend_cents)
         : "",
     redeem_valid_days:
       prize.redeem_valid_days != null && prize.redeem_valid_days > 0
@@ -62,12 +63,13 @@ export function RedemptionRulesFields({
           <label className={ui.label}>{t("dashboard.redeemMinSpend")}</label>
           <input
             type="text"
-            inputMode="decimal"
-            placeholder="15"
+            inputMode="numeric"
+            placeholder="500.000"
             value={value.redeem_min_spend}
             onChange={(e) => onChange({ ...value, redeem_min_spend: e.target.value })}
             className={ui.input}
           />
+          <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.redeemMinSpendHint")}</p>
         </div>
         <div>
           <label className={ui.label}>{t("dashboard.redeemValidDays")}</label>
