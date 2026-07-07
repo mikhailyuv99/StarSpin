@@ -216,7 +216,8 @@ body {
   .brutal-page--qr-studio .mx-auto,
   .qr-design-studio-page,
   .qr-design-studio,
-  .qr-preview-panel-inner {
+  .qr-studio-preview,
+  .qr-preview-panel {
     flex: 0 0 auto;
     height: auto !important;
     min-height: 0 !important;
@@ -224,21 +225,44 @@ body {
   }
 
   .qr-design-studio-page {
-    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: 0 !important;
   }
 
   .qr-customize-panel {
-    max-height: min(34vh, 19rem);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
     padding: 1rem !important;
     padding-bottom: 1.35rem !important;
   }
 
+  /* QR-only: short form, no internal scroll */
+  .qr-customize-panel--qr {
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Sticker / visit card: taller scrollable panel, preview stays visible below */
+  .qr-customize-panel--print {
+    max-height: min(52vh, 28rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .qr-customize-actions {
     padding-bottom: 0.15rem;
+  }
+
+  .qr-studio-preview {
+    align-self: stretch;
+    height: fit-content;
+    max-height: fit-content;
+    overflow: hidden;
+  }
+
+  .qr-design-studio--visit_card .qr-studio-preview,
+  .qr-design-studio--table_sticker .qr-studio-preview {
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
 
   .qr-preview-panel {
@@ -251,12 +275,30 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .qr-design-studio--visit_card .qr-preview-frame--print,
+  .qr-design-studio--table_sticker .qr-preview-frame--print {
+    overflow: hidden;
+    padding: 0;
+    width: min(100%, var(--qr-preview-canvas-width, 100%));
+    height: fit-content;
+  }
+
+  .qr-design-studio--visit_card .qr-preview-aspect--print,
+  .qr-design-studio--table_sticker .qr-preview-aspect--print {
+    width: min(100%, var(--qr-preview-canvas-width, 100%)) !important;
+    aspect-ratio: var(--qr-preview-aspect-ratio);
+    margin: 0 4px 4px 0;
   }
 
   .qr-preview-actions {
     width: 100%;
-    padding-bottom: 0.35rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .qr-design-studio--qr .qr-preview-actions {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   }
 
   .qr-preview-aspect {

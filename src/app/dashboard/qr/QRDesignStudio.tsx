@@ -247,7 +247,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   }, [template, qrFg, qrBg, saveStatus, error]);
 
   const previewPanel = (
-    <div className="qr-preview-panel-inner w-full max-w-full lg:shrink-0">
+    <div className="qr-preview-panel qr-preview-panel-inner w-full max-w-full lg:shrink-0">
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -352,10 +352,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       <div
-        className="max-lg:contents flex flex-col gap-4 lg:relative"
+        className="flex flex-col gap-4 lg:relative"
         style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
       >
-        <div className="shrink-0 max-lg:order-2 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:w-[var(--qr-preview-width)]">
+        <div className="qr-studio-preview shrink-0 max-lg:order-2 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:w-[var(--qr-preview-width)]">
           <div className="lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20 lg:pointer-events-auto">
             {previewPanel}
           </div>
@@ -364,7 +364,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         <form
           ref={customizeRef}
           onSubmit={(e) => e.preventDefault()}
-          className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 max-lg:order-1 space-y-4 max-lg:space-y-4 lg:space-y-5 lg:pr-[calc(var(--qr-preview-width)+2rem)]`}
+          className={`${ui.card} qr-design-studio-form qr-customize-panel ${template === "qr" ? "qr-customize-panel--qr" : "qr-customize-panel--print"} min-w-0 max-lg:order-1 space-y-4 max-lg:space-y-4 lg:space-y-5 lg:pr-[calc(var(--qr-preview-width)+2rem)]`}
         >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
