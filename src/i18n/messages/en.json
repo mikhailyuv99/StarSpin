@@ -5,6 +5,13 @@
     "merchantTitle": "Loyalty game",
     "merchantDescription": "Scan, play, and win rewards"
   },
+  "inactive": {
+    "title": "This journey isn't live yet",
+    "body": "This customer journey needs an active STARSPIN plan to go live. Subscribe to a plan to activate it.",
+    "bodyNamed": "{name}'s customer journey isn't active yet. An active STARSPIN plan is required to launch it.",
+    "home": "Back to home",
+    "plans": "View plans"
+  },
   "common": {
     "brand": "STARSPIN",
     "loading": "Loading…",

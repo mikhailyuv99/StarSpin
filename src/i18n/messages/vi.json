@@ -5,6 +5,13 @@
     "merchantTitle": "Trò chơi khách hàng thân thiết",
     "merchantDescription": "Quét, chơi và nhận phần thưởng"
   },
+  "inactive": {
+    "title": "Trải nghiệm này chưa hoạt động",
+    "body": "Hành trình khách hàng này cần gói STARSPIN đang hoạt động để chạy. Hãy đăng ký một gói để kích hoạt.",
+    "bodyNamed": "Hành trình khách hàng của {name} chưa hoạt động. Cần một gói STARSPIN đang hoạt động để khởi chạy.",
+    "home": "Về trang chủ",
+    "plans": "Xem các gói"
+  },
   "common": {
     "brand": "STARSPIN",
     "loading": "Đang tải…",

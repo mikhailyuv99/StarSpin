@@ -1,10 +1,12 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
+import { isMerchantLive } from "@/lib/merchant-access";
 import { resolveAndPersistMerchantPlaceId } from "@/lib/google-place-id.server";
 import { activeWheelPrizes } from "@/lib/prizes";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
+import { MerchantInactiveNotice } from "./MerchantInactiveNotice";
 import type { Merchant, Prize } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,10 +33,13 @@ export default async function PublicMerchantPage({
     .from("merchants")
     .select("*")
     .eq("slug", slug)
-    .eq("subscription_status", "active")
     .maybeSingle();
 
+  // Truly unknown slug → 404. Known business without an active plan → branded notice.
   if (error || !merchantRow) notFound();
+  if (!isMerchantLive(merchantRow.subscription_status)) {
+    return <MerchantInactiveNotice businessName={merchantRow.name} />;
+  }
 
   const resolution = await resolveAndPersistMerchantPlaceId(supabase, {
     id: merchantRow.id,

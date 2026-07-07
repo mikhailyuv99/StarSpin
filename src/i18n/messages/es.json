@@ -5,6 +5,13 @@
     "merchantTitle": "Juego de fidelización",
     "merchantDescription": "Escanea, juega y gana recompensas"
   },
+  "inactive": {
+    "title": "Esta experiencia aún no está activa",
+    "body": "Este recorrido de cliente necesita un plan STARSPIN activo para funcionar. Suscríbete a un plan para activarlo.",
+    "bodyNamed": "El recorrido de cliente de {name} aún no está activo. Se requiere un plan STARSPIN activo para lanzarlo.",
+    "home": "Volver al inicio",
+    "plans": "Ver planes"
+  },
   "common": {
     "brand": "STARSPIN",
     "loading": "Cargando…",
