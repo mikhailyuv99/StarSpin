@@ -71,8 +71,7 @@ export function previewPixelSize(template: QRDesignTemplate): { width: number; h
 
 export const ALIGNMENT_GRID = [0.25, 0.5, 0.75] as const;
 const SNAP_THRESHOLD = 0.04;
-const MIN_SCALE = 0.15;
-const MAX_SCALE = 3;
+const MIN_SCALE = 0.05;
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, { logo: number; qr: number; text: number }> = {
   table_sticker: { logo: 130, qr: 400, text: 36 },
@@ -85,14 +84,14 @@ export const RESIZE_HANDLE_HIT = 22;
 export const ROTATION_HANDLE_OFFSET = 36;
 export const ROTATION_HANDLE_HIT = 26;
 const ROTATION_SNAP_THRESHOLD = 8;
-const ROTATION_SNAPS = [0, 90, 180] as const;
+const ROTATION_SNAPS = [0, 90, 180, 270] as const;
 
 export function snapRotation(rotation: number): number {
   const normalized = ((rotation % 360) + 360) % 360;
   for (const snap of ROTATION_SNAPS) {
     if (Math.abs(normalized - snap) < ROTATION_SNAP_THRESHOLD) return snap;
   }
-  if (normalized > 360 - ROTATION_SNAP_THRESHOLD || normalized < ROTATION_SNAP_THRESHOLD) return 0;
+  if (normalized > 360 - ROTATION_SNAP_THRESHOLD) return 0;
   return rotation;
 }
 
@@ -122,7 +121,7 @@ export function clampPlacement(placement: ElementPlacement): ElementPlacement {
   return {
     x: Math.min(0.98, Math.max(0.02, placement.x)),
     y: Math.min(0.98, Math.max(0.02, placement.y)),
-    scale: Math.min(MAX_SCALE, Math.max(MIN_SCALE, placement.scale)),
+    scale: Math.max(MIN_SCALE, placement.scale),
     rotation: ((placement.rotation % 360) + 360) % 360,
   };
 }
