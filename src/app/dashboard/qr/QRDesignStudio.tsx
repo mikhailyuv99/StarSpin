@@ -275,6 +275,11 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               ? "qr-preview-aspect qr-preview-aspect--qr qr-preview-aspect--framed"
               : "qr-preview-aspect qr-preview-aspect--print"
           }
+          style={{
+            width: `${previewPx.width}px`,
+            maxWidth: "100%",
+            aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
+          }}
         >
           <QRDesignCanvas
             template={template}

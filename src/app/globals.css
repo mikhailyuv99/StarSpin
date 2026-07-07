@@ -254,20 +254,26 @@ body {
 }
 
 @media (max-width: 1023px) {
-  .brutal-page--qr-studio {
-    padding-bottom: 0;
+  html.qr-studio-active,
+  body.qr-studio-active {
+    height: auto !important;
+    min-height: 0 !important;
   }
 
-  .brutal-page--qr-studio > div {
-    padding-bottom: 0;
+  .brutal-page--qr-studio,
+  .brutal-page--qr-studio main,
+  .brutal-page--qr-studio .mx-auto,
+  .qr-design-studio-page,
+  .qr-design-studio {
+    min-height: 0 !important;
+    height: auto !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
   }
 
-  .qr-design-studio-page {
-    padding-bottom: 0;
-    margin-bottom: 0;
-  }
-
-  .qr-design-studio-order {
+  .qr-design-studio-order,
+  .qr-studio-order {
+    flex: 0 0 auto;
     margin-bottom: 0;
   }
 
@@ -286,6 +292,7 @@ body {
     padding: 0 !important;
     max-height: min(50vh, 32rem);
     overflow: hidden;
+    flex: 0 0 auto;
   }
 
   .qr-customize-panel__scroll {
@@ -311,9 +318,7 @@ body {
 
 .qr-preview-aspect {
   position: relative;
-  width: min(100%, var(--qr-preview-canvas-width, 100%));
-  max-width: var(--qr-preview-canvas-width, 100%);
-  aspect-ratio: var(--qr-preview-aspect-ratio, 1 / 1);
+  max-width: 100%;
   height: auto;
   overflow: hidden;
   margin-inline: auto;
@@ -337,21 +342,9 @@ body {
   box-shadow: 4px 4px 0 0 #0a0a0a;
 }
 
-.qr-design-studio--visit_card .qr-preview-aspect {
-  width: min(100%, var(--qr-preview-canvas-width, 420px));
-  max-width: var(--qr-preview-canvas-width, 420px);
-  aspect-ratio: 1050 / 600;
-}
-
-.qr-design-studio--table_sticker .qr-preview-aspect {
-  width: min(100%, var(--qr-preview-canvas-width, 360px));
-  max-width: var(--qr-preview-canvas-width, 360px);
-  aspect-ratio: 1 / 1;
-}
-
 @media (min-width: 1024px) {
   .qr-design-studio--qr .qr-preview-aspect--qr {
-    width: min(var(--qr-customize-height, 320px), var(--qr-preview-width, 320px));
+    width: min(var(--qr-customize-height, 320px), var(--qr-preview-width, 320px)) !important;
     height: min(var(--qr-customize-height, 320px), var(--qr-preview-width, 320px));
     max-width: 100%;
     aspect-ratio: 1 / 1;
@@ -360,21 +353,20 @@ body {
 
 .qr-preview-frame {
   box-sizing: content-box;
+  width: 100%;
   padding-right: 6px;
   padding-bottom: 6px;
   overflow: visible;
 }
 
 .qr-preview-frame--print {
-  width: fit-content;
-  max-width: 100%;
+  width: 100%;
+  max-width: var(--qr-preview-canvas-width, 100%);
   margin-inline: auto;
-  padding-right: 4px;
-  padding-bottom: 4px;
 }
 
 .qr-preview-actions--print {
-  width: min(100%, var(--qr-preview-canvas-width, 100%));
+  width: 100%;
   max-width: var(--qr-preview-canvas-width, 100%);
   margin-inline: auto;
 }
