@@ -358,6 +358,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         {previewPanel}
       </div>
 
+      <div className="qr-design-studio-settings min-w-0">
       <form
         ref={customizeRef}
         onSubmit={(e) => e.preventDefault()}
@@ -510,6 +511,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           {t("dashboard.qrOrderBadge")}
         </span>
       </section>
+      </div>
     </div>
   );
 }
