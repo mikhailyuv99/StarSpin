@@ -5,18 +5,22 @@ import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
   CANVAS_SIZE,
+  addTextBox,
+  createTextBox,
   downloadCanvas,
+  getSideDesign,
   normalizeHex,
   parseQRDesign,
-  patchVisitCardSide,
-  PREVIEW_MAX_WIDTH,
+  patchSideDesign,
+  patchTextBox,
+  placementFromCanvasPoint,
   previewPixelSize,
+  PREVIEW_MAX_WIDTH,
+  removeTextBox,
   renderDesignToCanvas,
-  type CardSideSettings,
-  type DesignElementKey,
   type QRDesignConfig,
   type QRDesignTemplate,
-  type TextStyle,
+  type SelectedElement,
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
@@ -34,15 +38,27 @@ const SAVED_STATUS_MS = 2500;
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+function UndoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+      <path d="M9 14H4v-5M4 14a8 8 0 1 1 2 4.24" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RedoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+      <path d="M15 10h5v5M15 14a8 8 0 1 1-2-4.24" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const t = useTranslations();
 
   const initialDesign = useMemo(
-    () =>
-      parseQRDesign(merchant.qr_design, {
-        primary_color: merchant.primary_color,
-        logo_url: merchant.logo_url,
-      }),
+    () => parseQRDesign(merchant.qr_design, { logo_url: merchant.logo_url }),
     [merchant],
   );
 
@@ -51,7 +67,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrFg, setQrFg] = useState(merchant.qr_fg_color ?? "#0a0a0a");
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
-  const [selectedElement, setSelectedElement] = useState<DesignElementKey | null>(null);
+  const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const skipAutosaveRef = useRef(true);
@@ -89,6 +105,13 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     bumpHistory();
   }, []);
 
+  const pushHistoryAndApply = (updater: (prev: QRDesignConfig) => QRDesignConfig) => {
+    historyPastRef.current = [...historyPastRef.current.slice(-49), structuredClone(designRef.current)];
+    historyFutureRef.current = [];
+    setDesign(updater);
+    bumpHistory();
+  };
+
   const undoLayout = useCallback(() => {
     const past = historyPastRef.current;
     if (!past.length) return;
@@ -125,59 +148,32 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
 
-  const canvasDesign = useMemo(() => {
-    if (activeLogoUrl && activeLogoUrl !== design.logoUrl) {
-      return { ...design, logoUrl: activeLogoUrl };
-    }
-    return design;
-  }, [design, activeLogoUrl]);
-
   const displayUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}${publicMerchantPath(merchant.slug)}`
       : publicMerchantUrl(merchant.slug);
 
-  const sideSettings: CardSideSettings | null =
-    template === "visit_card" ? design.visitCard[visitCardSide] : null;
+  const sideDesign =
+    template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
+
+  const selectedTextBox =
+    selectedElement?.kind === "text"
+      ? sideDesign?.textBoxes.find((b) => b.id === selectedElement.id) ?? null
+      : null;
 
   const patchDesign = (patch: Partial<QRDesignConfig>) => {
     setDesign((prev) => ({ ...prev, ...patch }));
   };
 
-  const patchSide = (patch: Partial<CardSideSettings>) => {
-    if (template !== "visit_card") return;
-    setDesign((prev) => patchVisitCardSide(prev, visitCardSide, patch));
-  };
-
-  const activeNameStyle =
-    template === "visit_card" ? design.visitCard[visitCardSide].nameStyle : design.nameStyle;
-  const activeTaglineStyle =
-    template === "visit_card" ? design.visitCard[visitCardSide].taglineStyle : design.taglineStyle;
-
-  const patchNameStyle = (patch: Partial<TextStyle>) => {
-    if (template === "visit_card") {
-      patchSide({ nameStyle: { ...activeNameStyle, ...patch } });
-    } else {
-      patchDesign({ nameStyle: { ...design.nameStyle, ...patch } });
-    }
-  };
-
-  const patchTaglineStyle = (patch: Partial<TextStyle>) => {
-    if (template === "visit_card") {
-      patchSide({ taglineStyle: { ...activeTaglineStyle, ...patch } });
-    } else {
-      patchDesign({ taglineStyle: { ...design.taglineStyle, ...patch } });
-    }
+  const patchSide = (patch: Parameters<typeof patchSideDesign>[3]) => {
+    if (template === "qr") return;
+    setDesign((prev) => patchSideDesign(prev, template, visitCardSide, patch));
   };
 
   const applyBrandColors = () => {
     setQrFg(merchant.primary_color);
     setQrBg("#ffffff");
-    if (template === "visit_card") {
-      patchSide({ layoutBg: "#ffffff" });
-    } else if (template !== "qr") {
-      patchDesign({ layoutBg: "#ffffff" });
-    }
+    if (template !== "qr") patchSide({ layoutBg: "#ffffff" });
   };
 
   const handleLogoUpload = async (file: File) => {
@@ -199,6 +195,42 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     patchDesign({ logoUrl: data.publicUrl });
   };
 
+  const addLogoToCanvas = (canvasX?: number, canvasY?: number) => {
+    if (!activeLogoUrl || template === "qr") return;
+    const placement =
+      canvasX !== undefined && canvasY !== undefined
+        ? placementFromCanvasPoint(template, canvasX, canvasY)
+        : { x: 0.5, y: 0.28, scale: 0.75, rotation: 0 };
+    pushHistoryAndApply((prev) =>
+      patchSideDesign(prev, template, visitCardSide, {
+        showLogo: true,
+        logo: placement,
+      }),
+    );
+    setSelectedElement({ kind: "logo" });
+  };
+
+  const removeLogoFromCanvas = () => {
+    if (template === "qr") return;
+    pushHistoryAndApply((prev) =>
+      patchSideDesign(prev, template, visitCardSide, { showLogo: false }),
+    );
+    if (selectedElement?.kind === "logo") setSelectedElement(null);
+  };
+
+  const handleAddTextBox = () => {
+    if (template === "qr") return;
+    const box = createTextBox(t("dashboard.qrDefaultText"));
+    pushHistoryAndApply((prev) => addTextBox(prev, template, visitCardSide, box));
+    setSelectedElement({ kind: "text", id: box.id });
+  };
+
+  const handleDeleteTextBox = (id: string) => {
+    if (template === "qr") return;
+    pushHistoryAndApply((prev) => removeTextBox(prev, template, visitCardSide, id));
+    setSelectedElement(null);
+  };
+
   useEffect(() => {
     if (skipAutosaveRef.current) {
       skipAutosaveRef.current = false;
@@ -214,7 +246,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         const payload = {
           qr_fg_color: normalizeHex(qrFg, "#0a0a0a"),
           qr_bg_color: normalizeHex(qrBg, "#ffffff"),
-          qr_design: { ...design, template },
+          qr_design: { ...design, template, v: 2 as const },
         };
 
         const supabase = createClient();
@@ -254,7 +286,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     await renderDesignToCanvas(exportCanvasEl, {
       template: exportTemplate,
       url: displayUrl,
-      businessName: merchant.name,
       qrFg: normalizeHex(qrFg, "#0a0a0a"),
       qrBg: normalizeHex(qrBg, "#ffffff"),
       design: { ...design, template: exportTemplate, logoUrl: activeLogoUrl },
@@ -311,25 +342,38 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     };
   }, [template, qrFg, qrBg, saveStatus, error]);
 
+  const handlePreviewDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    if (template === "qr" || !activeLogoUrl) return;
+    if (!event.dataTransfer.types.includes("application/x-qr-logo")) return;
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const canvas = CANVAS_SIZE[template];
+    const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+    addLogoToCanvas(x, y);
+  };
+
   const previewPanel = (
     <div className="qr-preview-panel qr-preview-panel-inner w-full max-w-full lg:shrink-0">
       {template !== "qr" && (
-        <div className="mb-3 flex w-full flex-wrap items-center gap-2">
+        <div className="mb-3 flex w-full items-center gap-2">
           <button
             type="button"
             disabled={!canUndo}
             onClick={undoLayout}
-            className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+            aria-label={t("dashboard.qrUndo")}
+            className={`${ui.btnOutline} flex h-9 w-9 items-center justify-center !p-0 disabled:opacity-40`}
           >
-            {t("dashboard.qrUndo")}
+            <UndoIcon />
           </button>
           <button
             type="button"
             disabled={!canRedo}
             onClick={redoLayout}
-            className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+            aria-label={t("dashboard.qrRedo")}
+            className={`${ui.btnOutline} flex h-9 w-9 items-center justify-center !p-0 disabled:opacity-40`}
           >
-            {t("dashboard.qrRedo")}
+            <RedoIcon />
           </button>
         </div>
       )}
@@ -366,15 +410,18 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             maxWidth: "100%",
             aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
           }}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes("application/x-qr-logo")) e.preventDefault();
+          }}
+          onDrop={handlePreviewDrop}
         >
           <QRDesignCanvas
             template={template}
             visitCardSide={visitCardSide}
             displayUrl={displayUrl}
-            businessName={merchant.name}
             qrFg={normalizeHex(qrFg, "#0a0a0a")}
             qrBg={normalizeHex(qrBg, "#ffffff")}
-            design={canvasDesign}
+            design={{ ...design, logoUrl: activeLogoUrl }}
             editable={template !== "qr"}
             selected={selectedElement}
             onSelect={setSelectedElement}
@@ -485,100 +532,118 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 fallback="#ffffff"
                 onChange={setQrBg}
               />
-              {template !== "qr" && (
+              {template !== "qr" && sideDesign && (
                 <QRColorSwatch
                   label={t("dashboard.qrLayoutBackground")}
-                  value={template === "visit_card" ? sideSettings!.layoutBg : design.layoutBg}
+                  value={sideDesign.layoutBg}
                   fallback="#ffffff"
-                  onChange={(color) =>
-                    template === "visit_card"
-                      ? patchSide({ layoutBg: color })
-                      : patchDesign({ layoutBg: color })
-                  }
+                  onChange={(color) => patchSide({ layoutBg: color })}
                 />
               )}
             </div>
 
             {template !== "qr" && (
               <>
-                <div>
-                  <label className={ui.label}>{t("dashboard.qrTagline")}</label>
-                  <input
-                    value={template === "visit_card" ? sideSettings!.tagline : design.tagline}
-                    onChange={(e) =>
-                      template === "visit_card"
-                        ? patchSide({ tagline: e.target.value })
-                        : patchDesign({ tagline: e.target.value })
-                    }
-                    className={ui.input}
-                  />
-                </div>
-
-                <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
-                  <p className="text-sm font-extrabold text-ink">{t("dashboard.qrTypographyTitle")}</p>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <QRFontPicker
-                      id="qr-name-font"
-                      label={t("dashboard.qrNameFont")}
-                      value={activeNameStyle.fontId}
-                      onChange={(fontId) => patchNameStyle({ fontId })}
-                    />
-                    <QRColorSwatch
-                      label={t("dashboard.qrNameColor")}
-                      value={activeNameStyle.color}
-                      fallback="#0a0a0a"
-                      onChange={(color) => patchNameStyle({ color })}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <QRFontPicker
-                      id="qr-tagline-font"
-                      label={t("dashboard.qrTaglineFont")}
-                      value={activeTaglineStyle.fontId}
-                      onChange={(fontId) => patchTaglineStyle({ fontId })}
-                    />
-                    <QRColorSwatch
-                      label={t("dashboard.qrTaglineColor")}
-                      value={activeTaglineStyle.color}
-                      fallback="#0a0a0a"
-                      onChange={(color) => patchTaglineStyle({ color })}
-                    />
+                <div className="space-y-3">
+                  <p className={ui.label}>{t("dashboard.qrElementsTitle")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={handleAddTextBox} className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}>
+                      {t("dashboard.qrAddTextBox")}
+                    </button>
+                    {sideDesign?.showLogo && (
+                      <button type="button" onClick={removeLogoFromCanvas} className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}>
+                        {t("dashboard.qrRemoveLogo")}
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={template === "visit_card" ? sideSettings!.showName : design.showName}
-                    onChange={(e) =>
-                      template === "visit_card"
-                        ? patchSide({ showName: e.target.checked })
-                        : patchDesign({ showName: e.target.checked })
-                    }
-                    className="h-4 w-4 accent-black"
-                  />
-                  <span className="text-sm font-semibold">{t("dashboard.qrShowBusinessName")}</span>
-                </label>
-
-                {template === "visit_card" && (
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={sideSettings!.showQr}
-                      onChange={(e) => patchSide({ showQr: e.target.checked })}
-                      className="h-4 w-4 accent-black"
-                    />
-                    <span className="text-sm font-semibold">{t("dashboard.qrShowQr")}</span>
-                  </label>
+                {activeLogoUrl && (
+                  <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-3">
+                    <p className="text-sm font-extrabold text-ink">{t("dashboard.qrLogo")}</p>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={activeLogoUrl}
+                        alt=""
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("application/x-qr-logo", "1")}
+                        className="h-16 w-16 shrink-0 cursor-grab rounded-[14px] border-2 border-black object-cover active:cursor-grabbing"
+                      />
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <p className="text-xs font-medium text-muted">{t("dashboard.qrLogoDragHint")}</p>
+                        {!sideDesign?.showLogo && (
+                          <button
+                            type="button"
+                            onClick={() => addLogoToCanvas()}
+                            className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}
+                          >
+                            {t("dashboard.qrAddLogoToDesign")}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <LogoUploadField logoUrl={activeLogoUrl} onUpload={handleLogoUpload} />
+                  </div>
                 )}
 
-                <LogoUploadField
-                  label={t("dashboard.qrLogo")}
-                  logoUrl={activeLogoUrl}
-                  onUpload={handleLogoUpload}
-                />
+                {!activeLogoUrl && (
+                  <LogoUploadField label={t("dashboard.qrLogo")} logoUrl={null} onUpload={handleLogoUpload} />
+                )}
+
+                {selectedTextBox && (
+                  <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-extrabold text-ink">{t("dashboard.qrEditTextBox")}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTextBox(selectedTextBox.id)}
+                        className="text-xs font-bold text-red-700 underline"
+                      >
+                        {t("dashboard.qrDeleteTextBox")}
+                      </button>
+                    </div>
+                    <div>
+                      <label className={ui.label}>{t("dashboard.qrTextBoxContent")}</label>
+                      <input
+                        value={selectedTextBox.text}
+                        onChange={(e) =>
+                          setDesign((prev) =>
+                            patchTextBox(prev, template as "table_sticker" | "visit_card", visitCardSide, selectedTextBox.id, {
+                              text: e.target.value,
+                            }),
+                          )
+                        }
+                        className={`${ui.input} mt-1`}
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <QRFontPicker
+                        id="qr-text-font"
+                        label={t("dashboard.qrTextBoxFont")}
+                        value={selectedTextBox.fontId}
+                        onChange={(fontId) =>
+                          setDesign((prev) =>
+                            patchTextBox(prev, template as "table_sticker" | "visit_card", visitCardSide, selectedTextBox.id, {
+                              fontId,
+                            }),
+                          )
+                        }
+                      />
+                      <QRColorSwatch
+                        label={t("dashboard.qrTextBoxColor")}
+                        value={selectedTextBox.color}
+                        fallback="#0a0a0a"
+                        onChange={(color) =>
+                          setDesign((prev) =>
+                            patchTextBox(prev, template as "table_sticker" | "visit_card", visitCardSide, selectedTextBox.id, {
+                              color,
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             )}
 

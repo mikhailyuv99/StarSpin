@@ -4,38 +4,69 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CANVAS_SIZE,
   computeElementBounds,
-  getRenderContext,
+  elementKey,
+  getSideDesign,
   hitTestElement,
   hitTestResizeHandle,
-  patchLayoutElement,
+  hitTestRotationHandle,
+  patchElementPlacement,
+  patchTextBox,
   renderDesignToCanvas,
   snapToAlignmentGrid,
-  type DesignElementKey,
+  type ElementPlacement,
   type QRDesignConfig,
   type QRDesignTemplate,
   type ResizeHandle,
+  type SelectedElement,
   type VisitCardSide,
 } from "@/lib/qr-design";
 
-type DragMode = "move" | "resize";
+type DragMode = "move" | "resize" | "rotate";
 
 type DragState = {
   mode: DragMode;
-  key: DesignElementKey;
+  target: SelectedElement;
   handle?: ResizeHandle;
   startX: number;
   startY: number;
-  startPlacement: { x: number; y: number; scale: number };
+  startAngle: number;
+  startPlacement: ElementPlacement;
 };
 
-const ELEMENT_KEYS: DesignElementKey[] = ["logo", "name", "qr", "tagline"];
 const RENDER_DEBOUNCE_MS = 120;
+
+function getPlacement(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  target: SelectedElement,
+): ElementPlacement {
+  const side = getSideDesign(design, template, visitCardSide);
+  if (target.kind === "text") {
+    return side.textBoxes.find((b) => b.id === target.id)!.placement;
+  }
+  return side[target.kind];
+}
+
+function patchTarget(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  target: SelectedElement,
+  patch: Partial<ElementPlacement>,
+): QRDesignConfig {
+  if (target.kind === "text") {
+    return patchTextBox(design, template, visitCardSide, target.id, {
+      placement: patch,
+    });
+  }
+  return patchElementPlacement(design, template, visitCardSide, target.kind, patch);
+}
 
 export function QRDesignCanvas({
   template,
   visitCardSide = "front",
   displayUrl,
-  businessName,
   qrFg,
   qrBg,
   design,
@@ -49,13 +80,12 @@ export function QRDesignCanvas({
   template: QRDesignTemplate;
   visitCardSide?: VisitCardSide;
   displayUrl: string;
-  businessName: string;
   qrFg: string;
   qrBg: string;
   design: QRDesignConfig;
   editable: boolean;
-  selected: DesignElementKey | null;
-  onSelect: (key: DesignElementKey | null) => void;
+  selected: SelectedElement | null;
+  onSelect: (key: SelectedElement | null) => void;
   onLayoutChange: (next: QRDesignConfig) => void;
   onEditStart?: () => void;
   onEditEnd?: () => void;
@@ -77,8 +107,8 @@ export function QRDesignCanvas({
     selectedRef.current = selected;
   }, [selected]);
 
-  const sideCtx =
-    template !== "qr" ? getRenderContext(design, template, visitCardSide) : null;
+  const side =
+    template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
 
   const renderPreview = useCallback(async () => {
     const canvas = canvasRef.current;
@@ -91,7 +121,6 @@ export function QRDesignCanvas({
       await renderDesignToCanvas(canvas, {
         template,
         url: displayUrl,
-        businessName,
         qrFg,
         qrBg,
         design: { ...design, template },
@@ -108,7 +137,7 @@ export function QRDesignCanvas({
     } finally {
       void version;
     }
-  }, [businessName, design, displayUrl, editable, qrBg, qrFg, template, visitCardSide]);
+  }, [design, displayUrl, editable, qrBg, qrFg, template, visitCardSide]);
 
   useEffect(() => {
     const delay = drag ? 0 : RENDER_DEBOUNCE_MS;
@@ -129,15 +158,10 @@ export function QRDesignCanvas({
   };
 
   const getBounds = () => {
-    if (template === "qr" || !sideCtx) return {};
-    return computeElementBounds(template, sideCtx, canvasBox.width, canvasBox.height, businessName, {
+    if (template === "qr" || !side) return {};
+    return computeElementBounds(template, side, canvasBox.width, canvasBox.height, {
       hasLogo: Boolean(design.logoUrl),
     });
-  };
-
-  const patchElement = (key: DesignElementKey, patch: Partial<{ x: number; y: number; scale: number }>) => {
-    if (template === "qr") return;
-    onLayoutChange(patchLayoutElement(design, template, key, patch, visitCardSide));
   };
 
   const beginEdit = () => {
@@ -152,47 +176,67 @@ export function QRDesignCanvas({
     onEditEnd?.();
   };
 
+  const patchElement = (target: SelectedElement, patch: Partial<ElementPlacement>) => {
+    if (template === "qr") return;
+    onLayoutChange(patchTarget(design, template, visitCardSide, target, patch));
+  };
+
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!editable || template === "qr") return;
     const pt = clientToCanvas(event.clientX, event.clientY);
     if (!pt) return;
 
     const bounds = getBounds();
-    if (selected && bounds[selected]) {
-      const handle = hitTestResizeHandle(pt.x, pt.y, bounds[selected]);
-      if (handle) {
+
+    if (selected) {
+      const key = elementKey(selected);
+      const box = bounds[key];
+      if (box && hitTestRotationHandle(pt.x, pt.y, box)) {
+        const placement = getPlacement(design, template, visitCardSide, selected);
         beginEdit();
-        const layout =
-          template === "table_sticker"
-            ? design.layouts.table_sticker
-            : design.visitCard[visitCardSide].layout;
         setDrag({
-          mode: "resize",
-          key: selected,
-          handle,
+          mode: "rotate",
+          target: selected,
           startX: pt.x,
           startY: pt.y,
-          startPlacement: { ...layout[selected] },
+          startAngle: placement.rotation,
+          startPlacement: { ...placement },
         });
         event.currentTarget.setPointerCapture(event.pointerId);
         return;
+      }
+      if (box) {
+        const handle = hitTestResizeHandle(pt.x, pt.y, box);
+        if (handle) {
+          const placement = getPlacement(design, template, visitCardSide, selected);
+          beginEdit();
+          setDrag({
+            mode: "resize",
+            target: selected,
+            handle,
+            startX: pt.x,
+            startY: pt.y,
+            startAngle: placement.rotation,
+            startPlacement: { ...placement },
+          });
+          event.currentTarget.setPointerCapture(event.pointerId);
+          return;
+        }
       }
     }
 
     const hit = hitTestElement(pt.x, pt.y, bounds);
     if (hit) {
       onSelect(hit);
+      const placement = getPlacement(design, template, visitCardSide, hit);
       beginEdit();
-      const layout =
-        template === "table_sticker"
-          ? design.layouts.table_sticker
-          : design.visitCard[visitCardSide].layout;
       setDrag({
         mode: "move",
-        key: hit,
+        target: hit,
         startX: pt.x,
         startY: pt.y,
-        startPlacement: { ...layout[hit] },
+        startAngle: placement.rotation,
+        startPlacement: { ...placement },
       });
       event.currentTarget.setPointerCapture(event.pointerId);
     } else {
@@ -208,41 +252,60 @@ export function QRDesignCanvas({
     if (drag.mode === "move") {
       const dx = (pt.x - drag.startX) / canvasBox.width;
       const dy = (pt.y - drag.startY) / canvasBox.height;
-      const rawX = drag.startPlacement.x + dx;
-      const rawY = drag.startPlacement.y + dy;
-      const snapped = snapToAlignmentGrid(rawX, rawY);
-      patchElement(drag.key, snapped);
+      const snapped = snapToAlignmentGrid(
+        drag.startPlacement.x + dx,
+        drag.startPlacement.y + dy,
+      );
+      patchElement(drag.target, snapped);
       return;
     }
 
-    const centerX = drag.startPlacement.x * canvasBox.width;
-    const centerY = drag.startPlacement.y * canvasBox.height;
-    const startDist = Math.hypot(drag.startX - centerX, drag.startY - centerY);
-    const currentDist = Math.hypot(pt.x - centerX, pt.y - centerY);
+    if (drag.mode === "rotate") {
+      const sideDesign = getSideDesign(design, template, visitCardSide);
+      const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height, {
+        hasLogo: Boolean(design.logoUrl),
+      });
+      const box = bounds[elementKey(drag.target)];
+      if (!box) return;
+      const cx = box.x + box.w / 2;
+      const cy = box.y + box.h / 2;
+      const startRad = Math.atan2(drag.startY - cy, drag.startX - cx);
+      const currentRad = Math.atan2(pt.y - cy, pt.x - cx);
+      const delta = ((currentRad - startRad) * 180) / Math.PI;
+      patchElement(drag.target, { rotation: drag.startAngle + delta });
+      return;
+    }
+
+    const sideDesign = getSideDesign(design, template, visitCardSide);
+    const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height, {
+      hasLogo: Boolean(design.logoUrl),
+    });
+    const box = bounds[elementKey(drag.target)];
+    if (!box) return;
+    const cx = box.x + box.w / 2;
+    const cy = box.y + box.h / 2;
+    const startDist = Math.hypot(drag.startX - cx, drag.startY - cy);
+    const currentDist = Math.hypot(pt.x - cx, pt.y - cy);
     if (startDist > 0) {
-      patchElement(drag.key, {
+      patchElement(drag.target, {
         scale: drag.startPlacement.scale * (currentDist / startDist),
       });
     }
   };
 
   const endDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (drag?.mode === "move") {
-      const layout =
-        template === "table_sticker"
-          ? design.layouts.table_sticker[drag.key]
-          : design.visitCard[visitCardSide].layout[drag.key];
-      const snapped = snapToAlignmentGrid(layout.x, layout.y);
-      if (snapped.x !== layout.x || snapped.y !== layout.y) {
-        patchElement(drag.key, snapped);
+    if (!drag || template === "qr") return;
+    if (drag.mode === "move") {
+      const placement = getPlacement(design, template, visitCardSide, drag.target);
+      const snapped = snapToAlignmentGrid(placement.x, placement.y);
+      if (snapped.x !== placement.x || snapped.y !== placement.y) {
+        patchElement(drag.target, snapped);
       }
     }
-    if (drag) {
-      setDrag(null);
-      finishEdit();
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
+    setDrag(null);
+    finishEdit();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
   };
 
@@ -257,5 +320,3 @@ export function QRDesignCanvas({
     />
   );
 }
-
-export { ELEMENT_KEYS };
