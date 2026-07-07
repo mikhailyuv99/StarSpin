@@ -25,25 +25,38 @@ export type TextBox = {
   placement: ElementPlacement;
 };
 
+export type LibraryImage = {
+  id: string;
+  url: string;
+};
+
+export type PlacedImage = {
+  id: string;
+  libraryId: string;
+  url: string;
+  placement: ElementPlacement;
+};
+
+export const BUSINESS_LOGO_ID = "business";
+
 export type SideDesign = {
   layoutBg: string;
-  showLogo: boolean;
-  logo: ElementPlacement;
   qr: ElementPlacement;
   textBoxes: TextBox[];
+  images: PlacedImage[];
 };
 
 export type QRDesignConfig = {
-  v: 2;
+  v: 3;
   template: QRDesignTemplate;
-  logoUrl: string | null;
+  imageLibrary: LibraryImage[];
   sticker: SideDesign;
   visitCard: { front: SideDesign; back: SideDesign };
 };
 
 export type SelectedElement =
   | { kind: "qr" }
-  | { kind: "logo" }
+  | { kind: "image"; id: string }
   | { kind: "text"; id: string };
 
 export type ElementBounds = { x: number; y: number; w: number; h: number; rotation: number };
@@ -97,6 +110,7 @@ export function snapRotation(rotation: number): number {
 
 export function elementKey(ref: SelectedElement): string {
   if (ref.kind === "text") return `text:${ref.id}`;
+  if (ref.kind === "image") return `image:${ref.id}`;
   return ref.kind;
 }
 
@@ -133,11 +147,33 @@ function defaultQrPlacement(template: Exclude<QRDesignTemplate, "qr">): ElementP
 export function blankSideDesign(template: Exclude<QRDesignTemplate, "qr">): SideDesign {
   return {
     layoutBg: "#ffffff",
-    showLogo: false,
-    logo: { x: 0.5, y: 0.22, scale: 0.75, rotation: 0 },
     qr: defaultQrPlacement(template),
     textBoxes: [],
+    images: [],
   };
+}
+
+export function createPlacedImage(
+  libraryId: string,
+  url: string,
+  placement?: Partial<ElementPlacement>,
+): PlacedImage {
+  return {
+    id: crypto.randomUUID(),
+    libraryId,
+    url,
+    placement: clampPlacement({
+      x: 0.5,
+      y: 0.28,
+      scale: 0.75,
+      rotation: 0,
+      ...placement,
+    }),
+  };
+}
+
+export function createLibraryImage(url: string): LibraryImage {
+  return { id: crypto.randomUUID(), url };
 }
 
 export function createTextBox(text = "Text"): TextBox {
@@ -150,11 +186,11 @@ export function createTextBox(text = "Text"): TextBox {
   };
 }
 
-export function defaultQRDesign(merchant: { logo_url?: string | null }): QRDesignConfig {
+export function defaultQRDesign(_merchant: { logo_url?: string | null }): QRDesignConfig {
   return {
-    v: 2,
+    v: 3,
     template: "table_sticker",
-    logoUrl: merchant.logo_url ?? null,
+    imageLibrary: [],
     sticker: blankSideDesign("table_sticker"),
     visitCard: {
       front: blankSideDesign("visit_card"),
@@ -186,21 +222,72 @@ function parseTextBox(raw: unknown, fallback: TextBox): TextBox {
   };
 }
 
+function parsePlacedImage(raw: unknown, fallback: PlacedImage): PlacedImage {
+  if (!raw || typeof raw !== "object") return fallback;
+  const data = raw as Record<string, unknown>;
+  return {
+    id: typeof data.id === "string" ? data.id : fallback.id,
+    libraryId: typeof data.libraryId === "string" ? data.libraryId : fallback.libraryId,
+    url: typeof data.url === "string" ? data.url : fallback.url,
+    placement: parsePlacement(data.placement, fallback.placement),
+  };
+}
+
+function parseLibraryImage(raw: unknown, fallback: LibraryImage): LibraryImage {
+  if (!raw || typeof raw !== "object") return fallback;
+  const data = raw as Record<string, unknown>;
+  return {
+    id: typeof data.id === "string" ? data.id : fallback.id,
+    url: typeof data.url === "string" ? data.url : fallback.url,
+  };
+}
+
 function parseSideDesign(raw: unknown, template: Exclude<QRDesignTemplate, "qr">): SideDesign {
   const fallback = blankSideDesign(template);
   if (!raw || typeof raw !== "object") return fallback;
   const data = raw as Record<string, unknown>;
   const textBoxesRaw = Array.isArray(data.textBoxes) ? data.textBoxes : [];
+  const imagesRaw = Array.isArray(data.images) ? data.images : [];
   return {
     layoutBg:
       typeof data.layoutBg === "string" ? normalizeHex(data.layoutBg, fallback.layoutBg) : fallback.layoutBg,
-    showLogo: typeof data.showLogo === "boolean" ? data.showLogo : fallback.showLogo,
-    logo: parsePlacement(data.logo, fallback.logo),
     qr: parsePlacement(data.qr, fallback.qr),
     textBoxes: textBoxesRaw.map((item, i) =>
       parseTextBox(item, fallback.textBoxes[i] ?? createTextBox()),
     ),
+    images: imagesRaw.map((item, i) =>
+      parsePlacedImage(item, fallback.images[i] ?? createPlacedImage(BUSINESS_LOGO_ID, "")),
+    ).filter((img) => img.url),
   };
+}
+
+type LegacySideDesign = SideDesign & {
+  showLogo?: boolean;
+  logo?: ElementPlacement;
+};
+
+function migrateV2Side(
+  raw: unknown,
+  template: Exclude<QRDesignTemplate, "qr">,
+  logoUrl: string | null,
+): SideDesign {
+  const side = parseSideDesign(raw, template) as LegacySideDesign;
+  if (!raw || typeof raw !== "object") return side;
+  const data = raw as Record<string, unknown>;
+  const images = [...side.images];
+  const showLogo = data.showLogo === true;
+  const legacyLogo = parsePlacement(data.logo, { x: 0.5, y: 0.22, scale: 0.75, rotation: 0 });
+  if (showLogo && logoUrl && !images.some((img) => img.url === logoUrl)) {
+    images.push(createPlacedImage(BUSINESS_LOGO_ID, logoUrl, legacyLogo));
+  }
+  return { ...side, images };
+}
+
+function parseImageLibrary(raw: unknown): LibraryImage[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item, i) => parseLibraryImage(item, { id: `lib-${i}`, url: "" }))
+    .filter((img) => img.url);
 }
 
 export function parseQRDesign(
@@ -216,18 +303,20 @@ export function parseQRDesign(
       ? data.template
       : base.template;
 
-  if (data.v === 2) {
+  const legacyLogoUrl =
+    typeof data.logoUrl === "string" && data.logoUrl.trim()
+      ? data.logoUrl
+      : merchant.logo_url ?? null;
+
+  if (data.v === 3) {
     const visitRaw =
       data.visitCard && typeof data.visitCard === "object"
         ? (data.visitCard as Record<string, unknown>)
         : {};
     return {
-      v: 2,
+      v: 3,
       template,
-      logoUrl:
-        typeof data.logoUrl === "string" && data.logoUrl.trim()
-          ? data.logoUrl
-          : merchant.logo_url ?? null,
+      imageLibrary: parseImageLibrary(data.imageLibrary),
       sticker: parseSideDesign(data.sticker, "table_sticker"),
       visitCard: {
         front: parseSideDesign(visitRaw.front, "visit_card"),
@@ -236,14 +325,32 @@ export function parseQRDesign(
     };
   }
 
-  return {
-    ...base,
-    template,
-    logoUrl:
-      typeof data.logoUrl === "string" && data.logoUrl.trim()
-        ? data.logoUrl
-        : merchant.logo_url ?? null,
-  };
+  if (data.v === 2) {
+    const visitRaw =
+      data.visitCard && typeof data.visitCard === "object"
+        ? (data.visitCard as Record<string, unknown>)
+        : {};
+    const imageLibrary = parseImageLibrary(data.imageLibrary);
+    if (
+      legacyLogoUrl &&
+      !imageLibrary.some((img) => img.url === legacyLogoUrl) &&
+      legacyLogoUrl !== merchant.logo_url
+    ) {
+      imageLibrary.unshift(createLibraryImage(legacyLogoUrl));
+    }
+    return {
+      v: 3,
+      template,
+      imageLibrary,
+      sticker: migrateV2Side(data.sticker, "table_sticker", legacyLogoUrl),
+      visitCard: {
+        front: migrateV2Side(visitRaw.front, "visit_card", legacyLogoUrl),
+        back: migrateV2Side(visitRaw.back, "visit_card", legacyLogoUrl),
+      },
+    };
+  }
+
+  return { ...base, template };
 }
 
 export function getSideDesign(
@@ -277,14 +384,76 @@ export function patchElementPlacement(
   design: QRDesignConfig,
   template: Exclude<QRDesignTemplate, "qr">,
   visitCardSide: VisitCardSide,
-  kind: "qr" | "logo",
+  kind: "qr",
   patch: Partial<ElementPlacement>,
 ): QRDesignConfig {
   const side = getSideDesign(design, template, visitCardSide);
-  const current = side[kind];
+  const current = side.qr;
   return patchSideDesign(design, template, visitCardSide, {
-    [kind]: clampPlacement({ ...current, ...patch }),
+    qr: clampPlacement({ ...current, ...patch }),
   });
+}
+
+export type ImagePatch = Partial<Omit<PlacedImage, "id" | "placement">> & {
+  placement?: Partial<ElementPlacement>;
+};
+
+export function patchImage(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  id: string,
+  patch: ImagePatch,
+): QRDesignConfig {
+  const side = getSideDesign(design, template, visitCardSide);
+  return patchSideDesign(design, template, visitCardSide, {
+    images: side.images.map((img) => {
+      if (img.id !== id) return img;
+      return {
+        ...img,
+        ...patch,
+        placement: patch.placement
+          ? clampPlacement({ ...img.placement, ...patch.placement })
+          : img.placement,
+      };
+    }),
+  });
+}
+
+export function addImage(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  image: PlacedImage,
+): QRDesignConfig {
+  const side = getSideDesign(design, template, visitCardSide);
+  return patchSideDesign(design, template, visitCardSide, {
+    images: [...side.images, image],
+  });
+}
+
+export function removeImage(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  id: string,
+): QRDesignConfig {
+  const side = getSideDesign(design, template, visitCardSide);
+  return patchSideDesign(design, template, visitCardSide, {
+    images: side.images.filter((img) => img.id !== id),
+  });
+}
+
+export function addLibraryImage(design: QRDesignConfig, image: LibraryImage): QRDesignConfig {
+  if (design.imageLibrary.some((item) => item.url === image.url)) return design;
+  return { ...design, imageLibrary: [...design.imageLibrary, image] };
+}
+
+export function removeLibraryImage(design: QRDesignConfig, id: string): QRDesignConfig {
+  return {
+    ...design,
+    imageLibrary: design.imageLibrary.filter((img) => img.id !== id),
+  };
 }
 
 export type TextBoxPatch = Partial<Omit<TextBox, "id" | "placement">> & {
@@ -393,7 +562,6 @@ export function computeElementBounds(
   side: SideDesign,
   canvasWidth: number,
   canvasHeight: number,
-  options: { hasLogo: boolean },
 ): Record<string, ElementBounds> {
   const bounds: Record<string, ElementBounds> = {};
   const scratch = document.createElement("canvas");
@@ -408,9 +576,15 @@ export function computeElementBounds(
     canvasHeight,
   );
 
-  if (options.hasLogo && side.showLogo) {
-    const size = scaledSize(template, "logo", side.logo.scale);
-    bounds.logo = placementToBounds(side.logo, size, size, canvasWidth, canvasHeight);
+  for (const img of side.images) {
+    const size = scaledSize(template, "logo", img.placement.scale);
+    bounds[`image:${img.id}`] = placementToBounds(
+      img.placement,
+      size,
+      size,
+      canvasWidth,
+      canvasHeight,
+    );
   }
 
   for (const box of side.textBoxes) {
@@ -459,7 +633,7 @@ export function hitTestElement(
   const order = Object.keys(bounds).sort((a, b) => {
     const priority = (key: string) => {
       if (key.startsWith("text:")) return 3;
-      if (key === "logo") return 2;
+      if (key.startsWith("image:")) return 2;
       return 1;
     };
     return priority(b) - priority(a);
@@ -469,7 +643,7 @@ export function hitTestElement(
     const box = bounds[key];
     if (pointInRotatedRect(px, py, box)) {
       if (key === "qr") return { kind: "qr" };
-      if (key === "logo") return { kind: "logo" };
+      if (key.startsWith("image:")) return { kind: "image", id: key.slice(6) };
       return { kind: "text", id: key.slice(5) };
     }
   }
@@ -748,7 +922,6 @@ async function renderLayoutDesign(
   qrFg: string,
   qrBg: string,
   side: SideDesign,
-  logoUrl: string | null,
   editor?: {
     selected: SelectedElement | null;
     showGuides: boolean;
@@ -766,13 +939,14 @@ async function renderLayoutDesign(
 
   if (editor?.showGrid) drawAlignmentGrid(ctx, width, height);
 
-  const bounds = computeElementBounds(template, side, width, height, {
-    hasLogo: Boolean(logoUrl),
-  });
+  const bounds = computeElementBounds(template, side, width, height);
 
-  if (logoUrl && side.showLogo && bounds.logo) {
-    const logo = await loadImage(logoUrl);
-    if (logo) drawRotatedImage(ctx, logo, bounds.logo);
+  for (const img of side.images) {
+    const key = `image:${img.id}`;
+    const imgBounds = bounds[key];
+    if (!imgBounds) continue;
+    const loaded = await loadImage(img.url);
+    if (loaded) drawRotatedImage(ctx, loaded, imgBounds);
   }
 
   if (bounds.qr) {
@@ -832,7 +1006,7 @@ export async function renderDesignToCanvas(
     await ensureQRFontsForRender(fontIds[0], fontIds[0]);
     for (const id of fontIds.slice(1)) await ensureQRFontsForRender(id, id);
   }
-  await renderLayoutDesign(canvas, template, url, qrFg, qrBg, side, design.logoUrl, editor);
+  await renderLayoutDesign(canvas, template, url, qrFg, qrBg, side, editor);
 }
 
 export function downloadCanvas(canvas: HTMLCanvasElement, filename: string) {

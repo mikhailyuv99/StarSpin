@@ -10,6 +10,7 @@ import {
   hitTestResizeHandle,
   hitTestRotationHandle,
   patchElementPlacement,
+  patchImage,
   patchTextBox,
   renderDesignToCanvas,
   snapToAlignmentGrid,
@@ -46,7 +47,10 @@ function getPlacement(
   if (target.kind === "text") {
     return side.textBoxes.find((b) => b.id === target.id)!.placement;
   }
-  return side[target.kind];
+  if (target.kind === "image") {
+    return side.images.find((img) => img.id === target.id)!.placement;
+  }
+  return side.qr;
 }
 
 function patchTarget(
@@ -61,7 +65,10 @@ function patchTarget(
       placement: patch,
     });
   }
-  return patchElementPlacement(design, template, visitCardSide, target.kind, patch);
+  if (target.kind === "image") {
+    return patchImage(design, template, visitCardSide, target.id, { placement: patch });
+  }
+  return patchElementPlacement(design, template, visitCardSide, "qr", patch);
 }
 
 export function QRDesignCanvas({
@@ -160,9 +167,7 @@ export function QRDesignCanvas({
 
   const getBounds = () => {
     if (template === "qr" || !side) return {};
-    return computeElementBounds(template, side, canvasBox.width, canvasBox.height, {
-      hasLogo: Boolean(design.logoUrl),
-    });
+    return computeElementBounds(template, side, canvasBox.width, canvasBox.height);
   };
 
   const beginEdit = () => {
@@ -263,9 +268,7 @@ export function QRDesignCanvas({
 
     if (drag.mode === "rotate") {
       const sideDesign = getSideDesign(design, template, visitCardSide);
-      const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height, {
-        hasLogo: Boolean(design.logoUrl),
-      });
+      const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height);
       const box = bounds[elementKey(drag.target)];
       if (!box) return;
       const cx = box.x + box.w / 2;
@@ -278,9 +281,7 @@ export function QRDesignCanvas({
     }
 
     const sideDesign = getSideDesign(design, template, visitCardSide);
-    const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height, {
-      hasLogo: Boolean(design.logoUrl),
-    });
+    const bounds = computeElementBounds(template, sideDesign, canvasBox.width, canvasBox.height);
     const box = bounds[elementKey(drag.target)];
     if (!box) return;
     const cx = box.x + box.w / 2;

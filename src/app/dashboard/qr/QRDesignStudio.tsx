@@ -4,8 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
+  BUSINESS_LOGO_ID,
   CANVAS_SIZE,
+  addImage,
+  addLibraryImage,
   addTextBox,
+  createLibraryImage,
+  createPlacedImage,
   createTextBox,
   downloadCanvas,
   getSideDesign,
@@ -16,6 +21,8 @@ import {
   placementFromCanvasPoint,
   previewPixelSize,
   PREVIEW_MAX_WIDTH,
+  removeImage,
+  removeLibraryImage,
   removeTextBox,
   renderDesignToCanvas,
   type QRDesignConfig,
@@ -25,6 +32,12 @@ import {
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
 import { QRDesignImageDropzone } from "./QRDesignImageDropzone";
+import {
+  QRDesignImageGallery,
+  QR_IMAGE_DRAG_TYPE,
+  parseQrImageDragPayload,
+  type GalleryImage,
+} from "./QRDesignImageGallery";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
@@ -69,7 +82,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrFg, setQrFg] = useState(merchant.qr_fg_color ?? "#0a0a0a");
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
-  const [logoUrl, setLogoUrl] = useState<string | null>(merchant.logo_url ?? initialDesign.logoUrl);
   const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -149,15 +161,36 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [template]);
 
-  const activeLogoUrl = logoUrl ?? design.logoUrl ?? merchant.logo_url ?? null;
+  const businessLogoUrl = merchant.logo_url ?? null;
+
+  const galleryImages = useMemo((): GalleryImage[] => {
+    const items: GalleryImage[] = [];
+    if (businessLogoUrl) {
+      items.push({
+        id: BUSINESS_LOGO_ID,
+        url: businessLogoUrl,
+        isBusinessLogo: true,
+      });
+    }
+    for (const img of design.imageLibrary) {
+      if (businessLogoUrl && img.url === businessLogoUrl) continue;
+      items.push({ id: img.id, url: img.url, canDelete: true });
+    }
+    return items;
+  }, [businessLogoUrl, design.imageLibrary]);
+
+  const sideDesign =
+    template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
 
   const displayUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}${publicMerchantPath(merchant.slug)}`
       : publicMerchantUrl(merchant.slug);
 
-  const sideDesign =
-    template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
+  const selectedPlacedImage =
+    selectedElement?.kind === "image" && sideDesign
+      ? sideDesign.images.find((img) => img.id === selectedElement.id) ?? null
+      : null;
 
   const selectedTextBox =
     selectedElement?.kind === "text"
@@ -179,7 +212,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     if (template !== "qr") patchSide({ layoutBg: "#ffffff" });
   };
 
-  const handleLogoUpload = async (file: File) => {
+  const handleImageUpload = async (file: File) => {
     const supabase = createClient();
     const {
       data: { user },
@@ -195,37 +228,39 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       return;
     }
     const { data } = supabase.storage.from("merchant-logos").getPublicUrl(path);
-    setLogoUrl(data.publicUrl);
-    patchDesign({ logoUrl: data.publicUrl });
-
-    const { error: updateError } = await supabase
-      .from("merchants")
-      .update({ logo_url: data.publicUrl })
-      .eq("id", merchant.id);
-    if (updateError) setError(updateError.message);
+    const libraryImage = createLibraryImage(data.publicUrl);
+    pushHistoryAndApply((prev) => addLibraryImage(prev, libraryImage));
   };
 
-  const addLogoToCanvas = (canvasX?: number, canvasY?: number) => {
-    if (!activeLogoUrl || template === "qr") return;
+  const addImageToCanvas = (libraryId: string, url: string, canvasX?: number, canvasY?: number) => {
+    if (template === "qr") return;
     const placement =
       canvasX !== undefined && canvasY !== undefined
         ? placementFromCanvasPoint(template, canvasX, canvasY)
-        : { x: 0.5, y: 0.28, scale: 0.75, rotation: 0 };
-    pushHistoryAndApply((prev) =>
-      patchSideDesign(prev, template, visitCardSide, {
-        showLogo: true,
-        logo: placement,
-      }),
-    );
-    setSelectedElement({ kind: "logo" });
+        : undefined;
+    const placed = createPlacedImage(libraryId, url, placement);
+    pushHistoryAndApply((prev) => addImage(prev, template, visitCardSide, placed));
+    setSelectedElement({ kind: "image", id: placed.id });
   };
 
-  const removeLogoFromCanvas = () => {
+  const removeImageFromCanvas = (id: string) => {
     if (template === "qr") return;
-    pushHistoryAndApply((prev) =>
-      patchSideDesign(prev, template, visitCardSide, { showLogo: false }),
-    );
-    if (selectedElement?.kind === "logo") setSelectedElement(null);
+    pushHistoryAndApply((prev) => removeImage(prev, template, visitCardSide, id));
+    if (selectedElement?.kind === "image" && selectedElement.id === id) setSelectedElement(null);
+  };
+
+  const handleDeleteLibraryImage = (libraryId: string) => {
+    if (libraryId === BUSINESS_LOGO_ID) return;
+    pushHistoryAndApply((prev) => removeLibraryImage(prev, libraryId));
+  };
+
+  const handleGalleryImageClick = (libraryId: string, url: string) => {
+    const existing = sideDesign?.images.find((img) => img.libraryId === libraryId);
+    if (existing) {
+      setSelectedElement({ kind: "image", id: existing.id });
+      return;
+    }
+    addImageToCanvas(libraryId, url);
   };
 
   const handleAddTextBox = () => {
@@ -256,7 +291,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         const payload = {
           qr_fg_color: normalizeHex(qrFg, "#0a0a0a"),
           qr_bg_color: normalizeHex(qrBg, "#ffffff"),
-          qr_design: { ...design, template, v: 2 as const },
+          qr_design: { ...design, template, v: 3 as const },
         };
 
         const supabase = createClient();
@@ -298,7 +333,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       url: displayUrl,
       qrFg: normalizeHex(qrFg, "#0a0a0a"),
       qrBg: normalizeHex(qrBg, "#ffffff"),
-      design: { ...design, template: exportTemplate, logoUrl: activeLogoUrl },
+      design: { ...design, template: exportTemplate },
       visitCardSide: side,
     });
     return exportCanvasEl;
@@ -353,14 +388,16 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   }, [template, qrFg, qrBg, saveStatus, error]);
 
   const handlePreviewDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    if (template === "qr" || !activeLogoUrl) return;
-    if (!event.dataTransfer.types.includes("application/x-qr-logo")) return;
+    if (template === "qr") return;
+    if (!event.dataTransfer.types.includes(QR_IMAGE_DRAG_TYPE)) return;
     event.preventDefault();
+    const payload = parseQrImageDragPayload(event.dataTransfer.getData(QR_IMAGE_DRAG_TYPE));
+    if (!payload) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const canvas = CANVAS_SIZE[template];
     const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
     const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
-    addLogoToCanvas(x, y);
+    addImageToCanvas(payload.libraryId, payload.url, x, y);
   };
 
   const previewPanel = (
@@ -421,7 +458,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
           }}
           onDragOver={(e) => {
-            if (e.dataTransfer.types.includes("application/x-qr-logo")) e.preventDefault();
+            if (e.dataTransfer.types.includes(QR_IMAGE_DRAG_TYPE)) e.preventDefault();
           }}
           onDrop={handlePreviewDrop}
         >
@@ -431,7 +468,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             displayUrl={displayUrl}
             qrFg={normalizeHex(qrFg, "#0a0a0a")}
             qrBg={normalizeHex(qrBg, "#ffffff")}
-            design={{ ...design, logoUrl: activeLogoUrl }}
+            design={design}
             editable={template !== "qr"}
             selected={selectedElement}
             onSelect={setSelectedElement}
@@ -560,21 +597,24 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                     <button type="button" onClick={handleAddTextBox} className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}>
                       {t("dashboard.qrAddTextBox")}
                     </button>
-                    {sideDesign?.showLogo && (
-                      <button type="button" onClick={removeLogoFromCanvas} className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}>
-                        {t("dashboard.qrRemoveLogo")}
+                    {selectedPlacedImage && (
+                      <button
+                        type="button"
+                        onClick={() => removeImageFromCanvas(selectedPlacedImage.id)}
+                        className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}
+                      >
+                        {t("dashboard.qrRemoveImage")}
                       </button>
                     )}
                   </div>
                 </div>
 
-                <QRDesignImageDropzone
-                  imageUrl={activeLogoUrl}
-                  onUpload={handleLogoUpload}
-                  onImageClick={() => {
-                    if (sideDesign?.showLogo) setSelectedElement({ kind: "logo" });
-                    else addLogoToCanvas();
-                  }}
+                <QRDesignImageDropzone onUpload={handleImageUpload} />
+                <QRDesignImageGallery
+                  images={galleryImages}
+                  onImageClick={handleGalleryImageClick}
+                  onDelete={handleDeleteLibraryImage}
+                  selectedLibraryId={selectedPlacedImage?.libraryId ?? null}
                 />
 
                 {selectedTextBox && (
