@@ -28,12 +28,14 @@ export type TextBox = {
 export type LibraryImage = {
   id: string;
   url: string;
+  aspectRatio: number;
 };
 
 export type PlacedImage = {
   id: string;
   libraryId: string;
   url: string;
+  aspectRatio: number;
   placement: ElementPlacement;
 };
 
@@ -156,12 +158,14 @@ export function blankSideDesign(template: Exclude<QRDesignTemplate, "qr">): Side
 export function createPlacedImage(
   libraryId: string,
   url: string,
+  aspectRatio = 1,
   placement?: Partial<ElementPlacement>,
 ): PlacedImage {
   return {
     id: crypto.randomUUID(),
     libraryId,
     url,
+    aspectRatio: normalizeAspectRatio(aspectRatio),
     placement: clampPlacement({
       x: 0.5,
       y: 0.28,
@@ -172,8 +176,61 @@ export function createPlacedImage(
   };
 }
 
-export function createLibraryImage(url: string): LibraryImage {
-  return { id: crypto.randomUUID(), url };
+export function createLibraryImage(url: string, aspectRatio = 1): LibraryImage {
+  return { id: crypto.randomUUID(), url, aspectRatio: normalizeAspectRatio(aspectRatio) };
+}
+
+export function normalizeAspectRatio(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return 1;
+  return value;
+}
+
+export function readImageAspectRatio(url: string): Promise<number> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(normalizeAspectRatio(img.naturalWidth / img.naturalHeight));
+    img.onerror = () => resolve(1);
+    img.src = url;
+  });
+}
+
+export function readImageAspectRatioFromFile(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(normalizeAspectRatio(img.naturalWidth / img.naturalHeight));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(1);
+    };
+    img.src = objectUrl;
+  });
+}
+
+export function imageDisplaySize(
+  template: Exclude<QRDesignTemplate, "qr">,
+  scale: number,
+  aspectRatio: number,
+): { width: number; height: number } {
+  const base = scaledSize(template, "logo", scale);
+  const ratio = normalizeAspectRatio(aspectRatio);
+  if (ratio >= 1) return { width: base * ratio, height: base };
+  return { width: base, height: base / ratio };
+}
+
+export function resolveLibraryAspectRatio(
+  design: QRDesignConfig,
+  libraryId: string,
+  businessLogoAspectRatio = 1,
+): number {
+  if (libraryId === BUSINESS_LOGO_ID) return normalizeAspectRatio(businessLogoAspectRatio);
+  return normalizeAspectRatio(
+    design.imageLibrary.find((img) => img.id === libraryId)?.aspectRatio ?? 1,
+  );
 }
 
 export function createTextBox(text = "Text"): TextBox {
@@ -229,6 +286,10 @@ function parsePlacedImage(raw: unknown, fallback: PlacedImage): PlacedImage {
     id: typeof data.id === "string" ? data.id : fallback.id,
     libraryId: typeof data.libraryId === "string" ? data.libraryId : fallback.libraryId,
     url: typeof data.url === "string" ? data.url : fallback.url,
+    aspectRatio:
+      typeof data.aspectRatio === "number"
+        ? normalizeAspectRatio(data.aspectRatio)
+        : fallback.aspectRatio,
     placement: parsePlacement(data.placement, fallback.placement),
   };
 }
@@ -239,6 +300,10 @@ function parseLibraryImage(raw: unknown, fallback: LibraryImage): LibraryImage {
   return {
     id: typeof data.id === "string" ? data.id : fallback.id,
     url: typeof data.url === "string" ? data.url : fallback.url,
+    aspectRatio:
+      typeof data.aspectRatio === "number"
+        ? normalizeAspectRatio(data.aspectRatio)
+        : fallback.aspectRatio,
   };
 }
 
@@ -256,7 +321,7 @@ function parseSideDesign(raw: unknown, template: Exclude<QRDesignTemplate, "qr">
       parseTextBox(item, fallback.textBoxes[i] ?? createTextBox()),
     ),
     images: imagesRaw.map((item, i) =>
-      parsePlacedImage(item, fallback.images[i] ?? createPlacedImage(BUSINESS_LOGO_ID, "")),
+      parsePlacedImage(item, fallback.images[i] ?? createPlacedImage(BUSINESS_LOGO_ID, "", 1)),
     ).filter((img) => img.url),
   };
 }
@@ -278,7 +343,7 @@ function migrateV2Side(
   const showLogo = data.showLogo === true;
   const legacyLogo = parsePlacement(data.logo, { x: 0.5, y: 0.22, scale: 0.75, rotation: 0 });
   if (showLogo && logoUrl && !images.some((img) => img.url === logoUrl)) {
-    images.push(createPlacedImage(BUSINESS_LOGO_ID, logoUrl, legacyLogo));
+    images.push(createPlacedImage(BUSINESS_LOGO_ID, logoUrl, 1, legacyLogo));
   }
   return { ...side, images };
 }
@@ -286,7 +351,7 @@ function migrateV2Side(
 function parseImageLibrary(raw: unknown): LibraryImage[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .map((item, i) => parseLibraryImage(item, { id: `lib-${i}`, url: "" }))
+    .map((item, i) => parseLibraryImage(item, { id: `lib-${i}`, url: "", aspectRatio: 1 }))
     .filter((img) => img.url);
 }
 
@@ -449,10 +514,19 @@ export function addLibraryImage(design: QRDesignConfig, image: LibraryImage): QR
   return { ...design, imageLibrary: [...design.imageLibrary, image] };
 }
 
-export function removeLibraryImage(design: QRDesignConfig, id: string): QRDesignConfig {
+export function removeLibraryImage(design: QRDesignConfig, libraryId: string): QRDesignConfig {
+  const stripSide = (side: SideDesign): SideDesign => ({
+    ...side,
+    images: side.images.filter((img) => img.libraryId !== libraryId),
+  });
   return {
     ...design,
-    imageLibrary: design.imageLibrary.filter((img) => img.id !== id),
+    imageLibrary: design.imageLibrary.filter((img) => img.id !== libraryId),
+    sticker: stripSide(design.sticker),
+    visitCard: {
+      front: stripSide(design.visitCard.front),
+      back: stripSide(design.visitCard.back),
+    },
   };
 }
 
@@ -577,11 +651,11 @@ export function computeElementBounds(
   );
 
   for (const img of side.images) {
-    const size = scaledSize(template, "logo", img.placement.scale);
+    const { width, height } = imageDisplaySize(template, img.placement.scale, img.aspectRatio);
     bounds[`image:${img.id}`] = placementToBounds(
       img.placement,
-      size,
-      size,
+      width,
+      height,
       canvasWidth,
       canvasHeight,
     );

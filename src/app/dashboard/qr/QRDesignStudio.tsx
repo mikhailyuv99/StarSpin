@@ -21,6 +21,8 @@ import {
   placementFromCanvasPoint,
   previewPixelSize,
   PREVIEW_MAX_WIDTH,
+  readImageAspectRatio,
+  readImageAspectRatioFromFile,
   removeImage,
   removeLibraryImage,
   removeTextBox,
@@ -82,6 +84,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrFg, setQrFg] = useState(merchant.qr_fg_color ?? "#0a0a0a");
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
+  const [businessLogoAspectRatio, setBusinessLogoAspectRatio] = useState(1);
   const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +158,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       const target = event.target as Node | null;
       if (!target) return;
       if (document.querySelector(".qr-preview-aspect")?.contains(target)) return;
+      if (document.querySelector(".qr-customize-panel")?.contains(target)) return;
       setSelectedElement(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
@@ -163,21 +167,35 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   const businessLogoUrl = merchant.logo_url ?? null;
 
+  useEffect(() => {
+    if (!businessLogoUrl) {
+      setBusinessLogoAspectRatio(1);
+      return;
+    }
+    void readImageAspectRatio(businessLogoUrl).then(setBusinessLogoAspectRatio);
+  }, [businessLogoUrl]);
+
   const galleryImages = useMemo((): GalleryImage[] => {
     const items: GalleryImage[] = [];
     if (businessLogoUrl) {
       items.push({
         id: BUSINESS_LOGO_ID,
         url: businessLogoUrl,
+        aspectRatio: businessLogoAspectRatio,
         isBusinessLogo: true,
       });
     }
     for (const img of design.imageLibrary) {
       if (businessLogoUrl && img.url === businessLogoUrl) continue;
-      items.push({ id: img.id, url: img.url, canDelete: true });
+      items.push({
+        id: img.id,
+        url: img.url,
+        aspectRatio: img.aspectRatio,
+        canDelete: true,
+      });
     }
     return items;
-  }, [businessLogoUrl, design.imageLibrary]);
+  }, [businessLogoAspectRatio, businessLogoUrl, design.imageLibrary]);
 
   const sideDesign =
     template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
@@ -213,6 +231,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   };
 
   const handleImageUpload = async (file: File) => {
+    const aspectRatio = await readImageAspectRatioFromFile(file);
     const supabase = createClient();
     const {
       data: { user },
@@ -228,17 +247,23 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       return;
     }
     const { data } = supabase.storage.from("merchant-logos").getPublicUrl(path);
-    const libraryImage = createLibraryImage(data.publicUrl);
+    const libraryImage = createLibraryImage(data.publicUrl, aspectRatio);
     pushHistoryAndApply((prev) => addLibraryImage(prev, libraryImage));
   };
 
-  const addImageToCanvas = (libraryId: string, url: string, canvasX?: number, canvasY?: number) => {
+  const addImageToCanvas = (
+    libraryId: string,
+    url: string,
+    aspectRatio: number,
+    canvasX?: number,
+    canvasY?: number,
+  ) => {
     if (template === "qr") return;
     const placement =
       canvasX !== undefined && canvasY !== undefined
         ? placementFromCanvasPoint(template, canvasX, canvasY)
         : undefined;
-    const placed = createPlacedImage(libraryId, url, placement);
+    const placed = createPlacedImage(libraryId, url, aspectRatio, placement);
     pushHistoryAndApply((prev) => addImage(prev, template, visitCardSide, placed));
     setSelectedElement({ kind: "image", id: placed.id });
   };
@@ -252,15 +277,21 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const handleDeleteLibraryImage = (libraryId: string) => {
     if (libraryId === BUSINESS_LOGO_ID) return;
     pushHistoryAndApply((prev) => removeLibraryImage(prev, libraryId));
+    if (
+      selectedElement?.kind === "image" &&
+      sideDesign?.images.some((img) => img.id === selectedElement.id && img.libraryId === libraryId)
+    ) {
+      setSelectedElement(null);
+    }
   };
 
-  const handleGalleryImageClick = (libraryId: string, url: string) => {
+  const handleGalleryImageClick = (libraryId: string, url: string, aspectRatio: number) => {
     const existing = sideDesign?.images.find((img) => img.libraryId === libraryId);
     if (existing) {
       setSelectedElement({ kind: "image", id: existing.id });
       return;
     }
-    addImageToCanvas(libraryId, url);
+    addImageToCanvas(libraryId, url, aspectRatio);
   };
 
   const handleAddTextBox = () => {
@@ -397,7 +428,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     const canvas = CANVAS_SIZE[template];
     const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
     const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
-    addImageToCanvas(payload.libraryId, payload.url, x, y);
+    addImageToCanvas(payload.libraryId, payload.url, payload.aspectRatio, x, y);
   };
 
   const previewPanel = (

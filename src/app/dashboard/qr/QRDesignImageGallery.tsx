@@ -6,19 +6,27 @@ import { useTranslations } from "@/i18n/client";
 export type GalleryImage = {
   id: string;
   url: string;
+  aspectRatio: number;
   isBusinessLogo?: boolean;
   canDelete?: boolean;
 };
 
-export function qrImageDragPayload(libraryId: string, url: string): string {
-  return JSON.stringify({ libraryId, url });
+export function qrImageDragPayload(libraryId: string, url: string, aspectRatio: number): string {
+  return JSON.stringify({ libraryId, url, aspectRatio });
 }
 
-export function parseQrImageDragPayload(raw: string): { libraryId: string; url: string } | null {
+export function parseQrImageDragPayload(
+  raw: string,
+): { libraryId: string; url: string; aspectRatio: number } | null {
   try {
-    const data = JSON.parse(raw) as { libraryId?: string; url?: string };
+    const data = JSON.parse(raw) as { libraryId?: string; url?: string; aspectRatio?: number };
     if (typeof data.libraryId === "string" && typeof data.url === "string") {
-      return { libraryId: data.libraryId, url: data.url };
+      return {
+        libraryId: data.libraryId,
+        url: data.url,
+        aspectRatio:
+          typeof data.aspectRatio === "number" && data.aspectRatio > 0 ? data.aspectRatio : 1,
+      };
     }
   } catch {
     /* ignore */
@@ -35,7 +43,7 @@ export function QRDesignImageGallery({
   selectedLibraryId,
 }: {
   images: GalleryImage[];
-  onImageClick: (libraryId: string, url: string) => void;
+  onImageClick: (libraryId: string, url: string, aspectRatio: number) => void;
   onDelete?: (libraryId: string) => void;
   selectedLibraryId?: string | null;
 }) {
@@ -54,18 +62,25 @@ export function QRDesignImageGallery({
           return (
             <div key={img.id} className="flex flex-col items-center gap-1.5">
               <div className="relative">
-                <img
-                  src={img.url}
-                  alt=""
-                  draggable
-                  onClick={() => onImageClick(img.id, img.url)}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(QR_IMAGE_DRAG_TYPE, qrImageDragPayload(img.id, img.url));
-                  }}
-                  className={`h-16 w-16 cursor-grab rounded-[12px] border-2 object-cover shadow-[2px_2px_0_0_#0a0a0a] active:cursor-grabbing ${
+                <div
+                  className={`flex h-16 w-16 items-center justify-center rounded-[12px] border-2 bg-white shadow-[2px_2px_0_0_#0a0a0a] ${
                     selected ? "border-[var(--c-purple)] ring-2 ring-[var(--c-purple)]/40" : "border-black"
                   }`}
-                />
+                >
+                  <img
+                    src={img.url}
+                    alt=""
+                    draggable
+                    onClick={() => onImageClick(img.id, img.url, img.aspectRatio)}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(
+                        QR_IMAGE_DRAG_TYPE,
+                        qrImageDragPayload(img.id, img.url, img.aspectRatio),
+                      );
+                    }}
+                    className="max-h-[3.5rem] max-w-[3.5rem] cursor-grab object-contain active:cursor-grabbing"
+                  />
+                </div>
                 {img.canDelete && onDelete && (
                   <button
                     type="button"
