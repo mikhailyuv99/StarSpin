@@ -13,6 +13,7 @@ import {
   patchTextBox,
   renderDesignToCanvas,
   snapToAlignmentGrid,
+  snapRotation,
   type ElementPlacement,
   type QRDesignConfig,
   type QRDesignTemplate,
@@ -272,7 +273,7 @@ export function QRDesignCanvas({
       const startRad = Math.atan2(drag.startY - cy, drag.startX - cx);
       const currentRad = Math.atan2(pt.y - cy, pt.x - cx);
       const delta = ((currentRad - startRad) * 180) / Math.PI;
-      patchElement(drag.target, { rotation: drag.startAngle + delta });
+      patchElement(drag.target, { rotation: snapRotation(drag.startAngle + delta) });
       return;
     }
 
@@ -300,6 +301,12 @@ export function QRDesignCanvas({
       const snapped = snapToAlignmentGrid(placement.x, placement.y);
       if (snapped.x !== placement.x || snapped.y !== placement.y) {
         patchElement(drag.target, snapped);
+      }
+    } else if (drag.mode === "rotate") {
+      const placement = getPlacement(design, template, visitCardSide, drag.target);
+      const snappedRot = snapRotation(placement.rotation);
+      if (snappedRot !== placement.rotation) {
+        patchElement(drag.target, { rotation: snappedRot });
       }
     }
     setDrag(null);

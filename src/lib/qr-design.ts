@@ -82,8 +82,19 @@ const BASE: Record<Exclude<QRDesignTemplate, "qr">, { logo: number; qr: number; 
 export type ResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 export const RESIZE_HANDLE_SIZE = 14;
 export const RESIZE_HANDLE_HIT = 22;
-export const ROTATION_HANDLE_OFFSET = 28;
-export const ROTATION_HANDLE_HIT = 20;
+export const ROTATION_HANDLE_OFFSET = 36;
+export const ROTATION_HANDLE_HIT = 26;
+const ROTATION_SNAP_THRESHOLD = 8;
+const ROTATION_SNAPS = [0, 90, 180] as const;
+
+export function snapRotation(rotation: number): number {
+  const normalized = ((rotation % 360) + 360) % 360;
+  for (const snap of ROTATION_SNAPS) {
+    if (Math.abs(normalized - snap) < ROTATION_SNAP_THRESHOLD) return snap;
+  }
+  if (normalized > 360 - ROTATION_SNAP_THRESHOLD || normalized < ROTATION_SNAP_THRESHOLD) return 0;
+  return rotation;
+}
 
 export function elementKey(ref: SelectedElement): string {
   if (ref.kind === "text") return `text:${ref.id}`;
@@ -520,9 +531,22 @@ export function getRotationHandlePosition(bounds: ElementBounds): { x: number; y
   const rad = (bounds.rotation * Math.PI) / 180;
   const lx = 0;
   const ly = -bounds.h / 2 - ROTATION_HANDLE_OFFSET;
+  const handleCx = cx + lx * Math.cos(rad) - ly * Math.sin(rad);
+  const handleCy = cy + lx * Math.sin(rad) + ly * Math.cos(rad);
   return {
-    x: cx + lx * Math.cos(rad) - ly * Math.sin(rad) - ROTATION_HANDLE_HIT / 2,
-    y: cy + lx * Math.sin(rad) + ly * Math.cos(rad) - ROTATION_HANDLE_HIT / 2,
+    x: handleCx - ROTATION_HANDLE_HIT / 2,
+    y: handleCy - ROTATION_HANDLE_HIT / 2,
+  };
+}
+
+function getElementTopCenter(bounds: ElementBounds): { x: number; y: number } {
+  const cx = bounds.x + bounds.w / 2;
+  const cy = bounds.y + bounds.h / 2;
+  const rad = (bounds.rotation * Math.PI) / 180;
+  const ly = -bounds.h / 2;
+  return {
+    x: cx - ly * Math.sin(rad),
+    y: cy + ly * Math.cos(rad),
   };
 }
 
@@ -667,20 +691,41 @@ function drawEditorGuides(
         ctx.strokeRect(pos.x + 0.5, pos.y + 0.5, RESIZE_HANDLE_SIZE - 1, RESIZE_HANDLE_SIZE - 1);
       }
       const rot = getRotationHandlePosition(box);
+      const rotCx = rot.x + ROTATION_HANDLE_HIT / 2;
+      const rotCy = rot.y + ROTATION_HANDLE_HIT / 2;
+      const top = getElementTopCenter(box);
+
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.beginPath();
-      ctx.arc(
-        rot.x + ROTATION_HANDLE_HIT / 2,
-        rot.y + ROTATION_HANDLE_HIT / 2,
-        ROTATION_HANDLE_HIT / 2 - 1,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(top.x, top.y);
+      ctx.lineTo(rotCx, rotCy);
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.55)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.beginPath();
+      ctx.arc(rotCx, rotCy, ROTATION_HANDLE_HIT / 2 - 1, 0, Math.PI * 2);
       ctx.fillStyle = "#ffffff";
       ctx.fill();
       ctx.strokeStyle = "rgba(139, 92, 246, 0.95)";
       ctx.lineWidth = 1.5;
       ctx.stroke();
+
+      ctx.save();
+      ctx.translate(rotCx, rotCy);
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.95)";
+      ctx.lineWidth = 1.75;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(0, 0, 5.5, -Math.PI * 0.85, Math.PI * 0.35);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(5.8, 2.2);
+      ctx.lineTo(8.2, 4.8);
+      ctx.lineTo(5.4, 5.6);
+      ctx.stroke();
+      ctx.restore();
     }
     ctx.restore();
   }

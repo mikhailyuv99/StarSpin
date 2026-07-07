@@ -24,7 +24,7 @@ import {
   type VisitCardSide,
 } from "@/lib/qr-design";
 import { QRDesignCanvas } from "./QRDesignCanvas";
-import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
+import { QRDesignImageDropzone } from "./QRDesignImageDropzone";
 import { QRColorSwatch } from "./QRColorSwatch";
 import { QRFontPicker } from "./QRFontPicker";
 import { ui } from "@/components/ui/styles";
@@ -40,16 +40,18 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function UndoIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-      <path d="M9 14H4v-5M4 14a8 8 0 1 1 2 4.24" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M9 15 3 9l6-6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 9h12a6 6 0 0 1 0 12h-3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function RedoIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-      <path d="M15 10h5v5M15 14a8 8 0 1 1-2-4.24" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M15 9l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 15H9a6 6 0 0 1 0-12h3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -67,6 +69,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const [qrFg, setQrFg] = useState(merchant.qr_fg_color ?? "#0a0a0a");
   const [qrBg, setQrBg] = useState(merchant.qr_bg_color ?? "#ffffff");
   const [design, setDesign] = useState<QRDesignConfig>(initialDesign);
+  const [logoUrl, setLogoUrl] = useState<string | null>(merchant.logo_url ?? initialDesign.logoUrl);
   const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +149,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [template]);
 
-  const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
+  const activeLogoUrl = logoUrl ?? design.logoUrl ?? merchant.logo_url ?? null;
 
   const displayUrl =
     typeof window !== "undefined"
@@ -192,7 +195,14 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       return;
     }
     const { data } = supabase.storage.from("merchant-logos").getPublicUrl(path);
+    setLogoUrl(data.publicUrl);
     patchDesign({ logoUrl: data.publicUrl });
+
+    const { error: updateError } = await supabase
+      .from("merchants")
+      .update({ logo_url: data.publicUrl })
+      .eq("id", merchant.id);
+    if (updateError) setError(updateError.message);
   };
 
   const addLogoToCanvas = (canvasX?: number, canvasY?: number) => {
@@ -558,37 +568,14 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                   </div>
                 </div>
 
-                {activeLogoUrl && (
-                  <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-3">
-                    <p className="text-sm font-extrabold text-ink">{t("dashboard.qrLogo")}</p>
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={activeLogoUrl}
-                        alt=""
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData("application/x-qr-logo", "1")}
-                        className="h-16 w-16 shrink-0 cursor-grab rounded-[14px] border-2 border-black object-cover active:cursor-grabbing"
-                      />
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <p className="text-xs font-medium text-muted">{t("dashboard.qrLogoDragHint")}</p>
-                        {!sideDesign?.showLogo && (
-                          <button
-                            type="button"
-                            onClick={() => addLogoToCanvas()}
-                            className={`${ui.btnOutline} !w-auto px-4 py-2 text-sm`}
-                          >
-                            {t("dashboard.qrAddLogoToDesign")}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <LogoUploadField logoUrl={activeLogoUrl} onUpload={handleLogoUpload} />
-                  </div>
-                )}
-
-                {!activeLogoUrl && (
-                  <LogoUploadField label={t("dashboard.qrLogo")} logoUrl={null} onUpload={handleLogoUpload} />
-                )}
+                <QRDesignImageDropzone
+                  imageUrl={activeLogoUrl}
+                  onUpload={handleLogoUpload}
+                  onImageClick={() => {
+                    if (sideDesign?.showLogo) setSelectedElement({ kind: "logo" });
+                    else addLogoToCanvas();
+                  }}
+                />
 
                 {selectedTextBox && (
                   <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
