@@ -64,16 +64,17 @@ export type RenderSideContext = {
   taglineStyle: TextStyle;
 };
 
+/** Print canvas sizes @ 300 DPI — US business card 3.5×2 in, table sticker 3×3 in. */
 export const CANVAS_SIZE: Record<QRDesignTemplate, { width: number; height: number }> = {
   qr: { width: 512, height: 512 },
-  table_sticker: { width: 720, height: 720 },
-  visit_card: { width: 960, height: 540 },
+  table_sticker: { width: 900, height: 900 },
+  visit_card: { width: 1050, height: 600 },
 };
 
 export const PREVIEW_MAX_WIDTH: Record<QRDesignTemplate, number> = {
   qr: 300,
-  table_sticker: 420,
-  visit_card: 520,
+  table_sticker: 360,
+  visit_card: 420,
 };
 
 /** Symmetric 3×3 alignment grid (25 % / 50 % / 75 %). */
@@ -105,8 +106,8 @@ export function nearestGridIndex(value: number): number {
 }
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, Record<DesignElementKey, number>> = {
-  table_sticker: { logo: 88, name: 28, qr: 280, tagline: 22 },
-  visit_card: { logo: 96, name: 26, qr: 220, tagline: 18 },
+  table_sticker: { logo: 110, name: 35, qr: 350, tagline: 28 },
+  visit_card: { logo: 105, name: 28, qr: 240, tagline: 20 },
 };
 
 const DEFAULT_VISIT_CARD_LAYOUT: TemplateLayout = {

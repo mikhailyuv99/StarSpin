@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardHeader } from "@/components/DashboardHeader";
 
@@ -16,18 +16,33 @@ export function DashboardShell({
   const pathname = usePathname();
   const qrStudio = pathname === "/dashboard/qr";
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!qrStudio) return;
-    document.documentElement.classList.add("qr-studio-active");
-    document.body.classList.add("qr-studio-active");
+
+    const html = document.documentElement;
+    const body = document.body;
+    html.classList.add("qr-studio-active");
+    body.classList.add("qr-studio-active");
+    html.style.height = "auto";
+    html.style.minHeight = "0";
+    body.style.height = "auto";
+    body.style.minHeight = "0";
+
     return () => {
-      document.documentElement.classList.remove("qr-studio-active");
-      document.body.classList.remove("qr-studio-active");
+      html.classList.remove("qr-studio-active");
+      body.classList.remove("qr-studio-active");
+      html.style.height = "";
+      html.style.minHeight = "";
+      body.style.height = "";
+      body.style.minHeight = "";
     };
   }, [qrStudio]);
 
   return (
-    <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
+    <div
+      className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}
+      style={qrStudio ? { minHeight: 0, height: "auto" } : undefined}
+    >
       <div className="brutal-nav-wrap">
         <DashboardHeader nav={nav} />
       </div>

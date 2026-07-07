@@ -271,6 +271,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           className={`qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a] ${template === "qr" ? "qr-preview-aspect--qr" : ""}`}
           style={{
             aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
+            maxWidth: `${PREVIEW_MAX_WIDTH[template]}px`,
+            width: "100%",
+            marginInline: "auto",
           }}
         >
           <QRDesignCanvas
@@ -315,9 +318,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   return (
     <div
       ref={studioRef}
-      className={`qr-design-studio qr-design-studio--${template} space-y-4 lg:space-y-8`}
+      className={`qr-design-studio qr-design-studio--${template} flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-x-8 lg:gap-y-8`}
     >
-      <div className="flex flex-wrap gap-2 pb-1">
+      <div className="flex flex-wrap gap-2 pb-1 lg:col-span-2">
         {TEMPLATES.map((value) => (
           <button
             key={value}
@@ -337,20 +340,18 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
-      {/* DOM order = scroll order on mobile: preview → customize → order */}
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-8">
-        <div
-          className="qr-preview-panel min-w-0 shrink-0 self-start lg:col-start-2 lg:row-start-1 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
-          style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
-        >
-          {previewPanel}
-        </div>
+      <div
+        className="qr-preview-panel min-w-0 shrink-0 self-start lg:col-start-2 lg:row-start-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
+        style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
+      >
+        {previewPanel}
+      </div>
 
-        <form
-          ref={customizeRef}
-          onSubmit={(e) => e.preventDefault()}
-          className={`${ui.card} qr-customize-panel min-w-0 space-y-5 max-lg:p-4 lg:col-start-1 lg:row-start-1`}
-        >
+      <form
+        ref={customizeRef}
+        onSubmit={(e) => e.preventDefault()}
+        className={`${ui.card} qr-customize-panel min-w-0 space-y-5 max-lg:p-4 lg:col-start-1 lg:row-start-2`}
+      >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
@@ -485,10 +486,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
-        </form>
-      </div>
+      </form>
 
-      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
+      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4 lg:col-span-2`}>
         <div className="min-w-0">
           <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
