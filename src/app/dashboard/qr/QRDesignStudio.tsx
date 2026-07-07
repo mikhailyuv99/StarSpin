@@ -298,7 +298,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       <div
-        className={`mt-3 flex flex-col gap-2 ${template !== "qr" ? "qr-preview-actions--print" : "w-full"}`}
+        className={`mt-3 flex flex-col gap-2 qr-preview-actions ${template !== "qr" ? "qr-preview-actions--print" : "w-full"}`}
       >
         <button
           type="button"
@@ -364,7 +364,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         <form
           ref={customizeRef}
           onSubmit={(e) => e.preventDefault()}
-          className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 max-lg:order-1 space-y-5 max-lg:p-4 lg:pr-[calc(var(--qr-preview-width)+2rem)]`}
+          className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 max-lg:order-1 space-y-4 max-lg:space-y-4 lg:space-y-5 lg:pr-[calc(var(--qr-preview-width)+2rem)]`}
         >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -495,7 +495,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
               </>
             )}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="qr-customize-actions flex flex-wrap gap-3 pt-1">
               <button type="button" onClick={applyBrandColors} className={`${ui.btnOutline} !w-auto px-5`}>
                 {t("dashboard.qrUseBrandColors")}
               </button>

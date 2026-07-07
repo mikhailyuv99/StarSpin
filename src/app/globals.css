@@ -216,17 +216,29 @@ body {
   .brutal-page--qr-studio .mx-auto,
   .qr-design-studio-page,
   .qr-design-studio,
-  .qr-design-studio-form,
   .qr-preview-panel-inner {
     flex: 0 0 auto;
     height: auto !important;
     min-height: 0 !important;
-    padding-bottom: 0 !important;
     margin-bottom: 0 !important;
   }
 
+  .qr-design-studio-page {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   .qr-customize-panel {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    max-height: min(34vh, 19rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem !important;
+    padding-bottom: 1.35rem !important;
+  }
+
+  .qr-customize-actions {
+    padding-bottom: 0.15rem;
   }
 
   .qr-preview-panel {
@@ -239,6 +251,12 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .qr-preview-actions {
+    width: 100%;
+    padding-bottom: 0.35rem;
   }
 
   .qr-preview-aspect {
