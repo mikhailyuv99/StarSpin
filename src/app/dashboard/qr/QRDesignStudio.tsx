@@ -352,19 +352,20 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       <div
-        className="qr-studio-layout relative flex flex-col gap-4 lg:block lg:gap-0"
+        className="max-lg:contents flex flex-col gap-4 lg:relative"
         style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
       >
-        <div className="qr-studio-preview w-full min-w-0 shrink-0">
-          <div className="qr-studio-preview-inner">{previewPanel}</div>
+        <div className="shrink-0 max-lg:order-2 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:w-[var(--qr-preview-width)]">
+          <div className="lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20 lg:pointer-events-auto">
+            {previewPanel}
+          </div>
         </div>
 
-        <div className="qr-studio-settings min-w-0 w-full">
-          <form
-            ref={customizeRef}
-            onSubmit={(e) => e.preventDefault()}
-            className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 space-y-5 max-lg:p-4`}
-          >
+        <form
+          ref={customizeRef}
+          onSubmit={(e) => e.preventDefault()}
+          className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 max-lg:order-1 space-y-5 max-lg:p-4 lg:pr-[calc(var(--qr-preview-width)+2rem)]`}
+        >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
@@ -499,8 +500,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   );
