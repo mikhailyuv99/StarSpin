@@ -231,9 +231,7 @@ body {
   .qr-design-studio,
   .qr-studio-layout,
   .qr-studio-settings,
-  .qr-studio-preview,
-  .qr-studio-order,
-  .qr-design-studio-order {
+  .qr-studio-preview {
     flex: 0 0 auto;
     min-height: 0 !important;
     height: auto !important;

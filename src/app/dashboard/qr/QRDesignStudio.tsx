@@ -502,16 +502,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           </form>
         </div>
       </div>
-
-      <section className={`${ui.card} qr-design-studio-order qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
-        <div className="min-w-0">
-          <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
-          <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
-        </div>
-        <span className="mt-0.5 shrink-0 rounded-[10px] border-2 border-black bg-[var(--c-cream)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-muted">
-          {t("dashboard.qrOrderBadge")}
-        </span>
-      </section>
     </div>
   );
 }
