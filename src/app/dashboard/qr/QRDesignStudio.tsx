@@ -53,6 +53,13 @@ const SAVED_STATUS_MS = 2500;
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+function shouldKeepSelection(target: HTMLElement): boolean {
+  return Boolean(
+    target.tagName === "CANVAS" ||
+      target.closest("button, input, select, textarea, a, [data-qr-keep-selection]"),
+  );
+}
+
 function UndoIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -157,13 +164,19 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest(".qr-preview-aspect")) return;
-      if (target.closest("button, input, select, textarea, label, a, [role='button']")) return;
+      if (target.closest(".qr-design-studio")) return;
       setSelectedElement(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [template]);
+
+  const handleStudioPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (template === "qr") return;
+    const target = event.target as HTMLElement;
+    if (shouldKeepSelection(target)) return;
+    setSelectedElement(null);
+  };
 
   const businessLogoUrl = merchant.logo_url ?? null;
 
@@ -539,6 +552,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     <div
       ref={studioRef}
       className={`qr-design-studio qr-design-studio--${template}`}
+      onPointerDown={handleStudioPointerDown}
       style={{
         ["--qr-preview-canvas-width" as string]: `${previewPx.width}px`,
         ["--qr-preview-aspect-ratio" as string]: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
@@ -649,7 +663,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 />
 
                 {selectedTextBox && (
-                  <div className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4">
+                  <div
+                    data-qr-keep-selection
+                    className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-extrabold text-ink">{t("dashboard.qrEditTextBox")}</p>
                       <button

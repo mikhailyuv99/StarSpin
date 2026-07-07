@@ -233,6 +233,21 @@ export function QRDesignCanvas({
 
     const hit = hitTestElement(pt.x, pt.y, bounds);
     if (hit) {
+      const hitKey = elementKey(hit);
+      if (selected && hitKey === elementKey(selected)) {
+        const placement = getPlacement(design, template, visitCardSide, hit);
+        beginEdit();
+        setDrag({
+          mode: "move",
+          target: hit,
+          startX: pt.x,
+          startY: pt.y,
+          startAngle: placement.rotation,
+          startPlacement: { ...placement },
+        });
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
       onSelect(hit);
       const placement = getPlacement(design, template, visitCardSide, hit);
       beginEdit();
@@ -245,9 +260,10 @@ export function QRDesignCanvas({
         startPlacement: { ...placement },
       });
       event.currentTarget.setPointerCapture(event.pointerId);
-    } else {
-      onSelect(null);
+      return;
     }
+
+    onSelect(null);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
