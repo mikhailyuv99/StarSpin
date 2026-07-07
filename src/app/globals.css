@@ -197,11 +197,25 @@ body {
 }
 
 @media (max-width: 1023px) {
+  html.qr-studio-active,
+  body.qr-studio-active {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .brutal-page--qr-studio,
+  .brutal-page--qr-studio main,
+  .brutal-page--qr-studio .mx-auto,
+  .qr-design-studio-page,
+  .qr-design-studio {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
   .qr-preview-aspect {
     position: relative;
     width: 100%;
     overflow: hidden;
-    contain: layout paint;
   }
 
   .qr-preview-panel {
@@ -215,6 +229,19 @@ body {
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1.25rem;
+  }
+
+  .qr-studio-order {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .qr-design-studio--qr .qr-preview-aspect--qr {
+    width: min(var(--qr-customize-height, 320px), var(--qr-preview-width, 320px));
+    height: min(var(--qr-customize-height, 320px), var(--qr-preview-width, 320px));
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
   }
 }
 

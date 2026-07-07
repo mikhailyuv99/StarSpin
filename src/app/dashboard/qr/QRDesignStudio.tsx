@@ -213,6 +213,36 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   };
 
   const previewWidth = PREVIEW_MAX_WIDTH[template];
+  const customizeRef = useRef<HTMLFormElement>(null);
+  const studioRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (template !== "qr") {
+      studioRef.current?.style.removeProperty("--qr-customize-height");
+      return;
+    }
+
+    const form = customizeRef.current;
+    const studio = studioRef.current;
+    if (!form || !studio) return;
+
+    const syncHeight = () => {
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        studio.style.setProperty("--qr-customize-height", `${form.offsetHeight}px`);
+      } else {
+        studio.style.removeProperty("--qr-customize-height");
+      }
+    };
+
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(form);
+    window.addEventListener("resize", syncHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeight);
+    };
+  }, [template, qrFg, qrBg, saveStatus, error]);
 
   const previewPanel = (
     <div className="w-full max-w-full lg:shrink-0">
@@ -238,7 +268,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
       <div className="qr-preview-frame">
         <div
-          className="qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a]"
+          className={`qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a] ${template === "qr" ? "qr-preview-aspect--qr" : ""}`}
           style={{
             aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
           }}
@@ -283,7 +313,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   );
 
   return (
-    <div className="qr-design-studio space-y-4 lg:space-y-8">
+    <div
+      ref={studioRef}
+      className={`qr-design-studio qr-design-studio--${template} space-y-4 lg:space-y-8`}
+    >
       <div className="flex flex-wrap gap-2 pb-1">
         {TEMPLATES.map((value) => (
           <button
@@ -304,12 +337,20 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ))}
       </div>
 
+      {/* DOM order = scroll order on mobile: preview → customize → order */}
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-8">
-        <div className="order-2 min-w-0 lg:order-1">
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className={`${ui.card} qr-customize-panel space-y-5 max-lg:p-4`}
-          >
+        <div
+          className="qr-preview-panel min-w-0 shrink-0 self-start lg:col-start-2 lg:row-start-1 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
+          style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
+        >
+          {previewPanel}
+        </div>
+
+        <form
+          ref={customizeRef}
+          onSubmit={(e) => e.preventDefault()}
+          className={`${ui.card} qr-customize-panel min-w-0 space-y-5 max-lg:p-4 lg:col-start-1 lg:row-start-1`}
+        >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
@@ -444,18 +485,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
-          </form>
-        </div>
-
-        <div
-          className="qr-preview-panel order-1 min-w-0 self-start lg:order-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
-          style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
-        >
-          {previewPanel}
-        </div>
+        </form>
       </div>
 
-      <section className={`${ui.card} flex items-start justify-between gap-4 max-lg:p-4`}>
+      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
         <div className="min-w-0">
           <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
