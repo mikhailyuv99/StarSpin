@@ -60,13 +60,22 @@ export function isSafeMapsDestination(url: string): boolean {
   }
 }
 
-/** Business name from a resolved Google Maps URL (?q=…). */
+/** Business name from a resolved Google Maps URL (?q=… or /maps/place/<name>/). */
 export function extractMapsQueryFromUrl(url: string): string | null {
   try {
     const u = new URL(url);
     const q = u.searchParams.get("q") ?? u.searchParams.get("query");
-    if (!q?.trim()) return null;
-    return decodeURIComponent(q.replace(/\+/g, " ")).trim();
+    if (q?.trim()) return decodeURIComponent(q.replace(/\+/g, " ")).trim();
+
+    // Most Maps links are /maps/place/<Business+Name>/@lat,lng,... — the place
+    // name lives in the path, not a query param. It's the only reliable text we
+    // can feed to Places text search (place_id isn't in the served HTML).
+    const pathMatch = u.pathname.match(/\/maps\/place\/([^/@]+)/i);
+    if (pathMatch?.[1]) {
+      const name = decodeURIComponent(pathMatch[1].replace(/\+/g, " ")).trim();
+      if (name && !/^unnamed/i.test(name)) return name;
+    }
+    return null;
   } catch {
     return null;
   }

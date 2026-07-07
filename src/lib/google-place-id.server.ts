@@ -180,10 +180,6 @@ export async function resolveMerchantGooglePlaceId(merchant: {
   return resolution(null, resolvedUrl);
 }
 
-function buildMapsPlaceUrl(placeId: string): string {
-  return `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(placeId)}`;
-}
-
 function buildMapsNameSearchUrl(name: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
 }
@@ -192,13 +188,12 @@ function buildMapsNameSearchUrl(name: string): string {
 export function buildReviewOpenUrl(
   placeId: string | null,
   merchantName: string | null,
-  userAgent: string,
+  _userAgent: string,
   resolvedUrl?: string | null,
 ): string | null {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
-
+  // A valid Place ID always maps to the direct "write a review" form — on both
+  // desktop and mobile it opens the Google review composer for that place.
   if (placeId) {
-    if (isMobile) return buildMapsPlaceUrl(placeId);
     return buildGoogleWriteReviewUrl(placeId);
   }
 
