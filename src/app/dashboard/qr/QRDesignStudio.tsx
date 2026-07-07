@@ -331,7 +331,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         ["--qr-preview-aspect-ratio" as string]: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
       }}
     >
-      <div className="qr-design-studio-tabs flex flex-wrap gap-2 pb-1">
+      <div className="flex flex-wrap gap-2 pb-1">
         {TEMPLATES.map((value) => (
           <button
             key={value}
@@ -352,19 +352,19 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       <div
-        className="qr-design-studio-preview qr-preview-panel min-w-0 shrink-0 self-start"
+        className="qr-studio-layout relative flex flex-col gap-4 lg:block lg:gap-0"
         style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
       >
-        {previewPanel}
-      </div>
+        <div className="qr-studio-preview w-full min-w-0 shrink-0">
+          <div className="qr-studio-preview-inner">{previewPanel}</div>
+        </div>
 
-      <div className="qr-design-studio-settings min-w-0">
-      <form
-        ref={customizeRef}
-        onSubmit={(e) => e.preventDefault()}
-        className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0`}
-      >
-        <div className="qr-customize-panel__scroll space-y-5 lg:space-y-5">
+        <div className="qr-studio-settings min-w-0 w-full">
+          <form
+            ref={customizeRef}
+            onSubmit={(e) => e.preventDefault()}
+            className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0 space-y-5 max-lg:p-4`}
+          >
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
@@ -499,8 +499,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
+          </form>
         </div>
-      </form>
+      </div>
 
       <section className={`${ui.card} qr-design-studio-order qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
         <div className="min-w-0">
@@ -511,7 +512,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           {t("dashboard.qrOrderBadge")}
         </span>
       </section>
-      </div>
     </div>
   );
 }
