@@ -193,27 +193,160 @@ body {
 .brutal-page--qr-studio {
   min-height: 0;
   height: auto;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* QR studio layout — flex column on mobile, grid on desktop (never mix Tailwind flex+grid). */
+.qr-design-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.qr-design-studio-tabs {
+  order: 1;
+}
+
+.qr-design-studio-preview {
+  order: 2;
+}
+
+.qr-design-studio-form {
+  order: 3;
+}
+
+.qr-design-studio-order {
+  order: 4;
+}
+
+@media (min-width: 1024px) {
+  .qr-design-studio {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: start;
+    column-gap: 2rem;
+    row-gap: 2rem;
+  }
+
+  .qr-design-studio-tabs {
+    grid-column: 1 / -1;
+    order: unset;
+  }
+
+  .qr-design-studio-preview {
+    grid-column: 2;
+    grid-row: 2;
+    position: sticky;
+    top: var(--dashboard-sticky-top);
+    z-index: 20;
+    order: unset;
+  }
+
+  .qr-design-studio-form {
+    grid-column: 1;
+    grid-row: 2;
+    order: unset;
+  }
+
+  .qr-design-studio-order {
+    grid-column: 1 / -1;
+    order: unset;
+  }
 }
 
 @media (max-width: 1023px) {
+  .brutal-page--qr-studio {
+    padding-bottom: 0;
+  }
+
+  .brutal-page--qr-studio > div {
+    padding-bottom: 0;
+  }
+
+  .qr-design-studio-page {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .qr-design-studio-order {
+    margin-bottom: 0;
+  }
+
+  .qr-design-studio-preview {
+    align-items: center;
+  }
+
+  .qr-preview-panel-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
   .qr-customize-panel {
-    height: min(50vh, 32rem);
+    padding: 0 !important;
     max-height: min(50vh, 32rem);
+    overflow: hidden;
+  }
+
+  .qr-customize-panel__scroll {
+    max-height: min(50vh, 32rem);
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .qr-customize-panel {
+    overflow: visible;
+  }
+
+  .qr-customize-panel__scroll {
+    overflow: visible;
+    padding: 0;
   }
 }
 
 .qr-preview-aspect {
   position: relative;
-  width: 100%;
+  width: min(100%, var(--qr-preview-canvas-width, 100%));
   max-width: var(--qr-preview-canvas-width, 100%);
   aspect-ratio: var(--qr-preview-aspect-ratio, 1 / 1);
   height: auto;
   overflow: hidden;
   margin-inline: auto;
+}
+
+/* Print templates: canvas edge-to-edge — matches the downloaded PNG */
+.qr-preview-aspect--print {
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: 4px 4px 0 0 #0a0a0a;
+}
+
+/* Plain QR keeps a decorative frame */
+.qr-preview-aspect--framed {
+  border-radius: 14px;
+  border: 2px solid #0a0a0a;
+  background: var(--c-cream);
+  padding: 0.375rem;
+  box-shadow: 4px 4px 0 0 #0a0a0a;
+}
+
+.qr-design-studio--visit_card .qr-preview-aspect {
+  width: min(100%, var(--qr-preview-canvas-width, 420px));
+  max-width: var(--qr-preview-canvas-width, 420px);
+  aspect-ratio: 1050 / 600;
+}
+
+.qr-design-studio--table_sticker .qr-preview-aspect {
+  width: min(100%, var(--qr-preview-canvas-width, 360px));
+  max-width: var(--qr-preview-canvas-width, 360px);
+  aspect-ratio: 1 / 1;
 }
 
 @media (min-width: 1024px) {
@@ -230,6 +363,20 @@ body {
   padding-right: 6px;
   padding-bottom: 6px;
   overflow: visible;
+}
+
+.qr-preview-frame--print {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-right: 4px;
+  padding-bottom: 4px;
+}
+
+.qr-preview-actions--print {
+  width: min(100%, var(--qr-preview-canvas-width, 100%));
+  max-width: var(--qr-preview-canvas-width, 100%);
+  margin-inline: auto;
 }
 
 .qr-preview-download {

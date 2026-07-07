@@ -116,30 +116,30 @@ export function nearestGridIndex(value: number): number {
 }
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, Record<DesignElementKey, number>> = {
-  table_sticker: { logo: 110, name: 35, qr: 350, tagline: 28 },
-  visit_card: { logo: 105, name: 28, qr: 240, tagline: 20 },
+  table_sticker: { logo: 120, name: 34, qr: 340, tagline: 26 },
+  visit_card: { logo: 96, name: 26, qr: 230, tagline: 18 },
 };
 
 const DEFAULT_VISIT_CARD_LAYOUT: TemplateLayout = {
-  logo: { x: 0.17, y: 0.22, scale: 1 },
-  name: { x: 0.17, y: 0.48, scale: 1 },
-  qr: { x: 0.71, y: 0.44, scale: 1 },
-  tagline: { x: 0.71, y: 0.72, scale: 1 },
+  logo: { x: 0.18, y: 0.28, scale: 1.05 },
+  name: { x: 0.18, y: 0.52, scale: 1 },
+  qr: { x: 0.72, y: 0.42, scale: 1 },
+  tagline: { x: 0.72, y: 0.68, scale: 1 },
 };
 
 const DEFAULT_VISIT_CARD_BACK_LAYOUT: TemplateLayout = {
-  logo: { x: 0.5, y: 0.32, scale: 1.1 },
-  name: { x: 0.5, y: 0.5, scale: 1 },
-  tagline: { x: 0.5, y: 0.68, scale: 1 },
-  qr: { x: 0.5, y: 0.84, scale: 0.5 },
+  logo: { x: 0.5, y: 0.3, scale: 1 },
+  name: { x: 0.5, y: 0.48, scale: 1 },
+  tagline: { x: 0.5, y: 0.64, scale: 1 },
+  qr: { x: 0.5, y: 0.82, scale: 0.45 },
 };
 
 export const DEFAULT_LAYOUTS = {
   table_sticker: {
-    logo: { x: 0.5, y: 0.11, scale: 1 },
-    name: { x: 0.5, y: 0.28, scale: 1 },
-    qr: { x: 0.5, y: 0.52, scale: 1 },
-    tagline: { x: 0.5, y: 0.78, scale: 1 },
+    logo: { x: 0.5, y: 0.12, scale: 1 },
+    name: { x: 0.5, y: 0.27, scale: 1 },
+    qr: { x: 0.5, y: 0.51, scale: 1 },
+    tagline: { x: 0.5, y: 0.76, scale: 1 },
   } satisfies TemplateLayout,
 };
 

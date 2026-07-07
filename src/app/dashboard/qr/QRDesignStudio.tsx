@@ -247,7 +247,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   }, [template, qrFg, qrBg, saveStatus, error]);
 
   const previewPanel = (
-    <div className="w-full max-w-full lg:shrink-0">
+    <div className="qr-preview-panel-inner w-full max-w-full lg:shrink-0">
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -268,9 +268,13 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         </div>
       )}
 
-      <div className="qr-preview-frame">
+      <div className={`qr-preview-frame ${template !== "qr" ? "qr-preview-frame--print" : ""}`}>
         <div
-          className={`qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a] ${template === "qr" ? "qr-preview-aspect--qr" : ""}`}
+          className={
+            template === "qr"
+              ? "qr-preview-aspect qr-preview-aspect--qr qr-preview-aspect--framed"
+              : "qr-preview-aspect qr-preview-aspect--print"
+          }
         >
           <QRDesignCanvas
             template={template}
@@ -288,7 +292,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
         </div>
       </div>
 
-      <div className="qr-preview-frame mt-3 flex flex-col gap-2">
+      <div
+        className={`mt-3 flex flex-col gap-2 ${template !== "qr" ? "qr-preview-actions--print" : "w-full"}`}
+      >
         <button
           type="button"
           onClick={() => void handleDownload()}
@@ -314,13 +320,13 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   return (
     <div
       ref={studioRef}
-      className={`qr-design-studio qr-design-studio--${template} flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-x-8 lg:gap-y-8`}
+      className={`qr-design-studio qr-design-studio--${template}`}
       style={{
         ["--qr-preview-canvas-width" as string]: `${previewPx.width}px`,
         ["--qr-preview-aspect-ratio" as string]: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
       }}
     >
-      <div className="flex flex-wrap gap-2 pb-1 lg:col-span-2">
+      <div className="qr-design-studio-tabs flex flex-wrap gap-2 pb-1">
         {TEMPLATES.map((value) => (
           <button
             key={value}
@@ -341,7 +347,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       </div>
 
       <div
-        className="qr-preview-panel min-w-0 shrink-0 self-start lg:col-start-2 lg:row-start-2 lg:sticky lg:top-[var(--dashboard-sticky-top)] lg:z-20"
+        className="qr-design-studio-preview qr-preview-panel min-w-0 shrink-0 self-start"
         style={{ ["--qr-preview-width" as string]: `${previewWidth + 20}px` }}
       >
         {previewPanel}
@@ -350,8 +356,9 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       <form
         ref={customizeRef}
         onSubmit={(e) => e.preventDefault()}
-        className={`${ui.card} qr-customize-panel min-w-0 space-y-5 max-lg:p-4 lg:col-start-1 lg:row-start-2`}
+        className={`${ui.card} qr-design-studio-form qr-customize-panel min-w-0`}
       >
+        <div className="qr-customize-panel__scroll space-y-5 lg:space-y-5">
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={ui.h2}>{t("dashboard.qrCustomizeTitle")}</h2>
@@ -486,9 +493,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 {t("dashboard.qrUseBrandColors")}
               </button>
             </div>
+        </div>
       </form>
 
-      <section className={`${ui.card} qr-studio-order flex items-start justify-between gap-4 max-lg:p-4 lg:col-span-2`}>
+      <section className={`${ui.card} qr-design-studio-order qr-studio-order flex items-start justify-between gap-4 max-lg:p-4`}>
         <div className="min-w-0">
           <h2 className={ui.h2}>{t("dashboard.qrOrderTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("dashboard.qrOrderSoon")}</p>
