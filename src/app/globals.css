@@ -202,6 +202,18 @@ body {
   gap: 1rem;
 }
 
+.qr-studio-layout {
+  position: relative;
+}
+
+.qr-studio-preview {
+  width: 100%;
+}
+
+.qr-studio-preview-inner {
+  width: 100%;
+}
+
 @media (max-width: 1023px) {
   html.qr-studio-active,
   body.qr-studio-active,
@@ -216,6 +228,8 @@ body {
   .brutal-page--qr-studio .mx-auto,
   .qr-design-studio-page,
   .qr-design-studio,
+  .qr-studio-layout,
+  .qr-studio-settings,
   .qr-studio-preview,
   .qr-preview-panel {
     flex: 0 0 auto;
@@ -298,7 +312,7 @@ body {
   }
 
   .qr-design-studio--qr .qr-preview-actions {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    padding-bottom: max(1.75rem, env(safe-area-inset-bottom, 0px));
   }
 
   .qr-preview-aspect {
@@ -321,10 +335,24 @@ body {
     max-width: none;
   }
 
-  .qr-customize-panel {
-    max-height: min(70vh, 40rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+  .qr-studio-settings {
+    padding-right: calc(var(--qr-preview-width, 28rem) + 2rem);
+  }
+
+  .qr-studio-preview {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--qr-preview-width, auto);
+    pointer-events: none;
+  }
+
+  .qr-studio-preview-inner {
+    position: sticky;
+    top: var(--dashboard-sticky-top);
+    z-index: 20;
+    width: var(--qr-preview-width, auto);
+    pointer-events: auto;
   }
 }
 
