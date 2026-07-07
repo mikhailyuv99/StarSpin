@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useId } from "react";
 import { normalizeHex } from "@/lib/qr-design";
 import { ui } from "@/components/ui/styles";
 
@@ -16,7 +16,6 @@ export function QRColorSwatch({
   onChange: (value: string) => void;
 }) {
   const inputId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
   const color = normalizeHex(value, fallback);
 
   return (
@@ -24,22 +23,19 @@ export function QRColorSwatch({
       <label htmlFor={inputId} className={ui.label}>
         {label}
       </label>
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="mt-1.5 block h-9 w-9 cursor-pointer rounded-[10px] border-2 border-black shadow-[2px_2px_0_0_#0a0a0a] transition-transform hover:scale-105 active:scale-95"
+      <div
+        className="relative mt-1.5 h-9 w-9 rounded-[10px] border-2 border-black shadow-[2px_2px_0_0_#0a0a0a] transition-transform active:scale-95"
         style={{ backgroundColor: color }}
-        aria-label={label}
-      />
-      <input
-        ref={inputRef}
-        id={inputId}
-        type="color"
-        value={color}
-        onChange={(e) => onChange(e.target.value)}
-        className="sr-only"
-        tabIndex={-1}
-      />
+      >
+        <input
+          id={inputId}
+          type="color"
+          value={color}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={label}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      </div>
     </div>
   );
 }
