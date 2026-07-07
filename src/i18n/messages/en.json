@@ -432,6 +432,8 @@
     "qrElement_qr": "QR code",
     "qrElement_tagline": "Tagline",
     "qrResetLayout": "Reset layout",
+    "qrUndo": "Undo",
+    "qrRedo": "Redo",
     "qrVisitCard_front": "Front",
     "qrVisitCard_back": "Back",
     "qrVisitCardCustomizeHint": "Editing the {side} side. Switch sides in the preview panel.",

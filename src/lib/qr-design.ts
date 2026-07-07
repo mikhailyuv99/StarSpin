@@ -116,30 +116,30 @@ export function nearestGridIndex(value: number): number {
 }
 
 const BASE: Record<Exclude<QRDesignTemplate, "qr">, Record<DesignElementKey, number>> = {
-  table_sticker: { logo: 120, name: 34, qr: 340, tagline: 26 },
-  visit_card: { logo: 96, name: 26, qr: 230, tagline: 18 },
+  table_sticker: { logo: 145, name: 42, qr: 440, tagline: 30 },
+  visit_card: { logo: 115, name: 34, qr: 295, tagline: 22 },
 };
 
 const DEFAULT_VISIT_CARD_LAYOUT: TemplateLayout = {
-  logo: { x: 0.18, y: 0.28, scale: 1.05 },
-  name: { x: 0.18, y: 0.52, scale: 1 },
-  qr: { x: 0.72, y: 0.42, scale: 1 },
-  tagline: { x: 0.72, y: 0.68, scale: 1 },
+  logo: { x: 0.11, y: 0.2, scale: 1.35 },
+  name: { x: 0.14, y: 0.52, scale: 1.25 },
+  qr: { x: 0.78, y: 0.48, scale: 1.25 },
+  tagline: { x: 0.14, y: 0.82, scale: 1.05 },
 };
 
 const DEFAULT_VISIT_CARD_BACK_LAYOUT: TemplateLayout = {
-  logo: { x: 0.5, y: 0.3, scale: 1 },
-  name: { x: 0.5, y: 0.48, scale: 1 },
-  tagline: { x: 0.5, y: 0.64, scale: 1 },
-  qr: { x: 0.5, y: 0.82, scale: 0.45 },
+  logo: { x: 0.5, y: 0.4, scale: 1.65 },
+  name: { x: 0.5, y: 0.58, scale: 1.2 },
+  tagline: { x: 0.5, y: 0.72, scale: 1.05 },
+  qr: { x: 0.5, y: 0.82, scale: 0.35 },
 };
 
 export const DEFAULT_LAYOUTS = {
   table_sticker: {
-    logo: { x: 0.5, y: 0.12, scale: 1 },
-    name: { x: 0.5, y: 0.27, scale: 1 },
-    qr: { x: 0.5, y: 0.51, scale: 1 },
-    tagline: { x: 0.5, y: 0.76, scale: 1 },
+    logo: { x: 0.5, y: 0.125, scale: 1.2 },
+    name: { x: 0.5, y: 0.28, scale: 1.2 },
+    qr: { x: 0.5, y: 0.54, scale: 1.35 },
+    tagline: { x: 0.5, y: 0.79, scale: 1.05 },
   } satisfies TemplateLayout,
 };
 
@@ -479,15 +479,45 @@ export function hitTestElement(
   return null;
 }
 
+export type ResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+export const RESIZE_HANDLE_SIZE = 14;
+export const RESIZE_HANDLE_HIT = 22;
+
+export function getResizeHandlePositions(
+  bounds: ElementBounds,
+  size = RESIZE_HANDLE_SIZE,
+): Record<ResizeHandle, { x: number; y: number }> {
+  const { x, y, w, h } = bounds;
+  const mx = x + w / 2 - size / 2;
+  const my = y + h / 2 - size / 2;
+  return {
+    nw: { x: x - size / 2, y: y - size / 2 },
+    n: { x: mx, y: y - size / 2 },
+    ne: { x: x + w - size / 2, y: y - size / 2 },
+    e: { x: x + w - size / 2, y: my },
+    se: { x: x + w - size / 2, y: y + h - size / 2 },
+    s: { x: mx, y: y + h - size / 2 },
+    sw: { x: x - size / 2, y: y + h - size / 2 },
+    w: { x: x - size / 2, y: my },
+  };
+}
+
 export function hitTestResizeHandle(
   px: number,
   py: number,
   bounds: ElementBounds,
-  handleSize = 14,
-): boolean {
-  const hx = bounds.x + bounds.w - handleSize / 2;
-  const hy = bounds.y + bounds.h - handleSize / 2;
-  return px >= hx && px <= hx + handleSize && py >= hy && py <= hy + handleSize;
+  hitSize = RESIZE_HANDLE_HIT,
+): ResizeHandle | null {
+  const positions = getResizeHandlePositions(bounds, hitSize);
+  const order: ResizeHandle[] = ["se", "sw", "ne", "nw", "e", "w", "n", "s"];
+  for (const id of order) {
+    const handle = positions[id];
+    if (px >= handle.x && px <= handle.x + hitSize && py >= handle.y && py <= handle.y + hitSize) {
+      return id;
+    }
+  }
+  return null;
 }
 
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
@@ -601,14 +631,14 @@ function drawEditorGuides(
     ctx.setLineDash([]);
     ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w, box.h);
     if (isSelected) {
-      const handle = 10;
-      const hx = box.x + box.w - handle / 2;
-      const hy = box.y + box.h - handle / 2;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(hx, hy, handle, handle);
-      ctx.strokeStyle = "rgba(139, 92, 246, 0.95)";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(hx + 0.5, hy + 0.5, handle - 1, handle - 1);
+      const handles = getResizeHandlePositions(box, RESIZE_HANDLE_SIZE);
+      for (const pos of Object.values(handles)) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(pos.x, pos.y, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
+        ctx.strokeStyle = "rgba(139, 92, 246, 0.95)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(pos.x + 0.5, pos.y + 0.5, RESIZE_HANDLE_SIZE - 1, RESIZE_HANDLE_SIZE - 1);
+      }
     }
     ctx.restore();
   }

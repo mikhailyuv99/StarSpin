@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -57,6 +57,71 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const skipAutosaveRef = useRef(true);
   const saveSeqRef = useRef(0);
   const savedStatusTimerRef = useRef<number | null>(null);
+  const historyPastRef = useRef<QRDesignConfig[]>([]);
+  const historyFutureRef = useRef<QRDesignConfig[]>([]);
+  const editSnapshotRef = useRef<QRDesignConfig | null>(null);
+  const designRef = useRef(design);
+  const [historyVersion, setHistoryVersion] = useState(0);
+
+  useEffect(() => {
+    designRef.current = design;
+  }, [design]);
+
+  const canUndo = historyPastRef.current.length > 0;
+  const canRedo = historyFutureRef.current.length > 0;
+  void historyVersion;
+
+  const bumpHistory = () => setHistoryVersion((v) => v + 1);
+
+  const handleEditStart = useCallback(() => {
+    if (editSnapshotRef.current) return;
+    editSnapshotRef.current = structuredClone(design);
+  }, [design]);
+
+  const handleEditEnd = useCallback(() => {
+    const before = editSnapshotRef.current;
+    editSnapshotRef.current = null;
+    if (!before) return;
+    const current = designRef.current;
+    if (JSON.stringify(before) === JSON.stringify(current)) return;
+    historyPastRef.current = [...historyPastRef.current.slice(-49), before];
+    historyFutureRef.current = [];
+    bumpHistory();
+  }, []);
+
+  const undoLayout = useCallback(() => {
+    const past = historyPastRef.current;
+    if (!past.length) return;
+    const previous = past[past.length - 1];
+    historyPastRef.current = past.slice(0, -1);
+    historyFutureRef.current = [structuredClone(design), ...historyFutureRef.current];
+    setDesign(previous);
+    setSelectedElement(null);
+    bumpHistory();
+  }, [design]);
+
+  const redoLayout = useCallback(() => {
+    const future = historyFutureRef.current;
+    if (!future.length) return;
+    const next = future[0];
+    historyFutureRef.current = future.slice(1);
+    historyPastRef.current = [...historyPastRef.current, structuredClone(design)];
+    setDesign(next);
+    setSelectedElement(null);
+    bumpHistory();
+  }, [design]);
+
+  useEffect(() => {
+    if (template === "qr") return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (document.querySelector(".qr-preview-aspect")?.contains(target)) return;
+      setSelectedElement(null);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [template]);
 
   const activeLogoUrl = design.logoUrl ?? merchant.logo_url ?? null;
 
@@ -248,6 +313,27 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
   const previewPanel = (
     <div className="qr-preview-panel qr-preview-panel-inner w-full max-w-full lg:shrink-0">
+      {template !== "qr" && (
+        <div className="mb-3 flex w-full flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={!canUndo}
+            onClick={undoLayout}
+            className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+          >
+            {t("dashboard.qrUndo")}
+          </button>
+          <button
+            type="button"
+            disabled={!canRedo}
+            onClick={redoLayout}
+            className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+          >
+            {t("dashboard.qrRedo")}
+          </button>
+        </div>
+      )}
+
       {template === "visit_card" && (
         <div className="mb-3 flex flex-wrap gap-2">
           {VISIT_CARD_SIDES.map((side) => (
@@ -293,6 +379,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
             selected={selectedElement}
             onSelect={setSelectedElement}
             onLayoutChange={setDesign}
+            onEditStart={handleEditStart}
+            onEditEnd={handleEditEnd}
           />
         </div>
       </div>

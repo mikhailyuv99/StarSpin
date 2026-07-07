@@ -432,6 +432,8 @@
     "qrElement_qr": "Código QR",
     "qrElement_tagline": "Eslogan",
     "qrResetLayout": "Restablecer diseño",
+    "qrUndo": "Deshacer",
+    "qrRedo": "Rehacer",
     "qrVisitCard_front": "Anverso",
     "qrVisitCard_back": "Reverso",
     "qrVisitCardCustomizeHint": "Editando el {side}. Cambia de lado en la vista previa.",

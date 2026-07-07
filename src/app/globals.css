@@ -270,7 +270,7 @@ body {
     align-self: stretch;
     height: fit-content;
     max-height: fit-content;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .qr-design-studio--visit_card .qr-studio-preview,
@@ -293,22 +293,26 @@ body {
 
   .qr-design-studio--visit_card .qr-preview-frame--print,
   .qr-design-studio--table_sticker .qr-preview-frame--print {
-    overflow: hidden;
-    padding: 0;
+    overflow: visible;
+    padding: 0 6px 6px 0;
     width: min(100%, var(--qr-preview-canvas-width, 100%));
     height: fit-content;
+    box-sizing: border-box;
   }
 
   .qr-design-studio--visit_card .qr-preview-aspect--print,
   .qr-design-studio--table_sticker .qr-preview-aspect--print {
     width: min(100%, var(--qr-preview-canvas-width, 100%)) !important;
     aspect-ratio: var(--qr-preview-aspect-ratio);
-    margin: 0 4px 4px 0;
+    margin: 0;
   }
 
   .qr-preview-actions {
-    width: 100%;
+    width: min(100%, var(--qr-preview-canvas-width, 100%));
+    max-width: 100%;
+    padding-inline: 6px;
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
   }
 
   .qr-design-studio--qr .qr-preview-actions {
@@ -406,15 +410,19 @@ body {
 }
 
 .qr-preview-actions--print {
-  width: 100%;
-  max-width: var(--qr-preview-canvas-width, 100%);
+  width: min(100%, var(--qr-preview-canvas-width, 100%));
+  max-width: 100%;
   margin-inline: auto;
+  padding-inline: 6px;
+  box-sizing: border-box;
 }
 
 .qr-preview-download {
   white-space: normal;
   text-align: center;
   line-height: 1.25;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .qr-font-list {

@@ -432,6 +432,8 @@
     "qrElement_qr": "QR-код",
     "qrElement_tagline": "Слоган",
     "qrResetLayout": "Сбросить макет",
+    "qrUndo": "Отменить",
+    "qrRedo": "Повторить",
     "qrVisitCard_front": "Лицевая",
     "qrVisitCard_back": "Оборот",
     "qrVisitCardCustomizeHint": "Редактирование: {side}. Переключайте сторону в предпросмотре.",

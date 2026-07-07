@@ -13,6 +13,7 @@ import {
   type DesignElementKey,
   type QRDesignConfig,
   type QRDesignTemplate,
+  type ResizeHandle,
   type VisitCardSide,
 } from "@/lib/qr-design";
 
@@ -21,6 +22,7 @@ type DragMode = "move" | "resize";
 type DragState = {
   mode: DragMode;
   key: DesignElementKey;
+  handle?: ResizeHandle;
   startX: number;
   startY: number;
   startPlacement: { x: number; y: number; scale: number };
@@ -41,6 +43,8 @@ export function QRDesignCanvas({
   selected,
   onSelect,
   onLayoutChange,
+  onEditStart,
+  onEditEnd,
 }: {
   template: QRDesignTemplate;
   visitCardSide?: VisitCardSide;
@@ -53,11 +57,14 @@ export function QRDesignCanvas({
   selected: DesignElementKey | null;
   onSelect: (key: DesignElementKey | null) => void;
   onLayoutChange: (next: QRDesignConfig) => void;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderVersion = useRef(0);
   const dragRef = useRef<DragState | null>(null);
   const selectedRef = useRef(selected);
+  const editingRef = useRef(false);
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const canvasBox = CANVAS_SIZE[template];
@@ -133,31 +140,49 @@ export function QRDesignCanvas({
     onLayoutChange(patchLayoutElement(design, template, key, patch, visitCardSide));
   };
 
+  const beginEdit = () => {
+    if (editingRef.current) return;
+    editingRef.current = true;
+    onEditStart?.();
+  };
+
+  const finishEdit = () => {
+    if (!editingRef.current) return;
+    editingRef.current = false;
+    onEditEnd?.();
+  };
+
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!editable || template === "qr") return;
     const pt = clientToCanvas(event.clientX, event.clientY);
     if (!pt) return;
 
     const bounds = getBounds();
-    if (selected && bounds[selected] && hitTestResizeHandle(pt.x, pt.y, bounds[selected])) {
-      const layout =
-        template === "table_sticker"
-          ? design.layouts.table_sticker
-          : design.visitCard[visitCardSide].layout;
-      setDrag({
-        mode: "resize",
-        key: selected,
-        startX: pt.x,
-        startY: pt.y,
-        startPlacement: { ...layout[selected] },
-      });
-      event.currentTarget.setPointerCapture(event.pointerId);
-      return;
+    if (selected && bounds[selected]) {
+      const handle = hitTestResizeHandle(pt.x, pt.y, bounds[selected]);
+      if (handle) {
+        beginEdit();
+        const layout =
+          template === "table_sticker"
+            ? design.layouts.table_sticker
+            : design.visitCard[visitCardSide].layout;
+        setDrag({
+          mode: "resize",
+          key: selected,
+          handle,
+          startX: pt.x,
+          startY: pt.y,
+          startPlacement: { ...layout[selected] },
+        });
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
     }
 
     const hit = hitTestElement(pt.x, pt.y, bounds);
     if (hit) {
       onSelect(hit);
+      beginEdit();
       const layout =
         template === "table_sticker"
           ? design.layouts.table_sticker
@@ -214,6 +239,7 @@ export function QRDesignCanvas({
     }
     if (drag) {
       setDrag(null);
+      finishEdit();
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }

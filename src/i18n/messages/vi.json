@@ -432,6 +432,8 @@
     "qrElement_qr": "Mã QR",
     "qrElement_tagline": "Khẩu hiệu",
     "qrResetLayout": "Đặt lại bố cục",
+    "qrUndo": "Hoàn tác",
+    "qrRedo": "Làm lại",
     "qrVisitCard_front": "Mặt trước",
     "qrVisitCard_back": "Mặt sau",
     "qrVisitCardCustomizeHint": "Đang chỉnh {side}. Chuyển mặt trong khung xem trước.",
