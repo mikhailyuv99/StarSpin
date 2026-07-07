@@ -77,6 +77,16 @@ export const PREVIEW_MAX_WIDTH: Record<QRDesignTemplate, number> = {
   visit_card: 420,
 };
 
+/** Preview box pixels — same aspect ratio as print canvas. */
+export function previewPixelSize(template: QRDesignTemplate): { width: number; height: number } {
+  const width = PREVIEW_MAX_WIDTH[template];
+  const canvas = CANVAS_SIZE[template];
+  return {
+    width,
+    height: Math.round(canvas.height * (width / canvas.width)),
+  };
+}
+
 /** Symmetric 3×3 alignment grid (25 % / 50 % / 75 %). */
 export const ALIGNMENT_GRID = [0.25, 0.5, 0.75] as const;
 

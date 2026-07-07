@@ -10,6 +10,7 @@ import {
   parseQRDesign,
   patchVisitCardSide,
   PREVIEW_MAX_WIDTH,
+  previewPixelSize,
   renderDesignToCanvas,
   type CardSideSettings,
   type DesignElementKey,
@@ -213,6 +214,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   };
 
   const previewWidth = PREVIEW_MAX_WIDTH[template];
+  const previewPx = previewPixelSize(template);
   const customizeRef = useRef<HTMLFormElement>(null);
   const studioRef = useRef<HTMLDivElement>(null);
 
@@ -269,12 +271,21 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       <div className="qr-preview-frame">
         <div
           className={`qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a] ${template === "qr" ? "qr-preview-aspect--qr" : ""}`}
-          style={{
-            aspectRatio: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
-            maxWidth: `${PREVIEW_MAX_WIDTH[template]}px`,
-            width: "100%",
-            marginInline: "auto",
-          }}
+          style={
+            template === "qr"
+              ? {
+                  aspectRatio: "1 / 1",
+                  width: `${previewPx.width}px`,
+                  maxWidth: "100%",
+                  marginInline: "auto",
+                }
+              : {
+                  width: `${previewPx.width}px`,
+                  height: `${previewPx.height}px`,
+                  maxWidth: "100%",
+                  marginInline: "auto",
+                }
+          }
         >
           <QRDesignCanvas
             template={template}

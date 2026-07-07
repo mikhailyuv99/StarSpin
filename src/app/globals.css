@@ -201,40 +201,48 @@ body {
   html.qr-studio-active.h-full,
   body.qr-studio-active,
   body.qr-studio-active.min-h-full {
-    height: auto !important;
+    height: 100dvh !important;
     min-height: 0 !important;
-    overflow-x: clip;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
   }
 
   body.qr-studio-active > * {
     min-height: 0 !important;
-    height: auto !important;
-    flex: 0 0 auto;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
   }
 
   .brutal-page--qr-studio {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .brutal-page--qr-studio,
-  .brutal-page--qr-studio main,
-  .brutal-page--qr-studio .mx-auto,
+  .brutal-page--qr-studio .mx-auto {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
   .qr-design-studio-page,
   .qr-design-studio,
   .qr-design-studio > *,
   .qr-preview-panel,
   .qr-studio-order {
-    min-height: 0 !important;
-    height: auto !important;
     flex: 0 0 auto;
+    min-height: 0;
   }
 
   .qr-preview-aspect {
     position: relative;
-    width: 100%;
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .qr-preview-panel {
@@ -243,11 +251,13 @@ body {
   }
 
   .qr-customize-panel {
+    height: min(50vh, 32rem);
     max-height: min(50vh, 32rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1.25rem;
+    flex-shrink: 0;
   }
 }
 

@@ -23,25 +23,17 @@ export function DashboardShell({
     const body = document.body;
     html.classList.add("qr-studio-active");
     body.classList.add("qr-studio-active");
-    html.style.height = "auto";
-    html.style.minHeight = "0";
-    body.style.height = "auto";
-    body.style.minHeight = "0";
 
     return () => {
       html.classList.remove("qr-studio-active");
       body.classList.remove("qr-studio-active");
-      html.style.height = "";
-      html.style.minHeight = "";
-      body.style.height = "";
-      body.style.minHeight = "";
     };
   }, [qrStudio]);
 
   return (
     <div
       className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}
-      style={qrStudio ? { minHeight: 0, height: "auto" } : undefined}
+      style={qrStudio ? { minHeight: 0 } : undefined}
     >
       <div className="brutal-nav-wrap">
         <DashboardHeader nav={nav} />
