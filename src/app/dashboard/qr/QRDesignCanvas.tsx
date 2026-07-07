@@ -101,7 +101,6 @@ export function QRDesignCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderVersion = useRef(0);
   const dragRef = useRef<DragState | null>(null);
-  const selectedRef = useRef(selected);
   const editingRef = useRef(false);
   const [drag, setDrag] = useState<DragState | null>(null);
 
@@ -111,10 +110,6 @@ export function QRDesignCanvas({
     dragRef.current = drag;
   }, [drag]);
 
-  useEffect(() => {
-    selectedRef.current = selected;
-  }, [selected]);
-
   const side =
     template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
 
@@ -123,7 +118,6 @@ export function QRDesignCanvas({
     if (!canvas) return;
     const version = ++renderVersion.current;
     const currentDrag = dragRef.current;
-    const currentSelected = selectedRef.current;
 
     try {
       await renderDesignToCanvas(canvas, {
@@ -136,8 +130,8 @@ export function QRDesignCanvas({
         editor:
           editable && template !== "qr"
             ? {
-                selected: currentSelected,
-                showGuides: Boolean(currentSelected) || Boolean(currentDrag),
+                selected,
+                showGuides: Boolean(selected) || Boolean(currentDrag),
                 showGrid: currentDrag?.mode === "move",
               }
             : undefined,
@@ -145,7 +139,7 @@ export function QRDesignCanvas({
     } finally {
       void version;
     }
-  }, [design, displayUrl, editable, qrBg, qrFg, template, visitCardSide]);
+  }, [design, displayUrl, editable, qrBg, qrFg, selected, template, visitCardSide]);
 
   useEffect(() => {
     const delay = drag ? 0 : RENDER_DEBOUNCE_MS;
@@ -153,7 +147,7 @@ export function QRDesignCanvas({
       void renderPreview();
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [renderPreview, drag]);
+  }, [renderPreview, drag, selected]);
 
   const clientToCanvas = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
