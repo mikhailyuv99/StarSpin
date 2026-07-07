@@ -271,21 +271,6 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
       <div className="qr-preview-frame">
         <div
           className={`qr-preview-aspect rounded-[14px] border-2 border-black bg-[var(--c-cream)] p-1.5 shadow-[4px_4px_0_0_#0a0a0a] ${template === "qr" ? "qr-preview-aspect--qr" : ""}`}
-          style={
-            template === "qr"
-              ? {
-                  aspectRatio: "1 / 1",
-                  width: `${previewPx.width}px`,
-                  maxWidth: "100%",
-                  marginInline: "auto",
-                }
-              : {
-                  width: `${previewPx.width}px`,
-                  height: `${previewPx.height}px`,
-                  maxWidth: "100%",
-                  marginInline: "auto",
-                }
-          }
         >
           <QRDesignCanvas
             template={template}
@@ -330,6 +315,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     <div
       ref={studioRef}
       className={`qr-design-studio qr-design-studio--${template} flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-start lg:gap-x-8 lg:gap-y-8`}
+      style={{
+        ["--qr-preview-canvas-width" as string]: `${previewPx.width}px`,
+        ["--qr-preview-aspect-ratio" as string]: `${CANVAS_SIZE[template].width} / ${CANVAS_SIZE[template].height}`,
+      }}
     >
       <div className="flex flex-wrap gap-2 pb-1 lg:col-span-2">
         {TEMPLATES.map((value) => (

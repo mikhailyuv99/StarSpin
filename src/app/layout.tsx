@@ -125,9 +125,9 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} h-full antialiased`}
+      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`}
     >
-      <body className="min-h-full font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
+      <body className="font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
         <I18nProvider locale={locale} messages={messages}>
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </I18nProvider>

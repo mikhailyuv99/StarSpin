@@ -191,74 +191,29 @@ body {
 }
 
 .brutal-page--qr-studio {
-  min-height: 0 !important;
-  height: auto !important;
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px)) !important;
+  min-height: 0;
+  height: auto;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 @media (max-width: 1023px) {
-  html.qr-studio-active,
-  html.qr-studio-active.h-full,
-  body.qr-studio-active,
-  body.qr-studio-active.min-h-full {
-    height: 100dvh !important;
-    min-height: 0 !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  body.qr-studio-active > * {
-    min-height: 0 !important;
-    height: 100% !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .brutal-page--qr-studio {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .brutal-page--qr-studio .mx-auto {
-    flex: 0 0 auto;
-    min-height: 0;
-  }
-
-  .qr-design-studio-page,
-  .qr-design-studio,
-  .qr-design-studio > *,
-  .qr-preview-panel,
-  .qr-studio-order {
-    flex: 0 0 auto;
-    min-height: 0;
-  }
-
-  .qr-preview-aspect {
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .qr-preview-panel {
-    max-width: min(100%, var(--qr-preview-width, 100%));
-    margin-inline: auto;
-  }
-
   .qr-customize-panel {
     height: min(50vh, 32rem);
     max-height: min(50vh, 32rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 1.25rem;
-    flex-shrink: 0;
   }
+}
+
+.qr-preview-aspect {
+  position: relative;
+  width: 100%;
+  max-width: var(--qr-preview-canvas-width, 100%);
+  aspect-ratio: var(--qr-preview-aspect-ratio, 1 / 1);
+  height: auto;
+  overflow: hidden;
+  margin-inline: auto;
 }
 
 @media (min-width: 1024px) {
