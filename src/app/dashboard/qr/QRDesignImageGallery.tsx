@@ -62,25 +62,21 @@ export function QRDesignImageGallery({
           return (
             <div key={img.id} className="flex flex-col items-center gap-1.5">
               <div className="relative">
-                <div
-                  className={`flex h-16 w-16 items-center justify-center rounded-[12px] border-2 bg-white shadow-[2px_2px_0_0_#0a0a0a] ${
-                    selected ? "border-[var(--c-purple)] ring-2 ring-[var(--c-purple)]/40" : "border-black"
+                <img
+                  src={img.url}
+                  alt=""
+                  draggable
+                  onClick={() => onImageClick(img.id, img.url, img.aspectRatio)}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData(
+                      QR_IMAGE_DRAG_TYPE,
+                      qrImageDragPayload(img.id, img.url, img.aspectRatio),
+                    );
+                  }}
+                  className={`max-h-16 max-w-16 cursor-grab object-contain active:cursor-grabbing ${
+                    selected ? "outline outline-2 outline-[var(--c-purple)] outline-offset-1" : ""
                   }`}
-                >
-                  <img
-                    src={img.url}
-                    alt=""
-                    draggable
-                    onClick={() => onImageClick(img.id, img.url, img.aspectRatio)}
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(
-                        QR_IMAGE_DRAG_TYPE,
-                        qrImageDragPayload(img.id, img.url, img.aspectRatio),
-                      );
-                    }}
-                    className="max-h-[3.5rem] max-w-[3.5rem] cursor-grab object-contain active:cursor-grabbing"
-                  />
-                </div>
+                />
                 {img.canDelete && onDelete && (
                   <button
                     type="button"

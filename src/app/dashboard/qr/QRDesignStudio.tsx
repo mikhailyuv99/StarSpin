@@ -155,10 +155,10 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   useEffect(() => {
     if (template === "qr") return;
     const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
+      const target = event.target as HTMLElement | null;
       if (!target) return;
-      if (document.querySelector(".qr-preview-aspect")?.contains(target)) return;
-      if (document.querySelector(".qr-customize-panel")?.contains(target)) return;
+      if (target.closest(".qr-preview-aspect")) return;
+      if (target.closest("button, input, select, textarea, label, a, [role='button']")) return;
       setSelectedElement(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
