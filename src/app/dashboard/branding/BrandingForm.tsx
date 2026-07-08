@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
-import { normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
+import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 
 export function BrandingForm({
@@ -70,11 +70,15 @@ export function BrandingForm({
     const supabase = createClient();
 
     let googleReviewLink = normalizeGoogleReviewLink(form.google_review_link) ?? form.google_review_link.trim();
-    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, googleReviewLink);
+    // Always re-resolve from the Maps link — never prefer a stale stored Place ID.
+    let resolvedPlaceId: string | null = extractGooglePlaceId(googleReviewLink);
     if (!resolvedPlaceId && googleReviewLink) {
       const resolved = await resolveGooglePlaceIdViaApi(googleReviewLink);
       resolvedPlaceId = resolved.placeId;
       if (resolved.normalizedLink) googleReviewLink = resolved.normalizedLink;
+    }
+    if (!resolvedPlaceId) {
+      resolvedPlaceId = sanitizeGooglePlaceId(null, googleReviewLink);
     }
 
     const { error } = await supabase

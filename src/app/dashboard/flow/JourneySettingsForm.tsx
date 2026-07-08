@@ -231,11 +231,16 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     };
 
     let googleReviewLink = normalizeGoogleReviewLink(form.google_review_link) ?? form.google_review_link.trim();
-    let resolvedPlaceId = sanitizeGooglePlaceId(form.google_place_id, googleReviewLink);
+    // Always re-resolve from the Maps link. A previously saved Place ID can be
+    // a wrong same-name venue (e.g. US vs Da Nang) and must not win on save.
+    let resolvedPlaceId: string | null = extractGooglePlaceId(googleReviewLink);
     if (!resolvedPlaceId && googleReviewLink) {
       const resolved = await resolveGooglePlaceIdViaApi(googleReviewLink);
       resolvedPlaceId = resolved.placeId;
       if (resolved.normalizedLink) googleReviewLink = resolved.normalizedLink;
+    }
+    if (!resolvedPlaceId) {
+      resolvedPlaceId = sanitizeGooglePlaceId(null, googleReviewLink);
     }
 
     const { error: updateError } = await supabase

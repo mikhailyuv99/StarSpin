@@ -45,9 +45,10 @@ export function isSafeMapsDestination(url: string): boolean {
   try {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
-    if (!host.endsWith("google.com")) return false;
+    if (!(host === "google.com" || host.endsWith(".google.com"))) return false;
     if (host === "search.google.com") return u.pathname.includes("/local/writereview");
     return (
+      host === "maps.google.com" ||
       host.startsWith("maps.") ||
       u.pathname.includes("/maps") ||
       u.searchParams.has("cid") ||
@@ -81,12 +82,42 @@ export function extractMapsQueryFromUrl(url: string): string | null {
   }
 }
 
-/** Feature id from Maps URLs (e.g. ftid=0xabc:0xdef). */
+/** Feature id from Maps URLs — query `ftid=` or path data `!1s0x…:0x…`. */
 export function extractFtidFromUrl(url: string): string | null {
   try {
     const decoded = decodeURIComponent(url);
-    const match = decoded.match(/[?&]ftid=(0x[a-f0-9]+:0x[a-f0-9]+)/i);
-    return match?.[1] ?? null;
+    const fromQuery = decoded.match(/[?&]ftid=(0x[a-f0-9]+:0x[a-f0-9]+)/i);
+    if (fromQuery?.[1]) return fromQuery[1].toLowerCase();
+
+    // Short links expand to /maps/place/.../data=!3m1!4b1!4m6!3m5!1s0x…:0x…!8m2!…
+    const fromData = decoded.match(/!1s(0x[a-f0-9]+:0x[a-f0-9]+)/i);
+    if (fromData?.[1]) return fromData[1].toLowerCase();
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Lat/lng hint from Maps URLs (`@16.05,108.24` or `!3d16.05!4d108.24`). */
+export function extractMapsCoordinatesFromUrl(
+  url: string,
+): { lat: number; lng: number } | null {
+  try {
+    const decoded = decodeURIComponent(url);
+    const at = decoded.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (at) {
+      const lat = Number(at[1]);
+      const lng = Number(at[2]);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+    }
+    const embed = decoded.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (embed) {
+      const lat = Number(embed[1]);
+      const lng = Number(embed[2]);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+    }
+    return null;
   } catch {
     return null;
   }
