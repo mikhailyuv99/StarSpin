@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
-import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
 import { JourneyThemePicker } from "@/components/dashboard/JourneyThemePicker";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
@@ -306,19 +305,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           logoUrl={form.logo_url || null}
           onUpload={handleLogoUpload}
         />
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <ColorPickButton
-            label={t("dashboard.colorPreviewPrimary")}
-            value={form.primary_color}
-            onChange={(v) => update("primary_color", v)}
-          />
-          <ColorPickButton
-            label={t("dashboard.colorPreviewSecondary")}
-            value={form.secondary_color}
-            onChange={(v) => update("secondary_color", v)}
-          />
-        </div>
       </section>
 
       <section className={`${ui.card} space-y-5`}>
@@ -334,6 +320,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           previewMerchant={previewMerchant}
           previewPrizes={previewPrizes}
         />
+        <button type="submit" disabled={loading} className={ui.btn}>
+          {loading ? t("common.saving") : t("common.save")}
+        </button>
       </section>
 
       <section className={`${ui.card} space-y-5`}>
