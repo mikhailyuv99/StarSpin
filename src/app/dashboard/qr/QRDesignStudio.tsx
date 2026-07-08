@@ -9,12 +9,15 @@ import {
   addImage,
   addLibraryImage,
   addTextBox,
+  canMoveLayer,
   createLibraryImage,
   createPlacedImage,
   createTextBox,
   downloadCanvas,
   getSideDesign,
   normalizeHex,
+  reorderLayer,
+  type LayerAction,
   parseQRDesign,
   patchSideDesign,
   patchTextBox,
@@ -157,7 +160,8 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest("canvas")) return;
+      // The canvas area manages its own selection/deselection.
+      if (target.closest("canvas, [data-qr-canvas-area]")) return;
       if (target.closest("button, input, select, textarea, a, [data-qr-keep-selection]")) return;
       setSelectedElement(null);
     };
@@ -306,6 +310,22 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
     pushHistoryAndApply((prev) => removeTextBox(prev, template, visitCardSide, id));
     setSelectedElement(null);
   };
+
+  const handleReorderLayer = (action: LayerAction) => {
+    if (template === "qr" || !selectedElement) return;
+    pushHistoryAndApply((prev) =>
+      reorderLayer(prev, template as "table_sticker" | "visit_card", visitCardSide, selectedElement, action),
+    );
+  };
+
+  const selectedLabel =
+    selectedElement?.kind === "qr"
+      ? t("dashboard.qrLayerQr")
+      : selectedElement?.kind === "text"
+        ? t("dashboard.qrLayerText")
+        : selectedElement?.kind === "image"
+          ? t("dashboard.qrLayerImage")
+          : null;
 
   useEffect(() => {
     if (skipAutosaveRef.current) {
@@ -478,6 +498,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
       <div className={`qr-preview-frame ${template !== "qr" ? "qr-preview-frame--print" : ""}`}>
         <div
+          data-qr-canvas-area
           className={
             template === "qr"
               ? "qr-preview-aspect qr-preview-aspect--qr qr-preview-aspect--framed"
@@ -639,6 +660,48 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                     )}
                   </div>
                 </div>
+
+                {selectedElement && sideDesign && (
+                  <div data-qr-keep-selection className="space-y-2">
+                    <p className={ui.label}>
+                      {t("dashboard.qrLayerTitle", { element: selectedLabel ?? "" })}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={!canMoveLayer(sideDesign, selectedElement, "backward")}
+                        onClick={() => handleReorderLayer("back")}
+                        className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+                      >
+                        {t("dashboard.qrLayerToBack")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canMoveLayer(sideDesign, selectedElement, "backward")}
+                        onClick={() => handleReorderLayer("backward")}
+                        className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+                      >
+                        {t("dashboard.qrLayerBackward")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canMoveLayer(sideDesign, selectedElement, "forward")}
+                        onClick={() => handleReorderLayer("forward")}
+                        className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+                      >
+                        {t("dashboard.qrLayerForward")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canMoveLayer(sideDesign, selectedElement, "forward")}
+                        onClick={() => handleReorderLayer("front")}
+                        className={`${ui.btnOutline} !w-auto px-3 py-1.5 text-xs disabled:opacity-40`}
+                      >
+                        {t("dashboard.qrLayerToFront")}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <QRDesignImageDropzone onUpload={handleImageUpload} />
                 <QRDesignImageGallery

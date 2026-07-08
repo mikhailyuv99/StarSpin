@@ -15,6 +15,8 @@ export type ElementPlacement = {
   y: number;
   scale: number;
   rotation: number;
+  /** Stacking order. Higher = in front. Undefined falls back to sensible defaults. */
+  z?: number;
 };
 
 export type TextBox = {
@@ -134,13 +136,43 @@ export function normalizeHex(value: string, fallback: string): string {
 }
 
 export function clampPlacement(placement: ElementPlacement): ElementPlacement {
-  return {
+  const next: ElementPlacement = {
     x: Math.min(0.98, Math.max(0.02, placement.x)),
     y: Math.min(0.98, Math.max(0.02, placement.y)),
     scale: Math.max(MIN_SCALE, placement.scale),
     rotation: ((placement.rotation % 360) + 360) % 360,
   };
+  if (placement.z !== undefined) next.z = placement.z;
+  return next;
 }
+
+/** Default stacking so legacy designs keep images-below-QR-below-text order. */
+const DEFAULT_QR_Z = 1000;
+const DEFAULT_TEXT_Z = 2000;
+
+export type LayerEntry = {
+  ref: SelectedElement;
+  placement: ElementPlacement;
+  z: number;
+};
+
+/** All placeable elements on a side, sorted back-to-front (ascending z). */
+export function getSideLayers(side: SideDesign): LayerEntry[] {
+  const entries: LayerEntry[] = [];
+  side.images.forEach((img, i) =>
+    entries.push({ ref: { kind: "image", id: img.id }, placement: img.placement, z: img.placement.z ?? i + 1 }),
+  );
+  entries.push({ ref: { kind: "qr" }, placement: side.qr, z: side.qr.z ?? DEFAULT_QR_Z });
+  side.textBoxes.forEach((box, i) =>
+    entries.push({ ref: { kind: "text", id: box.id }, placement: box.placement, z: box.placement.z ?? DEFAULT_TEXT_Z + i }),
+  );
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .sort((a, b) => a.entry.z - b.entry.z || a.index - b.index)
+    .map(({ entry }) => entry);
+}
+
+export type LayerAction = "front" | "back" | "forward" | "backward";
 
 function defaultQrPlacement(template: Exclude<QRDesignTemplate, "qr">): ElementPlacement {
   return { x: 0.5, y: 0.5, scale: 1, rotation: 0 };
@@ -264,6 +296,7 @@ function parsePlacement(raw: unknown, fallback: ElementPlacement): ElementPlacem
     y: typeof data.y === "number" ? data.y : fallback.y,
     scale: typeof data.scale === "number" ? data.scale : fallback.scale,
     rotation: typeof data.rotation === "number" ? data.rotation : fallback.rotation,
+    ...(typeof data.z === "number" ? { z: data.z } : {}),
   });
 }
 
@@ -580,6 +613,63 @@ export function removeTextBox(
   });
 }
 
+function patchLayerZ(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  ref: SelectedElement,
+  z: number,
+): QRDesignConfig {
+  if (ref.kind === "qr") {
+    return patchElementPlacement(design, template, visitCardSide, "qr", { z });
+  }
+  if (ref.kind === "image") {
+    return patchImage(design, template, visitCardSide, ref.id, { placement: { z } });
+  }
+  return patchTextBox(design, template, visitCardSide, ref.id, { placement: { z } });
+}
+
+/** Move an element within the stacking order (Canva-style bring forward / send back). */
+export function reorderLayer(
+  design: QRDesignConfig,
+  template: Exclude<QRDesignTemplate, "qr">,
+  visitCardSide: VisitCardSide,
+  ref: SelectedElement,
+  action: LayerAction,
+): QRDesignConfig {
+  const side = getSideDesign(design, template, visitCardSide);
+  const order = getSideLayers(side).map((entry) => entry.ref);
+  const index = order.findIndex((item) => elementKey(item) === elementKey(ref));
+  if (index < 0) return design;
+
+  const [item] = order.splice(index, 1);
+  let target = index;
+  if (action === "front") target = order.length;
+  else if (action === "back") target = 0;
+  else if (action === "forward") target = Math.min(order.length, index + 1);
+  else if (action === "backward") target = Math.max(0, index - 1);
+  order.splice(target, 0, item);
+
+  // Bake the resulting order into explicit, evenly-spaced z values.
+  let result = design;
+  order.forEach((entryRef, i) => {
+    result = patchLayerZ(result, template, visitCardSide, entryRef, (i + 1) * 10);
+  });
+  return result;
+}
+
+export function canMoveLayer(
+  side: SideDesign,
+  ref: SelectedElement,
+  action: LayerAction,
+): boolean {
+  const order = getSideLayers(side).map((entry) => entry.ref);
+  const index = order.findIndex((item) => elementKey(item) === elementKey(ref));
+  if (index < 0) return false;
+  if (action === "front" || action === "forward") return index < order.length - 1;
+  return index > 0;
+}
+
 function scaledSize(
   template: Exclude<QRDesignTemplate, "qr">,
   kind: "logo" | "qr" | "text",
@@ -699,6 +789,31 @@ function pointInRotatedRect(
   return localX >= -box.w / 2 && localX <= box.w / 2 && localY >= -box.h / 2 && localY <= box.h / 2;
 }
 
+function refFromKey(key: string): SelectedElement {
+  if (key === "qr") return { kind: "qr" };
+  if (key.startsWith("image:")) return { kind: "image", id: key.slice(6) };
+  return { kind: "text", id: key.slice(5) };
+}
+
+/**
+ * All elements under a point, ordered front-to-back using the real stacking order
+ * so hit-testing matches what's drawn. Used for tap-to-cycle through overlaps.
+ */
+export function hitTestElementsOrdered(
+  px: number,
+  py: number,
+  side: SideDesign,
+  bounds: Record<string, ElementBounds>,
+): SelectedElement[] {
+  const frontToBack = getSideLayers(side).slice().reverse();
+  const hits: SelectedElement[] = [];
+  for (const entry of frontToBack) {
+    const box = bounds[elementKey(entry.ref)];
+    if (box && pointInRotatedRect(px, py, box)) hits.push(entry.ref);
+  }
+  return hits;
+}
+
 export function hitTestElement(
   px: number,
   py: number,
@@ -715,11 +830,7 @@ export function hitTestElement(
 
   for (const key of order) {
     const box = bounds[key];
-    if (pointInRotatedRect(px, py, box)) {
-      if (key === "qr") return { kind: "qr" };
-      if (key.startsWith("image:")) return { kind: "image", id: key.slice(6) };
-      return { kind: "text", id: key.slice(5) };
-    }
+    if (pointInRotatedRect(px, py, box)) return refFromKey(key);
   }
   return null;
 }
@@ -807,18 +918,70 @@ export function hitTestRotationHandle(
   return px >= pos.x && px <= pos.x + hitSize && py >= pos.y && py <= pos.y + hitSize;
 }
 
+const imageCache = new Map<string, HTMLImageElement>();
+const imagePending = new Map<string, Promise<HTMLImageElement | null>>();
+
+/** Synchronously get an already-decoded image (for jank-free redraws during drags). */
+export function getCachedImage(url: string): HTMLImageElement | null {
+  return imageCache.get(url) ?? null;
+}
+
 async function loadImage(url: string): Promise<HTMLImageElement | null> {
-  try {
-    return await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("image load failed"));
-      img.src = url;
+  const cached = imageCache.get(url);
+  if (cached) return cached;
+  const inflight = imagePending.get(url);
+  if (inflight) return inflight;
+
+  const promise = new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  }).then((img) => {
+    imagePending.delete(url);
+    if (img) imageCache.set(url, img);
+    return img;
+  });
+
+  imagePending.set(url, promise);
+  return promise;
+}
+
+/** QR is expensive to generate — cache one high-res bitmap per (url, fg, bg) and scale on draw. */
+const QR_CACHE_RESOLUTION = 1024;
+const qrCanvasCache = new Map<string, HTMLCanvasElement>();
+const qrPending = new Map<string, Promise<HTMLCanvasElement>>();
+
+function qrCacheKey(url: string, fg: string, bg: string): string {
+  return `${url}\u0000${normalizeHex(fg, "#0a0a0a")}\u0000${normalizeHex(bg, "#ffffff")}`;
+}
+
+export function getCachedQrCanvas(url: string, fg: string, bg: string): HTMLCanvasElement | null {
+  return qrCanvasCache.get(qrCacheKey(url, fg, bg)) ?? null;
+}
+
+async function getQrCanvas(url: string, fg: string, bg: string): Promise<HTMLCanvasElement> {
+  const key = qrCacheKey(url, fg, bg);
+  const cached = qrCanvasCache.get(key);
+  if (cached) return cached;
+  const inflight = qrPending.get(key);
+  if (inflight) return inflight;
+
+  const promise = (async () => {
+    const scratch = document.createElement("canvas");
+    await QRCode.toCanvas(scratch, url, {
+      width: QR_CACHE_RESOLUTION,
+      margin: 1,
+      color: { dark: normalizeHex(fg, "#0a0a0a"), light: normalizeHex(bg, "#ffffff") },
     });
-  } catch {
-    return null;
-  }
+    qrCanvasCache.set(key, scratch);
+    qrPending.delete(key);
+    return scratch;
+  })();
+
+  qrPending.set(key, promise);
+  return promise;
 }
 
 async function drawQrModule(
@@ -830,13 +993,8 @@ async function drawQrModule(
   fg: string,
   bg: string,
 ): Promise<void> {
-  const scratch = document.createElement("canvas");
-  await QRCode.toCanvas(scratch, url, {
-    width: size,
-    margin: 1,
-    color: { dark: normalizeHex(fg, "#0a0a0a"), light: normalizeHex(bg, "#ffffff") },
-  });
-  ctx.drawImage(scratch, x, y, size, size);
+  const qr = await getQrCanvas(url, fg, bg);
+  ctx.drawImage(qr, x, y, size, size);
 }
 
 function drawRotatedImage(
@@ -1014,40 +1172,35 @@ async function renderLayoutDesign(
   if (editor?.showGrid) drawAlignmentGrid(ctx, width, height);
 
   const bounds = computeElementBounds(template, side, width, height);
+  const imageById = new Map(side.images.map((img) => [img.id, img]));
+  const textById = new Map(side.textBoxes.map((box) => [box.id, box]));
 
-  for (const img of side.images) {
-    const key = `image:${img.id}`;
-    const imgBounds = bounds[key];
-    if (!imgBounds) continue;
-    const loaded = await loadImage(img.url);
-    if (loaded) drawRotatedImage(ctx, loaded, imgBounds);
-  }
+  for (const layer of getSideLayers(side)) {
+    const box = bounds[elementKey(layer.ref)];
+    if (!box) continue;
 
-  if (bounds.qr) {
-    const qrSize = scaledSize(template, "qr", side.qr.scale);
-    const qrScratch = document.createElement("canvas");
-    await QRCode.toCanvas(qrScratch, url, {
-      width: qrSize,
-      margin: 1,
-      color: { dark: normalizeHex(qrFg, "#0a0a0a"), light: normalizeHex(qrBg, "#ffffff") },
-    });
-    drawRotatedImage(ctx, qrScratch, bounds.qr);
-  }
-
-  for (const box of side.textBoxes) {
-    const key = `text:${box.id}`;
-    const boxBounds = bounds[key];
-    if (!boxBounds) continue;
-    await ensureQRFontsForRender(box.fontId, box.fontId);
-    drawRotatedTextBlock(
-      ctx,
-      box.text,
-      boxBounds,
-      scaledSize(template, "text", box.placement.scale),
-      box.fontId,
-      box.color,
-      width,
-    );
+    if (layer.ref.kind === "image") {
+      const img = imageById.get(layer.ref.id);
+      if (!img) continue;
+      const loaded = await loadImage(img.url);
+      if (loaded) drawRotatedImage(ctx, loaded, box);
+    } else if (layer.ref.kind === "qr") {
+      const qrScratch = await getQrCanvas(url, qrFg, qrBg);
+      drawRotatedImage(ctx, qrScratch, box);
+    } else {
+      const textBox = textById.get(layer.ref.id);
+      if (!textBox) continue;
+      await ensureQRFontsForRender(textBox.fontId, textBox.fontId);
+      drawRotatedTextBlock(
+        ctx,
+        textBox.text,
+        box,
+        scaledSize(template, "text", textBox.placement.scale),
+        textBox.fontId,
+        textBox.color,
+        width,
+      );
+    }
   }
 
   drawBrutalBorder(ctx, width, height);

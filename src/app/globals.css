@@ -368,13 +368,92 @@ body {
   margin-inline: auto;
 }
 
-/* Print templates: canvas edge-to-edge — matches the downloaded PNG */
+/* Print templates: canvas edge-to-edge — matches the downloaded PNG.
+   overflow visible so selection handles/rotation grip can sit past the edge. */
 .qr-preview-aspect--print {
   border-radius: 0;
   padding: 0;
   border: none;
   background: transparent;
   box-shadow: 4px 4px 0 0 #0a0a0a;
+  overflow: visible;
+}
+
+/* ---- QR editor selection overlay (Canva-style, DOM handles) ---- */
+.qr-selection-box {
+  pointer-events: none;
+  z-index: 6;
+}
+.qr-selection-outline {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+.qr-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid #8b5cf6;
+  border-radius: 3px;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.qr-handle::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+.qr-handle--edge {
+  border-radius: 7px;
+  width: 12px;
+  height: 12px;
+}
+.qr-handle-rotate {
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #8b5cf6;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+.qr-handle-rotate:active {
+  cursor: grabbing;
+}
+.qr-handle-rotate::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+@media (pointer: coarse) {
+  .qr-handle {
+    width: 18px;
+    height: 18px;
+  }
+  .qr-handle::after {
+    inset: -16px;
+  }
+  .qr-handle-rotate {
+    width: 40px;
+    height: 40px;
+    top: -44px;
+  }
 }
 
 /* Plain QR keeps a decorative frame */
@@ -1436,5 +1515,48 @@ html.locale-es .cadeo-hero-accent {
   .brutal-btn,
   .public-btn {
     transition: none;
+  }
+}
+
+/* ---- App-like tactile feel across the whole site ---- */
+/* Base layer so per-element Tailwind utilities can still override. */
+@layer base {
+  /* Kill the grey mobile tap flash + the 300ms double-tap delay so every
+     control responds instantly like a native app. */
+  a,
+  button,
+  label,
+  summary,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  button,
+  label,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Generic press feedback for buttons that don't already animate
+     (the brutalist buttons handle their own :active state). */
+  button:not(.brutal-btn):not(.public-btn):not(:disabled),
+  [role="button"]:not(.brutal-btn):not(.public-btn) {
+    transition: transform 0.1s ease;
+  }
+  button:not(.brutal-btn):not(.public-btn):not(:disabled):active,
+  [role="button"]:not(.brutal-btn):not(.public-btn):active {
+    transform: scale(0.96);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button:not(.brutal-btn):not(.public-btn):active,
+    [role="button"]:not(.brutal-btn):not(.public-btn):active {
+      transform: none;
+    }
   }
 }
