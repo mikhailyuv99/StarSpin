@@ -349,6 +349,13 @@
     "managePaymentSaving": "Guardando…",
     "managePaymentUpdated": "Método de pago actualizado.",
     "managePaymentError": "No se pudo actualizar el método de pago.",
+    "manageChangePlanTitle": "Cambiar plan",
+    "manageChangePlanHelp": "Cambia entre mensual, trimestral o anual. Durante la prueba no se cobra ahora. En un plan de pago Stripe prorratea la diferencia.",
+    "manageChangePlanCurrent": "Actual",
+    "manageChangePlanSave": "Actualizar plan",
+    "manageChangePlanSaving": "Actualizando plan…",
+    "manageChangePlanSuccess": "Plan actualizado.",
+    "manageChangePlanError": "No se pudo cambiar el plan. Inténtalo de nuevo o escribe a hello@starspin.cc.",
     "activatingTitle": "Activando tu suscripción…",
     "activatingBody": "El pago se realizó correctamente. Estamos activando tu ruleta; suele tardar unos segundos."
   },

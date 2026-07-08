@@ -2,13 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
 import type { BillingSummary } from "@/lib/billing-summary";
-import { managePlanLabelForPlan, marketingPeriodForPlan } from "@/lib/billing-display";
+import type { BillingPlan } from "@/lib/billing";
+import {
+  managePlanLabelForPlan,
+  marketingPeriodForPlan,
+  marketingPriceForPlan,
+} from "@/lib/billing-display";
+import { formatPlanEur, PLAN_PRICING } from "@/lib/plan-pricing";
 import { ui } from "@/components/ui/styles";
+
+const PLAN_OPTIONS: BillingPlan[] = ["monthly", "quarterly", "annual"];
 
 function formatDate(iso: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(iso));
@@ -110,8 +118,15 @@ export function BillingManagePage({
   const [setupLoading, setSetupLoading] = useState(false);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [actionLoading, setActionLoading] = useState<"cancel" | "resume" | null>(null);
+  const [actionLoading, setActionLoading] = useState<"cancel" | "resume" | "change-plan" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<BillingPlan>(summary.plan ?? "monthly");
+  const [planSuccess, setPlanSuccess] = useState(false);
+
+  useEffect(() => {
+    setLive(summary);
+    if (summary.plan) setSelectedPlan(summary.plan);
+  }, [summary]);
 
   const refresh = () => router.refresh();
 
@@ -219,8 +234,43 @@ export function BillingManagePage({
     refresh();
   };
 
+  const handleChangePlan = async () => {
+    if (!live.plan || selectedPlan === live.plan) return;
+    setActionLoading("change-plan");
+    setActionError(null);
+    setPlanSuccess(false);
+    try {
+      const res = await fetch("/api/stripe/billing/change-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selectedPlan }),
+      });
+      const data = (await res.json()) as { summary?: BillingSummary; error?: string };
+      if (!res.ok || !data.summary) {
+        setActionError(data.error ?? t("billing.manageChangePlanError"));
+        return;
+      }
+      setLive(data.summary);
+      setSelectedPlan(data.summary.plan ?? selectedPlan);
+      setPlanSuccess(true);
+      refresh();
+    } catch {
+      setActionError(t("billing.manageChangePlanError"));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const canManageSubscription =
     live.stripeStatus === "active" || live.stripeStatus === "trialing" || live.stripeStatus === "past_due";
+  const canChangePlan = canManageSubscription;
+  const planDirty = Boolean(live.plan && selectedPlan !== live.plan);
+
+  const planOptionLabel = (value: BillingPlan) => {
+    if (value === "monthly") return t("marketing.pricingMonthly");
+    if (value === "quarterly") return t("marketing.pricingQuarterly");
+    return t("marketing.pricingAnnual");
+  };
 
   return (
     <div className="space-y-6">
@@ -260,6 +310,68 @@ export function BillingManagePage({
         </div>
 
         {paymentSuccess && <p className={ui.alertSuccess}>{t("billing.managePaymentUpdated")}</p>}
+        {planSuccess && <p className={ui.alertSuccess}>{t("billing.manageChangePlanSuccess")}</p>}
+
+        {canChangePlan && (
+          <section className="space-y-3 rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4">
+            <h3 className="text-sm font-extrabold uppercase tracking-wide text-ink">
+              {t("billing.manageChangePlanTitle")}
+            </h3>
+            <p className="text-sm font-medium text-muted">{t("billing.manageChangePlanHelp")}</p>
+            <div
+              className="grid gap-2 sm:grid-cols-3"
+              role="radiogroup"
+              aria-label={t("billing.manageChangePlanTitle")}
+            >
+              {PLAN_OPTIONS.map((value) => {
+                const selected = selectedPlan === value;
+                const current = live.plan === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    disabled={actionLoading !== null}
+                    onClick={() => {
+                      setSelectedPlan(value);
+                      setPlanSuccess(false);
+                      setActionError(null);
+                    }}
+                    className={`rounded-[14px] border-2 border-black px-3 py-3 text-left transition ${
+                      selected
+                        ? "bg-[var(--c-lavender)] shadow-[3px_3px_0_0_#0a0a0a]"
+                        : "bg-white hover:-translate-y-0.5"
+                    }`}
+                  >
+                    <span className="block text-xs font-extrabold uppercase tracking-wide text-ink">
+                      {planOptionLabel(value)}
+                      {current ? ` · ${t("billing.manageChangePlanCurrent")}` : ""}
+                    </span>
+                    <span className="mt-1 block text-sm font-extrabold text-ink">
+                      {marketingPriceForPlan(value)}
+                    </span>
+                    <span className="block text-xs font-medium text-muted">
+                      {formatPlanEur(PLAN_PRICING[value].eur)}
+                      {value === "quarterly" ? ` · ${t("marketing.pricingQuarterlyBadge")}` : ""}
+                      {value === "annual" ? ` · ${t("marketing.pricingAnnualBadge")}` : ""}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={handleChangePlan}
+              disabled={!planDirty || actionLoading !== null}
+              className={`${ui.btn} !w-auto px-5 disabled:opacity-50`}
+            >
+              {actionLoading === "change-plan"
+                ? t("billing.manageChangePlanSaving")
+                : t("billing.manageChangePlanSave")}
+            </button>
+          </section>
+        )}
 
         {live.hasAccount && !showPaymentForm && (
           <button

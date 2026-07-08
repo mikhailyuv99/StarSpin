@@ -349,6 +349,13 @@
     "managePaymentSaving": "Đang lưu…",
     "managePaymentUpdated": "Đã cập nhật phương thức thanh toán.",
     "managePaymentError": "Không thể cập nhật phương thức thanh toán.",
+    "manageChangePlanTitle": "Đổi gói",
+    "manageChangePlanHelp": "Chuyển giữa gói tháng, quý hoặc năm. Trong thời gian dùng thử chưa tính phí ngay. Với gói trả phí, Stripe sẽ cân trừ phần chênh lệch.",
+    "manageChangePlanCurrent": "Hiện tại",
+    "manageChangePlanSave": "Cập nhật gói",
+    "manageChangePlanSaving": "Đang cập nhật gói…",
+    "manageChangePlanSuccess": "Đã cập nhật gói.",
+    "manageChangePlanError": "Không thể đổi gói. Thử lại hoặc liên hệ hello@starspin.cc.",
     "activatingTitle": "Đang kích hoạt gói đăng ký…",
     "activatingBody": "Thanh toán thành công. Chúng tôi đang bật vòng quay — thường chỉ mất vài giây."
   },

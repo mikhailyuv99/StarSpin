@@ -349,6 +349,13 @@
     "managePaymentSaving": "Saving…",
     "managePaymentUpdated": "Payment method updated.",
     "managePaymentError": "Couldn't update payment method.",
+    "manageChangePlanTitle": "Change plan",
+    "manageChangePlanHelp": "Switch between monthly, quarterly, or annual. During a trial there’s no charge now. On a paid plan Stripe prorates the difference.",
+    "manageChangePlanCurrent": "Current",
+    "manageChangePlanSave": "Update plan",
+    "manageChangePlanSaving": "Updating plan…",
+    "manageChangePlanSuccess": "Plan updated.",
+    "manageChangePlanError": "Couldn't change plan. Try again or contact hello@starspin.cc.",
     "activatingTitle": "Activating your subscription…",
     "activatingBody": "Your payment succeeded. We're turning on your wheel — this usually takes a few seconds."
   },

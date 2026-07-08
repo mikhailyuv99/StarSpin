@@ -349,6 +349,13 @@
     "managePaymentSaving": "Сохранение…",
     "managePaymentUpdated": "Способ оплаты обновлён.",
     "managePaymentError": "Не удалось обновить способ оплаты.",
+    "manageChangePlanTitle": "Сменить план",
+    "manageChangePlanHelp": "Переключайтесь между месячным, квартальным или годовым. Во время пробного периода сейчас не списываем. На платном плане Stripe делает перерасчёт.",
+    "manageChangePlanCurrent": "Текущий",
+    "manageChangePlanSave": "Обновить план",
+    "manageChangePlanSaving": "Обновляем план…",
+    "manageChangePlanSuccess": "План обновлён.",
+    "manageChangePlanError": "Не удалось сменить план. Попробуйте ещё раз или напишите на hello@starspin.cc.",
     "activatingTitle": "Активируем подписку…",
     "activatingBody": "Оплата прошла успешно. Включаем колесо — обычно это занимает несколько секунд."
   },

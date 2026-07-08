@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import type { BillingPlan } from "@/lib/billing";
 import { isBillingPlan } from "@/lib/billing";
-import { getAnnualPriceId, getMonthlyPriceId, getQuarterlyPriceId } from "@/lib/stripe";
+import { getAnnualPriceId, getMonthlyPriceId, getQuarterlyPriceId, priceIdForPlan } from "@/lib/stripe";
 
 export type BillingSummary = {
   hasAccount: boolean;
@@ -197,4 +197,42 @@ export async function resumeSubscription(
 ): Promise<void> {
   const subscription = await getMerchantSubscription(stripe, merchant);
   await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
+}
+
+export async function changeSubscriptionPlan(
+  stripe: Stripe,
+  merchant: { stripe_customer_id: string; stripe_subscription_id: string | null },
+  plan: BillingPlan,
+): Promise<Stripe.Subscription> {
+  const subscription = await getMerchantSubscription(stripe, merchant);
+  if (subscription.status !== "active" && subscription.status !== "trialing" && subscription.status !== "past_due") {
+    throw new Error("Subscription cannot be changed");
+  }
+
+  const item = subscription.items.data[0];
+  if (!item) throw new Error("Subscription item missing");
+
+  const currentPlan =
+    (subscription.metadata?.plan && isBillingPlan(subscription.metadata.plan)
+      ? subscription.metadata.plan
+      : null) ?? (item.price?.id ? planFromPriceId(item.price.id) : null);
+
+  if (currentPlan === plan || item.price?.id === priceIdForPlan(plan)) {
+    return subscription;
+  }
+
+  // While trialing, swap the future price without invoicing now.
+  const prorationBehavior = subscription.status === "trialing" ? "none" : "create_prorations";
+
+  return stripe.subscriptions.update(subscription.id, {
+    items: [{ id: item.id, price: priceIdForPlan(plan) }],
+    proration_behavior: prorationBehavior,
+    cancel_at_period_end: false,
+    metadata: {
+      ...subscription.metadata,
+      plan,
+      product: "starspin",
+    },
+    expand: ["items.data.price", "default_payment_method"],
+  });
 }
