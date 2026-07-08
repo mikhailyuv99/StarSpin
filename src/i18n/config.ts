@@ -1,4 +1,4 @@
-export const locales = ["en", "ru", "vi", "es"] as const;
+export const locales = ["en", "ru", "vi", "es", "ko"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "en";
 
@@ -9,6 +9,7 @@ export const localeLabels: Record<Locale, string> = {
   ru: "Russian",
   vi: "Vietnamese",
   es: "Spanish",
+  ko: "한국어",
 };
 
 export function isLocale(value: string): value is Locale {
@@ -21,6 +22,7 @@ export function localeToIntl(locale: Locale): string {
     ru: "ru-RU",
     vi: "vi-VN",
     es: "es-ES",
+    ko: "ko-KR",
   };
   return map[locale];
 }

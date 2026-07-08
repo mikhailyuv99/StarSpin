@@ -11,6 +11,7 @@ const localeFlags: Record<Locale, string> = {
   ru: "🇷🇺",
   vi: "🇻🇳",
   es: "🇪🇸",
+  ko: "🇰🇷",
 };
 
 export function LocaleSwitcher({

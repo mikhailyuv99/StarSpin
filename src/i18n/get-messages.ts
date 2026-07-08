@@ -4,8 +4,9 @@ import en from "./messages/en.json";
 import ru from "./messages/ru.json";
 import vi from "./messages/vi.json";
 import es from "./messages/es.json";
+import ko from "./messages/ko.json";
 
-const catalogs: Record<Locale, Messages> = { en, ru, vi, es };
+const catalogs: Record<Locale, Messages> = { en, ru, vi, es, ko };
 
 export function getMessages(locale: Locale): Messages {
   return catalogs[locale] ?? en;
