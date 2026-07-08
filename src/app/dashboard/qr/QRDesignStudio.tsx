@@ -409,6 +409,42 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
   const previewPx = previewPixelSize(template);
   const customizeRef = useRef<HTMLFormElement>(null);
   const studioRef = useRef<HTMLDivElement>(null);
+  const colorsRef = useRef<HTMLDivElement>(null);
+  const elementPanelRef = useRef<HTMLDivElement>(null);
+  const textPanelRef = useRef<HTMLDivElement>(null);
+
+  const selectionKey = selectedElement
+    ? selectedElement.kind === "qr"
+      ? "qr"
+      : `${selectedElement.kind}:${selectedElement.id}`
+    : "";
+
+  useEffect(() => {
+    if (!selectedElement) return;
+    const container = customizeRef.current;
+    const target =
+      selectedElement.kind === "text"
+        ? textPanelRef.current
+        : selectedElement.kind === "image"
+          ? elementPanelRef.current
+          : colorsRef.current;
+    if (!container || !target) return;
+    const frame = window.requestAnimationFrame(() => {
+      // Only scroll the customize panel itself — never the page/window.
+      const canScroll = container.scrollHeight > container.clientHeight + 1;
+      if (!canScroll) return;
+      const cRect = container.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const alreadyVisible = tRect.top >= cRect.top && tRect.bottom <= cRect.bottom;
+      if (alreadyVisible) return;
+      const dest = container.scrollTop + (tRect.top - cRect.top) - 12;
+      const max = container.scrollHeight - container.clientHeight;
+      container.scrollTo({ top: Math.max(0, Math.min(dest, max)), behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+    // Only re-run when the selected element identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionKey]);
 
   useEffect(() => {
     if (template !== "qr") {
@@ -618,7 +654,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
             {error && <p className={ui.alertError}>{error}</p>}
 
-            <div className="flex flex-wrap gap-6">
+            <div ref={colorsRef} className="flex flex-wrap gap-6">
               <QRColorSwatch
                 label={t("dashboard.qrForeground")}
                 value={qrFg}
@@ -662,7 +698,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
                 </div>
 
                 {selectedElement && sideDesign && (
-                  <div data-qr-keep-selection className="space-y-2">
+                  <div ref={elementPanelRef} data-qr-keep-selection className="space-y-2">
                     <p className={ui.label}>
                       {t("dashboard.qrLayerTitle", { element: selectedLabel ?? "" })}
                     </p>
@@ -713,6 +749,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
 
                 {selectedTextBox && (
                   <div
+                    ref={textPanelRef}
                     data-qr-keep-selection
                     className="rounded-[14px] border-2 border-black/15 bg-[var(--c-cream)]/60 p-4 space-y-4"
                   >

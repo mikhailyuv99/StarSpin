@@ -126,7 +126,6 @@ export function QRFontPicker({
                           aria-selected={isSelected}
                           onClick={() => {
                             onChange(font.id);
-                            setOpen(false);
                           }}
                           className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-[var(--c-lavender)] ${
                             isSelected ? "bg-[var(--c-yellow)] font-extrabold" : "font-semibold"
