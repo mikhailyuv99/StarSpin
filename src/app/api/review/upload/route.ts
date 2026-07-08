@@ -24,14 +24,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.fileMerchantRequired") }, { status: 400 });
     }
 
+    const maxBytes = 12 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return NextResponse.json({ error: t("api.uploadFailed") }, { status: 400 });
+    }
+
+    const mimeToExt: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/jpg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/heic": "heic",
+      "image/heif": "heif",
+    };
+    const nameExt = file.name.split(".").pop()?.toLowerCase();
+    const ext =
+      mimeToExt[file.type] ??
+      (nameExt && /^[a-z0-9]+$/.test(nameExt) ? nameExt : "jpg");
+
     const supabase = createAdminClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${merchantId}/${crypto.randomUUID()}.${ext}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const contentType = file.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
     const { error } = await supabase.storage
       .from("review-screenshots")
-      .upload(path, buffer, { contentType: file.type, upsert: false });
+      .upload(path, buffer, { contentType, upsert: false });
 
     if (error) throw error;
 

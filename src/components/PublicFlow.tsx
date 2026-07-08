@@ -8,7 +8,6 @@ import type { Merchant, Prize } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { Wheel } from "@/components/Wheel";
-import { verifyReviewScreenshot } from "@/lib/ocr";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
@@ -235,8 +234,15 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     setLoading(true);
     setError(null);
     try {
-      const status = await verifyReviewScreenshot(file, merchant.name);
-      setReviewStatus(status);
+      const isImage =
+        file.type.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+      if (!isImage) {
+        throw new Error(t("api.uploadFailed"));
+      }
+      if (file.size > 12 * 1024 * 1024) {
+        throw new Error(t("api.uploadFailed"));
+      }
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("merchantId", merchant.id);
@@ -245,14 +251,32 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
         headers: { "x-locale": locale },
         body: formData,
       });
-      const uploadData = await uploadRes.json();
+
+      const raw = await uploadRes.text();
+      let uploadData: { path?: string; url?: string; error?: string };
+      try {
+        uploadData = JSON.parse(raw) as { path?: string; url?: string; error?: string };
+      } catch {
+        throw new Error(t("api.uploadFailed"));
+      }
+
       if (!uploadRes.ok) throw new Error(uploadData.error ?? t("api.uploadFailed"));
-      setScreenshotUrl(uploadData.path ?? uploadData.url);
+
+      setReviewStatus("pending");
+      setScreenshotUrl(uploadData.path ?? uploadData.url ?? null);
       advance("google_review");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
     } finally {
       setLoading(false);
+      const input = fileInputRef.current;
+      if (input) {
+        try {
+          input.value = "";
+        } catch {
+          /* Safari can throw when clearing file inputs */
+        }
+      }
     }
   };
 
@@ -416,11 +440,11 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,.heic"
+            accept="image/*"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleReviewUpload(file);
+              if (file) void handleReviewUpload(file);
             }}
           />
           <button
@@ -430,10 +454,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                 advance("google_review");
                 return;
               }
-              const input = fileInputRef.current;
-              if (!input) return;
-              input.value = "";
-              input.click();
+              fileInputRef.current?.click();
             }}
             disabled={loading}
             className="public-btn public-btn-outline public-touch-target"
