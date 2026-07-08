@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
 import { isMerchantLive } from "@/lib/merchant-access";
 import { getStripe } from "@/lib/stripe";
-import { createSubscriptionPaymentSecret, ensureStripeCustomer, getOrCreateSubscriptionPaymentSecret } from "@/lib/stripe-billing";
+import { ensureStripeCustomer, getOrCreateSubscriptionPaymentSecret } from "@/lib/stripe-billing";
 
 export async function POST(request: Request) {
   try {

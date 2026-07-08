@@ -13,7 +13,11 @@ import type { BillingPlan } from "@/lib/billing";
 import { checkoutPayForPlan } from "@/lib/billing-display";
 import "@/components/marketing/cadeo-styles.css";
 
-function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
+function isSetupIntentSecret(clientSecret: string) {
+  return clientSecret.startsWith("seti_");
+}
+
+function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; clientSecret: string }) {
   const { t } = useI18n();
   const stripe = useStripe();
   const elements = useElements();
@@ -28,15 +32,26 @@ function CheckoutPaymentForm({ plan }: { plan: BillingPlan }) {
     setError(null);
 
     const returnUrl = `${window.location.origin}/dashboard?billing=success`;
-    const { error: confirmError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl },
-    });
+    // Free trials use a SetupIntent (seti_…); immediate charges use a PaymentIntent (pi_…).
+    const result = isSetupIntentSecret(clientSecret)
+      ? await stripe.confirmSetup({
+          elements,
+          confirmParams: { return_url: returnUrl },
+          redirect: "if_required",
+        })
+      : await stripe.confirmPayment({
+          elements,
+          confirmParams: { return_url: returnUrl },
+          redirect: "if_required",
+        });
 
-    if (confirmError) {
-      setError(confirmError.message ?? t("billing.checkoutError"));
+    if (result.error) {
+      setError(result.error.message ?? t("billing.checkoutError"));
       setSubmitting(false);
+      return;
     }
+
+    window.location.assign(returnUrl);
   };
 
   return (
@@ -163,7 +178,7 @@ export function StarspinCheckout({
                 },
               }}
             >
-              <CheckoutPaymentForm plan={plan} />
+              <CheckoutPaymentForm plan={plan} clientSecret={clientSecret} />
             </Elements>
           )}
         </div>
