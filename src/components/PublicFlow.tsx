@@ -15,6 +15,7 @@ import { PrizeCoupon } from "@/components/PrizeCoupon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 import { computePreviewWheelSize } from "@/components/dashboard/JourneyPhonePreview";
 import { resolveJourneyTheme } from "@/lib/journey-theme";
+import { compressImageForUpload } from "@/lib/compress-image";
 import {
   buildPublicStepOrder,
   isSocialFlowStep,
@@ -233,40 +234,62 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   const handleReviewUpload = async (file: File) => {
     setLoading(true);
     setError(null);
-    try {
-      const isImage =
-        file.type.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
-      if (!isImage) {
-        throw new Error(t("api.uploadFailed"));
-      }
-      if (file.size > 12 * 1024 * 1024) {
-        throw new Error(t("api.uploadFailed"));
-      }
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("merchantId", merchant.id);
-      const uploadRes = await fetch("/api/review/upload", {
-        method: "POST",
-        headers: { "x-locale": locale },
-        body: formData,
-      });
-
-      const raw = await uploadRes.text();
-      let uploadData: { path?: string; url?: string; error?: string };
-      try {
-        uploadData = JSON.parse(raw) as { path?: string; url?: string; error?: string };
-      } catch {
-        throw new Error(t("api.uploadFailed"));
-      }
-
-      if (!uploadRes.ok) throw new Error(uploadData.error ?? t("api.uploadFailed"));
-
+    /** Always let the customer continue — never surface upload UI errors on this step. */
+    const finishSuccess = (pathOrUrl: string | null) => {
       setReviewStatus("pending");
-      setScreenshotUrl(uploadData.path ?? uploadData.url ?? null);
+      setScreenshotUrl(pathOrUrl);
       advance("google_review");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("public.error"));
+    };
+
+    try {
+      const uploadFile = await compressImageForUpload(file);
+
+      const postOnce = async (): Promise<{ path?: string; url?: string } | null> => {
+        const formData = new FormData();
+        formData.append("file", uploadFile);
+        formData.append("merchantId", merchant.id);
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 25_000);
+        try {
+          const uploadRes = await fetch("/api/review/upload", {
+            method: "POST",
+            headers: { "x-locale": locale },
+            body: formData,
+            signal: controller.signal,
+          });
+          const raw = await uploadRes.text();
+          if (!raw) return uploadRes.ok ? {} : null;
+          try {
+            const data = JSON.parse(raw) as { path?: string; url?: string; error?: string };
+            if (data.path || data.url) return data;
+            // Ambiguous/empty success body after storage write — treat as ok.
+            if (uploadRes.ok) return data;
+            return null;
+          } catch {
+            // HTML/proxy noise after a successful write — prefer continuing.
+            return uploadRes.ok ? {} : null;
+          }
+        } finally {
+          window.clearTimeout(timer);
+        }
+      };
+
+      let result: { path?: string; url?: string } | null = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          result = await postOnce();
+          if (result) break;
+        } catch {
+          /* retry once — flaky mobile networks */
+        }
+      }
+
+      finishSuccess(result?.path ?? result?.url ?? null);
+    } catch {
+      // Compression / unexpected client failure — still never block the journey.
+      finishSuccess(null);
     } finally {
       setLoading(false);
       const input = fileInputRef.current;
