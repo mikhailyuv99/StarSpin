@@ -17,6 +17,7 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-plex-mono",
+  preload: false,
 });
 
 const display = Bricolage_Grotesque({
@@ -41,36 +42,42 @@ const gameFontCyrillic = Comfortaa({
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
   weight: ["600", "700"],
   variable: "--font-game-cyrillic",
+  preload: false,
 });
 
 const bodyRu = Nunito({
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body-ru",
+  preload: false,
 });
 
 const displayRu = Rubik({
   subsets: ["latin", "cyrillic"],
   weight: ["600", "700", "800"],
   variable: "--font-display-ru",
+  preload: false,
 });
 
 const bodyVi = Nunito({
   subsets: ["latin", "vietnamese", "latin-ext"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body-vi",
+  preload: false,
 });
 
 const displayVi = Baloo_2({
   subsets: ["latin", "vietnamese", "latin-ext"],
   weight: ["600", "700", "800"],
   variable: "--font-display-vi",
+  preload: false,
 });
 
 const gameVi = Baloo_2({
   subsets: ["latin", "vietnamese"],
   weight: ["600", "700", "800"],
   variable: "--font-game-vi",
+  preload: false,
 });
 
 export async function generateMetadata(): Promise<Metadata> {

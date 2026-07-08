@@ -1885,6 +1885,282 @@
   color: rgb(10 10 10 / 0.72);
 }
 
+/* How it works — visual customer journey */
+.cadeo-journey {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem 1.25rem;
+  margin-top: 2.25rem;
+  justify-items: center;
+}
+
+@media (min-width: 900px) {
+  .cadeo-journey {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.cadeo-journey-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  max-width: 22rem;
+  text-align: center;
+}
+
+.cadeo-journey-phone-wrap {
+  position: relative;
+}
+
+.cadeo-journey-num {
+  position: absolute;
+  top: -0.7rem;
+  left: -0.7rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border: var(--c-border);
+  border-radius: 10px;
+  background: var(--c-yellow);
+  font-family: var(--font-game), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.cadeo-journey-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.cadeo-journey-body {
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgb(10 10 10 / 0.72);
+}
+
+/* Phone mockups */
+.cadeo-jphone {
+  position: relative;
+  width: 210px;
+  padding: 7px;
+  background: var(--c-black);
+  border: 3px solid var(--c-black);
+  border-radius: 28px;
+  box-shadow: var(--c-shadow-lg);
+}
+
+.cadeo-jnotch {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 10px;
+  background: var(--c-black);
+  border-radius: 99px;
+  z-index: 2;
+}
+
+.cadeo-jscreen {
+  position: relative;
+  border-radius: 21px;
+  overflow: hidden;
+  background: #fff;
+  aspect-ratio: 9 / 16;
+}
+
+.cadeo-jscreen--game {
+  background:
+    radial-gradient(circle at 30% 18%, rgb(244 143 177 / 0.5), transparent 45%),
+    radial-gradient(circle at 72% 82%, rgb(155 127 232 / 0.5), transparent 50%),
+    linear-gradient(165deg, #2a1a4a 0%, #5b3bb8 48%, #f48fb1 100%);
+}
+
+.cadeo-jgame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  height: 100%;
+  padding: 1.7rem 0.75rem 1rem;
+}
+
+.cadeo-jvenue {
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: rgb(255 255 255 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.4);
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+}
+
+.cadeo-jgame-title {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+}
+
+.cadeo-jwheel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9.5rem;
+  height: 9.5rem;
+  padding: 0.35rem;
+  background: rgb(255 255 255 / 0.95);
+  border: var(--c-border);
+  border-radius: 50%;
+  box-shadow: var(--c-shadow);
+}
+
+.cadeo-jwheel svg,
+.cadeo-jwheel .marketing-wheel-wrap {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cadeo-jgame-btn {
+  width: 100%;
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--c-yellow);
+  border: 2px solid var(--c-black);
+  border-radius: 99px;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
+.cadeo-jtasks,
+.cadeo-jwin {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.75rem 0.7rem 0.9rem;
+}
+
+.cadeo-jtasks {
+  gap: 0.5rem;
+}
+
+.cadeo-jtasks-title {
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 0.2rem;
+}
+
+.cadeo-jtask {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.5rem;
+  border: 2px solid var(--c-black);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.cadeo-jtask--done {
+  background: #d6f7e8;
+}
+
+.cadeo-jtask-ic {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.cadeo-jtask-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.cadeo-jtask-check {
+  font-weight: 900;
+  color: #0a0a0a;
+}
+
+.cadeo-jtask-bar {
+  margin-top: auto;
+  height: 0.55rem;
+  border: 2px solid var(--c-black);
+  border-radius: 99px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cadeo-jtask-bar-fill {
+  height: 100%;
+  width: 66%;
+  background: var(--c-purple-deep);
+}
+
+.cadeo-jwin {
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.cadeo-jwin-badge {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--c-purple-deep);
+}
+
+.cadeo-jwin-prize {
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-align: center;
+  background: var(--c-yellow);
+  border: 2px solid var(--c-black);
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+  margin-bottom: 0.2rem;
+}
+
+.cadeo-jfield {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid var(--c-black);
+  border-radius: 8px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgb(10 10 10 / 0.45);
+  text-align: left;
+}
+
+.cadeo-jclaim-btn {
+  width: 100%;
+  text-align: center;
+  margin-top: auto;
+  padding: 0.55rem;
+  background: var(--c-purple-deep);
+  color: #fff;
+  border: 2px solid var(--c-black);
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 0 var(--c-black);
+}
+
 /* Pricing */
 .cadeo-pricing-section {
   max-width: 76rem !important;
@@ -1946,6 +2222,17 @@
   font-weight: 600;
   margin-bottom: 0.75rem;
   line-height: 1.4;
+}
+
+.cadeo-pricing-wrap--solo {
+  max-width: 44rem;
+  margin: 1.75rem auto 0;
+}
+
+.cadeo-pricing-wrap--solo .cadeo-pricing-main {
+  border-radius: var(--c-radius);
+  overflow: hidden;
+  background: #fff;
 }
 
 .cadeo-pricing-main {

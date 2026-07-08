@@ -593,7 +593,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
           <div className="qr-studio-preview-inner">{previewPanel}</div>
         </div>
 
-        <div className="qr-studio-settings min-w-0 w-full max-lg:order-1">
+        <div className="qr-studio-settings min-w-0 w-full max-lg:order-1" data-qr-keep-selection>
           <form
             ref={customizeRef}
             onSubmit={(e) => e.preventDefault()}

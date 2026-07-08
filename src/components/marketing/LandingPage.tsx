@@ -2,15 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { createClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { StarspinLogo, StarspinMark } from "@/components/StarspinLogo";
-import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
+import { StarspinLogo } from "@/components/StarspinLogo";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { CONTACT_EMAIL } from "@/lib/brand";
-import { MarketingQrIcon, MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
+import { MarketingSpinWheel } from "@/components/marketing/MarketingSpinWheel";
 import { PricingPlans } from "@/components/billing/PricingPlans";
 import { PageScrollFallers } from "@/components/marketing/PageScrollFallers";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
@@ -21,18 +21,42 @@ import { AdvantageCopy } from "@/components/marketing/AdvantageCopy";
 import { getMarketingAdvantages } from "@/lib/marketing-advantages";
 import "./cadeo-styles.css";
 
+/** Lightweight client-side auth check so the nav/hero can point straight to the dashboard. */
+function useIsAuthed() {
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    try {
+      const supabase = createClient();
+      void supabase.auth.getSession().then(({ data }) => {
+        if (active) setAuthed(Boolean(data.session));
+      });
+    } catch {
+      /* env missing (local) — stay logged-out */
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  return authed;
+}
+
 function Logo() {
   return <StarspinLogo href="/" variant="light" size="md" />;
 }
 
-function Nav() {
+function Nav({ authed }: { authed: boolean }) {
   const { t } = useI18n();
   const menuItems: MobileMenuItem[] = [
-    { type: "anchor", href: "#features", label: t("marketing.navFeatures") },
+    { type: "anchor", href: "#how", label: t("marketing.navHow") },
     { type: "anchor", href: "#pricing", label: t("marketing.navPricing") },
     { type: "anchor", href: "#faq", label: t("marketing.navFaq") },
-    { type: "link", href: "/login", label: t("marketing.navLogin") },
-    { type: "link", href: "/login?mode=signup", label: t("marketing.navSignup"), emphasis: true },
+    ...(authed
+      ? [{ type: "link" as const, href: "/dashboard", label: t("marketing.navDashboard"), emphasis: true }]
+      : [
+          { type: "link" as const, href: "/login", label: t("marketing.navLogin") },
+          { type: "link" as const, href: "/login?mode=signup", label: t("marketing.navSignup"), emphasis: true },
+        ]),
   ];
 
   return (
@@ -40,17 +64,25 @@ function Nav() {
       <nav className="cadeo-nav">
         <Logo />
         <div className="cadeo-nav-links">
-          <a href="#features">{t("marketing.navFeatures")}</a>
+          <a href="#how">{t("marketing.navHow")}</a>
           <a href="#pricing">{t("marketing.navPricing")}</a>
           <a href="#faq">{t("marketing.navFaq")}</a>
         </div>
         <div className="cadeo-nav-actions">
-          <Link href="/login" className="cadeo-btn cadeo-btn-outline cadeo-nav-auth-btn">
-            {t("marketing.navLogin")}
-          </Link>
-          <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-nav-auth-btn">
-            {t("marketing.navSignup")}
-          </Link>
+          {authed ? (
+            <Link href="/dashboard" className="cadeo-btn cadeo-btn-yellow cadeo-nav-auth-btn">
+              {t("marketing.navDashboard")}
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="cadeo-btn cadeo-btn-outline cadeo-nav-auth-btn">
+                {t("marketing.navLogin")}
+              </Link>
+              <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-nav-auth-btn">
+                {t("marketing.navSignup")}
+              </Link>
+            </>
+          )}
           <div className="cadeo-nav-locale">
             <LocaleSwitcher variant="brutal" />
           </div>
@@ -61,24 +93,7 @@ function Nav() {
   );
 }
 
-function HeroWheelPhone() {
-  return (
-    <div className="cadeo-hero-phone" aria-hidden>
-      <div className="cadeo-hero-phone-frame">
-        <div className="cadeo-hero-phone-notch" />
-        <div className="cadeo-hero-phone-screen">
-          <p className="cadeo-hero-phone-label">Scan · Review · Spin</p>
-          <div className="cadeo-hero-phone-wheel-wrap">
-            <MarketingSpinWheel size={72} animate />
-          </div>
-          <div className="cadeo-hero-phone-cta">SPIN!</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Hero() {
+function Hero({ authed }: { authed: boolean }) {
   const { t } = useI18n();
   const badges: { cls: string; brand: SocialBrand; text: string }[] = [
     { cls: "cadeo-stat-badge--white", brand: "google", text: "+351 Google" },
@@ -102,16 +117,18 @@ function Hero() {
             <span className="cadeo-hero-accent">{t("marketing.heroTitleAccent")}</span>
           </h1>
           <p className="cadeo-hero-lead">{t("marketing.heroSubtitle")}</p>
-          <p className="cadeo-sub cadeo-hero-body">{t("marketing.heroBody")}</p>
           <div className="cadeo-hero-actions">
-            <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
-              {t("marketing.heroSignup")}
-            </Link>
-            <Link href="/login" className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
-              {t("marketing.heroLogin")}
-            </Link>
-            <a href="#pricing" className="cadeo-btn cadeo-btn-outline cadeo-btn-lg">
-              {t("marketing.heroPricing")}
+            {authed ? (
+              <Link href="/dashboard" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
+                {t("marketing.navDashboard")}
+              </Link>
+            ) : (
+              <Link href="/login?mode=signup" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
+                {t("marketing.heroSignup")}
+              </Link>
+            )}
+            <a href="#how" className="cadeo-btn cadeo-btn-outline cadeo-btn-lg">
+              {t("marketing.navHow")}
             </a>
           </div>
           <p className="cadeo-hero-mini-trust">
@@ -148,7 +165,6 @@ function Hero() {
               <div className="cadeo-hero-photo-shade" />
               <div className="cadeo-hero-photo-tag">QR → Play → Win</div>
             </div>
-            <HeroWheelPhone />
           </div>
         </Reveal>
       </div>
@@ -156,329 +172,116 @@ function Hero() {
   );
 }
 
-function Pillars() {
+function JourneyPhoneScan() {
   const { t } = useI18n();
-  const items = [
-    { cls: "cadeo-pillar--purple", num: "01", icon: "✨", text: t("marketing.pillar1") },
-    { cls: "cadeo-pillar--pink", num: "02", icon: "🤝", text: t("marketing.pillar2") },
-    { cls: "cadeo-pillar--blue", num: "03", icon: "📊", text: t("marketing.pillar3") },
-    { cls: "cadeo-pillar--yellow", num: "04", icon: "🏆", text: t("marketing.pillar4") },
+  return (
+    <div className="cadeo-jphone" aria-hidden>
+      <span className="cadeo-jnotch" />
+      <div className="cadeo-jscreen cadeo-jscreen--game">
+        <div className="cadeo-jgame">
+          <span className="cadeo-jvenue">★ YOUR VENUE</span>
+          <p className="cadeo-jgame-title">{t("marketing.journeyPlay")}</p>
+          <div className="cadeo-jwheel">
+            <MarketingSpinWheel size={130} animate />
+          </div>
+          <span className="cadeo-jgame-btn">{t("public.wheelSpin")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JourneyPhoneTasks() {
+  const { t } = useI18n();
+  const tasks: { brand: SocialBrand; label: string; done?: boolean }[] = [
+    { brand: "google", label: t("public.reviewTitleFirst"), done: true },
+    { brand: "instagram", label: t("public.follow_instagram") },
+    { brand: "tripadvisor", label: t("public.follow_tripadvisor") },
+  ];
+  return (
+    <div className="cadeo-jphone" aria-hidden>
+      <span className="cadeo-jnotch" />
+      <div className="cadeo-jscreen cadeo-jscreen--tasks">
+        <div className="cadeo-jtasks">
+          <p className="cadeo-jtasks-title">{t("public.headerSubtitle")}</p>
+          {tasks.map((task) => (
+            <div key={task.label} className={`cadeo-jtask ${task.done ? "cadeo-jtask--done" : ""}`}>
+              <span className="cadeo-jtask-ic">
+                <SocialIcon brand={task.brand} size={15} />
+              </span>
+              <span className="cadeo-jtask-label">{task.label}</span>
+              <span className="cadeo-jtask-check">{task.done ? "✓" : ""}</span>
+            </div>
+          ))}
+          <div className="cadeo-jtask-bar">
+            <div className="cadeo-jtask-bar-fill" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JourneyPhoneWin() {
+  const { t } = useI18n();
+  return (
+    <div className="cadeo-jphone" aria-hidden>
+      <span className="cadeo-jnotch" />
+      <div className="cadeo-jscreen cadeo-jscreen--win">
+        <div className="cadeo-jwin">
+          <span className="cadeo-jwin-badge">🎉 {t("public.claimTitle")}</span>
+          <p className="cadeo-jwin-prize">{t("marketing.wheelSlice2")}</p>
+          <div className="cadeo-jfield">{t("public.claimFirstName")}</div>
+          <div className="cadeo-jfield">{t("public.claimEmail")}</div>
+          <span className="cadeo-jclaim-btn">{t("public.claimSubmit")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HowItWorks() {
+  const { t } = useI18n();
+  const steps = [
+    { n: "1", phone: <JourneyPhoneScan />, title: t("marketing.howStep1Title"), body: t("marketing.howStep1Body") },
+    { n: "2", phone: <JourneyPhoneTasks />, title: t("marketing.howStep2Title"), body: t("marketing.howStep2Body") },
+    { n: "3", phone: <JourneyPhoneWin />, title: t("marketing.howStep3Title"), body: t("marketing.howStep3Body") },
   ];
 
   return (
-    <section className="cadeo-section cadeo-pillars-section">
+    <section id="how" className="cadeo-section cadeo-how-section">
       <div className="cadeo-section-inner">
         <Reveal className="cadeo-section-head">
-          <p className="cadeo-section-eyebrow">{t("marketing.pillarsEyebrow")}</p>
-          <h2 className="cadeo-h2 text-center">{t("marketing.pillarsTitle")}</h2>
+          <p className="cadeo-section-eyebrow">{t("marketing.howEyebrow")}</p>
+          <h2 className="cadeo-h2 text-center">{t("marketing.howTitle")}</h2>
+          <p className="cadeo-sub mx-auto max-w-xl text-center">{t("marketing.howSub")}</p>
         </Reveal>
-        <RevealStagger className="cadeo-pillars-grid">
-          {items.map((item) => (
-            <RevealItem key={item.text} className="cadeo-pillar-item">
-              <article className={`cadeo-pillar ${item.cls}`}>
-                <div className="cadeo-pillar-top">
-                  <span className="cadeo-pillar-level">LVL {item.num}</span>
-                  <span className="cadeo-pillar-num">{item.num}</span>
-                </div>
-                <div className="cadeo-pillar-icon-game" aria-hidden>
-                  {item.icon}
-                </div>
-                <div className="cadeo-pillar-xp" aria-hidden>
-                  <div className="cadeo-pillar-xp-fill" style={{ width: `${Number(item.num) * 25}%` }} />
-                </div>
-                <p className="cadeo-pillar-text">{item.text}</p>
-              </article>
+        <RevealStagger className="cadeo-journey">
+          {steps.map((step) => (
+            <RevealItem key={step.n} className="cadeo-journey-step">
+              <div className="cadeo-journey-phone-wrap">
+                <span className="cadeo-journey-num">{step.n}</span>
+                {step.phone}
+              </div>
+              <h3 className="cadeo-journey-title">{step.title}</h3>
+              <p className="cadeo-journey-body">{step.body}</p>
             </RevealItem>
           ))}
         </RevealStagger>
-        <Reveal className="cadeo-pillars-cta">
-          <a href="#features" className="cadeo-btn cadeo-btn-yellow cadeo-btn-lg">
-            {t("marketing.allFeatures")}
-          </a>
-        </Reveal>
       </div>
     </section>
   );
 }
 
-function WheelFlyer() {
-  return (
-    <div className="cadeo-flyer-wrap">
-      <div className="cadeo-card cadeo-flyer">
-        <div className="cadeo-flyer-brand">
-          <StarspinMark size={22} />
-          <span className="cadeo-flyer-brand-name">STARSPIN</span>
-        </div>
-        <div className="cadeo-flyer-venue-strip">
-          <span>YOUR VENUE</span>
-          <span className="cadeo-flyer-venue-tag">SCAN ME</span>
-        </div>
-        <div className="cadeo-flyer-wheel-wrap">
-          <MarketingSpinWheel size={168} />
-          <div className="cadeo-flyer-qr">
-            <MarketingQrIcon size={22} />
-            <span>Scan to play</span>
-          </div>
-        </div>
-        <div className="cadeo-flyer-steps">
-          {[
-            { n: "1", label: "Scan" },
-            { n: "2", label: "Spin" },
-            { n: "3", label: "Win" },
-          ].map((step) => (
-            <div key={step.label} className="cadeo-flyer-step">
-              <span className="cadeo-flyer-step-num">{step.n}</span>
-              <span>{step.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PhoneScene() {
-  const { t } = useI18n();
-  return (
-    <div className="cadeo-phone-scene">
-      <div className="cadeo-phone-scene-inner">
-        <div className="cadeo-phone">
-          <div className="cadeo-phone-screen">
-            <div className="cadeo-phone-screen-bg cadeo-phone-screen-bg--game" />
-            <div className="cadeo-phone-notch" />
-            <div className="cadeo-phone-screen-content">
-              <p className="cadeo-phone-title">Play &amp; win a prize!</p>
-              <div className="cadeo-phone-wheel-slot">
-                <MarketingSpinWheel size={100} animate className="cadeo-phone-wheel-svg" />
-              </div>
-              <button type="button" className="cadeo-phone-play-btn">
-                PLAY!
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="cadeo-review-card">
-          <span className="cadeo-review-badge">Step 1</span>
-          <h4>{t("public.reviewTitle")}</h4>
-          <ol className="cadeo-review-steps">
-            <li>Leave a Google review</li>
-            <li>Come back to this page</li>
-            <li>Spin the wheel</li>
-          </ol>
-          <div className="cadeo-review-btn">
-            <span className="cadeo-review-btn-icon">
-              <SocialIcon brand="google" size={14} />
-            </span>
-            Rate on Google
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function JourneyPreview() {
-  const { t } = useI18n();
-  const steps: { brand: SocialBrand; label: string; pill: string }[] = [
-    { brand: "google", label: t("dashboard.flowStep_google_review"), pill: "cadeo-visit-pill--google" },
-    { brand: "instagram", label: t("dashboard.flowStep_instagram"), pill: "cadeo-visit-pill--insta" },
-    { brand: "tripadvisor", label: t("dashboard.flowStep_tripadvisor"), pill: "cadeo-visit-pill--tripadvisor" },
-  ];
-  const total = steps.length + 1;
-
-  return (
-    <div className="cadeo-visits-block">
-      <RevealStagger className="cadeo-visits">
-        {steps.map((step, i) => (
-          <RevealItem key={step.label} className="cadeo-visit-item">
-            <div className="cadeo-visit-card">
-              <span className="cadeo-visit-step">{String(i + 1).padStart(2, "0")}</span>
-              <p className="cadeo-visit-label">{step.label}</p>
-              <div className="cadeo-visit-xp" aria-hidden>
-                <div className="cadeo-visit-xp-fill" style={{ width: `${((i + 1) / total) * 100}%` }} />
-              </div>
-              <span className={`cadeo-visit-pill ${step.pill}`}>
-                <span className="cadeo-visit-pill-icon">
-                  <SocialIcon brand={step.brand} size={22} />
-                </span>
-                <span className="cadeo-visit-pill-text">{step.label}</span>
-              </span>
-            </div>
-          </RevealItem>
-        ))}
-        <RevealItem className="cadeo-visit-item">
-          <div className="cadeo-visit-card">
-            <span className="cadeo-visit-step">{String(steps.length + 1).padStart(2, "0")}</span>
-            <p className="cadeo-visit-label">{t("public.stepWheel")}</p>
-            <div className="cadeo-visit-xp" aria-hidden>
-              <div className="cadeo-visit-xp-fill" style={{ width: "100%" }} />
-            </div>
-            <span className="cadeo-visit-pill cadeo-visit-pill--yellow">
-              <span className="cadeo-visit-pill-icon cadeo-visit-pill-icon--wheel">
-                <JourneyWheelIcon size={22} />
-              </span>
-              <span className="cadeo-visit-pill-text">{t("public.stepWheel")}</span>
-            </span>
-          </div>
-        </RevealItem>
-      </RevealStagger>
-    </div>
-  );
-}
-
-function DataScene() {
-  return (
-    <div className="cadeo-data-scene">
-      <div className="cadeo-poll-card cadeo-poll-card--1">How was the welcome?</div>
-      <div className="cadeo-poll-card cadeo-poll-card--2">Rate our service</div>
-      <div className="cadeo-poll-card cadeo-poll-card--3">Your opinion matters</div>
-      <div className="cadeo-win-phone">
-        <div className="cadeo-win-screen">
-          <div className="cadeo-win-screen-content">
-            <p className="cadeo-win-title">YOU WON!<br />1 FREE DRINK</p>
-            <div className="cadeo-form-field">First name</div>
-            <div className="cadeo-form-field">Email</div>
-            <div className="cadeo-form-field">Phone</div>
-            <div className="cadeo-win-claim">Claim my prize</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GiftScene() {
-  const tags = [
-    { cls: "cadeo-gift-tag--purple", text: "Redeem on next visit" },
-    { cls: "cadeo-gift-tag--white", text: "Valid 1 month" },
-    { cls: "cadeo-gift-tag--yellow", text: "Min. spend $5" },
-    { cls: "cadeo-gift-tag--pink", text: "In-store only" },
-  ];
-
-  return (
-    <div className="cadeo-gift-scene">
-      {tags.map((tag) => (
-        <div key={tag.text} className={`cadeo-gift-tag ${tag.cls}`}>
-          {tag.text}
-        </div>
-      ))}
-      <div className="cadeo-gift-box">
-        <span className="cadeo-gift-emoji" aria-hidden>
-          🎁
-        </span>
-        <div className="cadeo-gift-wheel">
-          <MarketingSpinWheel size={150} animate className="cadeo-gift-wheel-svg" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Features() {
-  const { t } = useI18n();
-
-  return (
-    <section id="features" className="cadeo-section">
-      <div className="cadeo-section-inner">
-        <div className="cadeo-feature">
-          <Reveal className="cadeo-feature-visual" y={32}>
-            <WheelFlyer />
-          </Reveal>
-          <Reveal className="cadeo-feature-copy" delay={0.06}>
-            <p className="cadeo-feature-label">{t("marketing.scanSubtitle")}</p>
-            <h3 className="cadeo-feature-title">{t("marketing.scanTitle")}</h3>
-            <p className="cadeo-feature-body">{t("marketing.scanBody")}</p>
-          </Reveal>
-        </div>
-
-        <div className="cadeo-feature cadeo-feature--reverse">
-          <Reveal className="cadeo-feature-visual" y={32}>
-            <PhoneScene />
-          </Reveal>
-          <Reveal className="cadeo-feature-copy" delay={0.06}>
-            <p className="cadeo-feature-label">{t("marketing.funSubtitle")}</p>
-            <h3 className="cadeo-feature-title">{t("marketing.funTitle")}</h3>
-            <p className="cadeo-feature-body">{t("marketing.funBody")}</p>
-          </Reveal>
-        </div>
-
-        <div className="cadeo-visits-intro">
-          <Reveal>
-            <h3 className="cadeo-h2">{t("marketing.visitsTitle")}</h3>
-            <p className="cadeo-sub mx-auto max-w-xl">{t("marketing.visitsBody")}</p>
-          </Reveal>
-          <JourneyPreview />
-        </div>
-
-        <Reveal className="cadeo-quote" y={28}>
-          <div className="cadeo-quote-layout">
-            <div className="cadeo-quote-photo">
-              <Image
-                src={marketingImages.blackBarbershopOwner}
-                alt="Duc, owner of The Black Barbershop"
-                fill
-                sizes="(max-width: 768px) 90vw, 280px"
-                unoptimized
-                className="cadeo-quote-photo-img"
-              />
-            </div>
-            <div className="cadeo-quote-content">
-              <p className="cadeo-quote-title">{t("marketing.quote")}</p>
-              <p className="cadeo-quote-body">{t("marketing.quoteBody")}</p>
-              <div className="cadeo-quote-author">
-                <div>
-                  <p className="cadeo-quote-author-name">{t("marketing.quoteAuthor")}</p>
-                  <p className="cadeo-quote-author-role">{t("marketing.quoteRole")}</p>
-                </div>
-              </div>
-              <div className="cadeo-quote-btn">
-                <Link href="/login" className="cadeo-btn cadeo-btn-yellow">
-                  {t("marketing.footerDemo")}
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-
-        <div className="cadeo-feature">
-          <Reveal className="cadeo-feature-visual" y={32}>
-            <DataScene />
-          </Reveal>
-          <Reveal className="cadeo-feature-copy" delay={0.06}>
-            <p className="cadeo-feature-label">{t("dashboard.navCrm")}</p>
-            <h3 className="cadeo-feature-title">{t("marketing.dataTitle")}</h3>
-            <p className="cadeo-feature-body">{t("marketing.dataBody")}</p>
-          </Reveal>
-        </div>
-
-        <div className="cadeo-feature cadeo-feature--reverse">
-          <Reveal className="cadeo-feature-visual" y={32}>
-            <GiftScene />
-          </Reveal>
-          <Reveal className="cadeo-feature-copy" delay={0.06}>
-            <p className="cadeo-feature-label">{t("marketing.prizeSubtitle")}</p>
-            <h3 className="cadeo-feature-title">{t("marketing.prizeTitle")}</h3>
-            <p className="cadeo-feature-body">{t("marketing.prizeBody")}</p>
-          </Reveal>
-        </div>
-
-        <Reveal className="text-center">
-          <h3 className="cadeo-h2">{t("marketing.easyTitle")}</h3>
-          <p className="cadeo-sub mx-auto max-w-lg">{t("marketing.easyBody")}</p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-function Advantages() {
+function WhatYouGet() {
   const { t } = useI18n();
   const items = getMarketingAdvantages(t);
 
   return (
-    <section className="cadeo-section cadeo-section--tight-top">
+    <section id="features" className="cadeo-section cadeo-section--tight-top">
       <div className="cadeo-section-inner">
-        <Reveal>
+        <Reveal className="cadeo-section-head">
+          <p className="cadeo-section-eyebrow">{t("marketing.pillarsEyebrow")}</p>
           <h2 className="cadeo-h2 text-center">{t("marketing.advantagesTitle")}</h2>
         </Reveal>
         <RevealStagger className="cadeo-adv-grid">
@@ -508,40 +311,21 @@ function Pricing() {
     t("marketing.priceF7"),
     t("marketing.priceF8"),
   ];
-  const sideAdv = getMarketingAdvantages(t);
 
   return (
     <section id="pricing" className="cadeo-section">
       <div className="cadeo-section-inner cadeo-pricing-section">
+        <Reveal className="cadeo-section-head">
+          <h2 className="cadeo-h2 text-center">{t("marketing.navPricing")}</h2>
+          <p className="cadeo-sub mx-auto max-w-xl text-center">{t("marketing.pricingIncludes")}</p>
+        </Reveal>
         <Reveal y={30}>
-          <div className="cadeo-pricing-wrap">
-          <div className="cadeo-pricing-inner">
-            <div className="cadeo-pricing-side">
-              <h3>{t("marketing.advantagesTitle")}</h3>
-              <ul>
-                {sideAdv.map((item) => (
-                  <li key={item.num}>
-                    <span>🎯</span>
-                    <AdvantageCopy title={item.title} desc={item.desc} />
-                  </li>
-                ))}
-              </ul>
-              <div className="cadeo-signup-box">
-                <p className="cadeo-signup-banner">{t("marketing.signupBanner")}</p>
-                <span className="cadeo-signup-badge">{t("marketing.signupBannerSub")}</span>
-                <div className="mt-4">
-                  <Link href="/login" className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
-                    {t("marketing.navCta")}
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <div className="cadeo-pricing-wrap cadeo-pricing-wrap--solo">
             <div className="cadeo-pricing-main">
               <div className="cadeo-pricing-header">
                 <h3 className="cadeo-pricing-name">{t("marketing.pricingName")}</h3>
                 <PricingPlans />
               </div>
-              <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
               <div className="cadeo-pricing-features">
                 {features.map((f) => (
                   <div key={f} className="cadeo-check">
@@ -557,7 +341,6 @@ function Pricing() {
                 ))}
               </div>
             </div>
-          </div>
           </div>
         </Reveal>
       </div>
@@ -631,7 +414,7 @@ function Footer() {
           <div className="cadeo-footer-col">
             <span className="cadeo-footer-sticker">{t("marketing.footerSocial")}</span>
             <ul className="cadeo-footer-links">
-              <li><Link href="/login">{t("marketing.footerDemo")}</Link></li>
+              <li><a href="#how">{t("marketing.navHow")}</a></li>
               <li><a href="#pricing">{t("marketing.navPricing")}</a></li>
             </ul>
           </div>
@@ -679,16 +462,16 @@ function CookieBanner() {
 }
 
 export function LandingPage() {
+  const authed = useIsAuthed();
   return (
     <div className="cadeo-page">
       <MobileAppBanner />
       <PageScrollFallers />
-      <Nav />
+      <Nav authed={authed} />
       <main>
-        <Hero />
-        <Pillars />
-        <Features />
-        <Advantages />
+        <Hero authed={authed} />
+        <HowItWorks />
+        <WhatYouGet />
         <Pricing />
         <FAQ />
       </main>
