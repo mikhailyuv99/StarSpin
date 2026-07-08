@@ -7,50 +7,61 @@ import { useTranslations } from "@/i18n/client";
 export function StepIndicator({
   current,
   steps,
+  onStepClick,
+  showResult = false,
+  forceMobileLayout = false,
 }: {
   current: PublicStep;
   steps: PublicStep[];
   accent?: string;
+  /** Preview only: jump to a step when a pill is tapped. */
+  onStepClick?: (step: PublicStep) => void;
+  /** Preview only: include the final result step in the pill row. */
+  showResult?: boolean;
+  /** Dashboard phone preview: use mobile breakpoints only (<640px). */
+  forceMobileLayout?: boolean;
 }) {
   const t = useTranslations();
-  const displaySteps = steps.filter((s) => s !== "result");
-  const position = journeyStepPosition(steps, current);
+  const displaySteps = steps.filter((s) => showResult || s !== "result");
+  const position = journeyStepPosition(steps, current, { includeResult: showResult });
 
-  const currentIndex = displaySteps.indexOf(current === "result" ? "claim" : current);
+  const resolvedCurrent = current === "result" ? "result" : current;
+  const currentIndex = displaySteps.indexOf(resolvedCurrent);
 
   return (
-    <div className="mb-5 sm:mb-6">
+    <div className={`mb-5${forceMobileLayout ? "" : " sm:mb-6"}${onStepClick ? " public-step-nav" : ""}`}>
       <p className="mb-3 text-center text-xs font-extrabold uppercase tracking-wider text-muted">
         {t("public.journeyStepHeading", {
           current: position.current,
           total: position.total,
         })}
       </p>
-      <div className="flex justify-center gap-1 sm:gap-1.5">
+      <div className={`flex justify-center gap-1${forceMobileLayout ? "" : " sm:gap-1.5"}`}>
         {displaySteps.map((step, i) => {
           const onResult = current === "result";
-          const done = onResult ? true : i < currentIndex;
-          const active = !onResult && i === currentIndex;
-          const state = done ? (active ? "active" : "done") : "idle";
+          const done = onResult ? i < displaySteps.length - 1 : i < currentIndex;
+          const active = onResult ? step === "result" : i === currentIndex;
+          const state = active ? "active" : done ? "done" : "idle";
+          const label = t("public.journeyStepHeading", { current: i + 1, total: displaySteps.length });
+          const pillClass = `public-step-pill public-step-pill--${state}${onStepClick ? " public-step-pill--nav" : ""}`;
 
           return (
             <div key={`${step}-${i}`} className="flex min-w-0 max-w-[3.5rem] flex-1 flex-col items-center">
-              <div
-                className={`public-step-pill public-step-pill--${state}`}
-                style={
-                  done || active
-                    ? {
-                        backgroundColor: "#0a0a0a",
-                        color: "#ffffff",
-                        borderWidth: active ? 3 : 2,
-                      }
-                    : undefined
-                }
-                aria-current={active ? "step" : undefined}
-                aria-label={t("public.journeyStepHeading", { current: i + 1, total: displaySteps.length })}
-              >
-                {done ? "✓" : i + 1}
-              </div>
+              {onStepClick ? (
+                <button
+                  type="button"
+                  className={pillClass}
+                  aria-current={active ? "step" : undefined}
+                  aria-label={label}
+                  onClick={() => onStepClick(step)}
+                >
+                  {done && !active ? "✓" : step === "result" ? "★" : i + 1}
+                </button>
+              ) : (
+                <div className={pillClass} aria-current={active ? "step" : undefined} aria-label={label}>
+                  {done && !active ? "✓" : i + 1}
+                </div>
+              )}
             </div>
           );
         })}

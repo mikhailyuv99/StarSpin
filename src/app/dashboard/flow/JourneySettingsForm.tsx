@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { ColorPickButton } from "@/components/dashboard/ColorPickButton";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
+import { JourneyThemePicker } from "@/components/dashboard/JourneyThemePicker";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
+import { parseJourneyTheme, type JourneyTemplateId } from "@/lib/journey-theme";
 import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
 import { createClient } from "@/lib/supabase/client";
@@ -17,7 +19,7 @@ import {
   normalizeFlowSteps,
   type FlowActionStep,
 } from "@/lib/flow-steps";
-import type { Merchant } from "@/lib/types";
+import type { Merchant, Prize } from "@/lib/types";
 
 const STEP_ACCENT: Record<FlowActionStep, string> = {
   google_review: "#9b7fe8",
@@ -65,6 +67,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
   const t = useTranslations();
   const router = useRouter();
   const [steps, setSteps] = useState<FlowActionStep[]>(normalizeFlowSteps(merchant.flow_steps));
+  const initialTheme = useMemo(() => parseJourneyTheme(merchant.journey_theme), [merchant.journey_theme]);
+  const [journeyTemplate, setJourneyTemplate] = useState<JourneyTemplateId>(initialTheme.template);
+  const [journeyAccent, setJourneyAccent] = useState<string>(initialTheme.accent ?? "");
   const [form, setForm] = useState({
     name: merchant.name,
     slug: merchant.slug,
@@ -90,6 +95,47 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     () => FLOW_ACTION_STEPS.filter((step) => !steps.includes(step)),
     [steps],
   );
+
+  // Live merchant fed to the theme picker's phone preview — mirrors the form.
+  const previewMerchant = useMemo<Merchant>(
+    () => ({
+      ...merchant,
+      name: form.name || merchant.name,
+      slug: form.slug || merchant.slug,
+      primary_color: form.primary_color,
+      secondary_color: form.secondary_color,
+      logo_url: form.logo_url || null,
+      google_review_link: form.google_review_link || null,
+      social_links: {
+        instagram: form.instagram || undefined,
+        facebook: form.facebook || undefined,
+        tiktok: form.tiktok || undefined,
+        tripadvisor: form.tripadvisor || undefined,
+      },
+      flow_steps: steps,
+      customer_page_headline: form.customer_page_headline || null,
+      customer_page_subtitle: form.customer_page_subtitle || null,
+      spin_button_label: form.spin_button_label || null,
+    }),
+    [merchant, form, steps],
+  );
+
+  const previewPrizes = useMemo<Prize[]>(() => {
+    const base = {
+      merchant_id: merchant.id,
+      stock_remaining: null,
+      active: true,
+      created_at: "",
+    } as const;
+    return [
+      { ...base, id: "pp1", label: t("dashboard.previewPrize1"), probability_weight: 30 },
+      { ...base, id: "pp2", label: t("dashboard.previewPrize2"), probability_weight: 25 },
+      { ...base, id: "pp3", label: t("dashboard.previewPrize3"), probability_weight: 20 },
+      { ...base, id: "pp4", label: t("dashboard.previewPrize4"), probability_weight: 15 },
+      { ...base, id: "pp5", label: t("dashboard.previewPrize5"), probability_weight: 7 },
+      { ...base, id: "pp6", label: t("dashboard.previewPrize6"), probability_weight: 3 },
+    ];
+  }, [merchant.id, t]);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -208,6 +254,11 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         customer_page_headline: form.customer_page_headline.trim() || null,
         customer_page_subtitle: form.customer_page_subtitle.trim() || null,
         spin_button_label: form.spin_button_label.trim() || null,
+        journey_theme: {
+          v: 1,
+          template: journeyTemplate,
+          accent: journeyAccent.trim() || null,
+        },
       })
       .eq("id", merchant.id);
 
@@ -224,7 +275,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
       {message && <p className={ui.alertSuccess}>{message}</p>}
       {error && <p className={ui.alertError}>{error}</p>}
 
@@ -268,6 +319,21 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
             onChange={(v) => update("secondary_color", v)}
           />
         </div>
+      </section>
+
+      <section className={`${ui.card} space-y-5`}>
+        <div>
+          <h2 className={ui.h2}>{t("dashboard.journeyThemeTitle")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("dashboard.journeyThemeSubtitle")}</p>
+        </div>
+        <JourneyThemePicker
+          template={journeyTemplate}
+          accent={journeyAccent}
+          onTemplateChange={setJourneyTemplate}
+          onAccentChange={setJourneyAccent}
+          previewMerchant={previewMerchant}
+          previewPrizes={previewPrizes}
+        />
       </section>
 
       <section className={`${ui.card} space-y-5`}>

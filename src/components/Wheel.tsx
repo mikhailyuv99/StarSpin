@@ -12,6 +12,17 @@ import {
 } from "@/lib/wheel";
 import { WheelSliceLabels, wheelClipPrefix } from "@/components/WheelSliceLabels";
 
+export interface WheelColors {
+  palette: string[];
+  stroke: string;
+  label: string;
+  rim: string;
+  hub: string;
+  hubDot: string;
+  pointer: string;
+  pointerInner: string;
+}
+
 interface WheelProps {
   prizes: Prize[];
   primaryColor: string;
@@ -21,9 +32,21 @@ interface WheelProps {
   setSpinning: (v: boolean) => void;
   targetPrizeId?: string;
   hideSpinButton?: boolean;
+  colors?: WheelColors;
+  /** Fixed wheel diameter (px). Used in the dashboard phone preview. */
+  sizePx?: number;
 }
 
-const SLICE_COLORS = ["#f5e08e", "#d8ccf5", "#f48fb1", "#a8e6cf", "#b8cfe8", "#f4a89a"];
+const DEFAULT_WHEEL_COLORS: WheelColors = {
+  palette: ["#f5e08e", "#d8ccf5", "#f48fb1", "#a8e6cf", "#b8cfe8", "#f4a89a"],
+  stroke: "#0a0a0a",
+  label: "#0a0a0a",
+  rim: "#0a0a0a",
+  hub: "#ffffff",
+  hubDot: "#f5e08e",
+  pointer: "#0a0a0a",
+  pointerInner: "#f5e08e",
+};
 
 export function Wheel({
   prizes,
@@ -33,10 +56,12 @@ export function Wheel({
   setSpinning,
   targetPrizeId,
   hideSpinButton = false,
+  colors = DEFAULT_WHEEL_COLORS,
+  sizePx,
 }: WheelProps) {
   const t = useTranslations();
-  const [rotation, setRotation] = useState(0);
-  const [wheelSize, setWheelSize] = useState(280);
+  const [dynamicSize, setDynamicSize] = useState(() => sizePx ?? 280);
+  const wheelSize = sizePx ?? dynamicSize;
   const spunRef = useRef<string | undefined>(undefined);
   const slices = prizeEqualSliceAngles(prizes);
   const clipPrefix = wheelClipPrefix(slices.map((s) => s.prize));
@@ -47,15 +72,18 @@ export function Wheel({
   const pointerW = Math.round(wheelSize * 0.22);
   const pointerH = Math.round(wheelSize * 0.17);
 
+  const [rotation, setRotation] = useState(0);
+
   useEffect(() => {
+    if (sizePx != null) return;
     const update = () => {
       const w = window.innerWidth;
-      setWheelSize(Math.min(Math.max(w - 72, 260), 320));
+      setDynamicSize(Math.min(Math.max(w - 72, 260), 320));
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [sizePx]);
 
   const spin = useCallback(() => {
     if (spinning || slices.length === 0) return;
@@ -101,7 +129,12 @@ export function Wheel({
     <div className="public-wheel-stage">
       <div className="marketing-wheel-wrap" style={{ width: wheelSize, height: wheelSize }}>
         <div className="marketing-wheel-pointer" aria-hidden>
-          <WheelPointer width={pointerW} height={pointerH} />
+          <WheelPointer
+            width={pointerW}
+            height={pointerH}
+            color={colors.pointer}
+            innerColor={colors.pointerInner}
+          />
         </div>
 
         <svg
@@ -111,7 +144,7 @@ export function Wheel({
           className="marketing-wheel block"
           aria-hidden
         >
-          <circle cx={cx} cy={cy} r={r + 3} fill="#fff" stroke="#0a0a0a" strokeWidth="2.5" />
+          <circle cx={cx} cy={cy} r={r + 3} fill={colors.hub} stroke={colors.rim} strokeWidth="2.5" />
           <g
             className="marketing-wheel__disc"
             style={{
@@ -120,14 +153,14 @@ export function Wheel({
             }}
           >
             {slices.map((slice, i) => {
-              const fill = SLICE_COLORS[i % SLICE_COLORS.length]!;
+              const fill = colors.palette[i % colors.palette.length]!;
 
               return (
                 <path
                   key={slice.prize.id}
                   d={describeSlice(cx, cy, r, slice.start, slice.end)}
                   fill={fill}
-                  stroke="#0a0a0a"
+                  stroke={colors.stroke}
                   strokeWidth="1.25"
                 />
               );
@@ -138,10 +171,11 @@ export function Wheel({
               cy={cy}
               r={r}
               clipIdPrefix={clipPrefix}
+              color={colors.label}
             />
           </g>
-          <circle cx={cx} cy={cy} r="9" fill="#fff" stroke="#0a0a0a" strokeWidth="2" />
-          <circle cx={cx} cy={cy} r="3.5" fill="#f5e08e" stroke="#0a0a0a" strokeWidth="1.25" />
+          <circle cx={cx} cy={cy} r="9" fill={colors.hub} stroke={colors.rim} strokeWidth="2" />
+          <circle cx={cx} cy={cy} r="3.5" fill={colors.hubDot} stroke={colors.stroke} strokeWidth="1.25" />
         </svg>
       </div>
 

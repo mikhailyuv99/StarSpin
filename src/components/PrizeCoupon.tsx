@@ -8,30 +8,35 @@ export function PrizeCoupon({
   prizeCode,
   rules,
   compact = false,
+  forceMobileLayout = false,
 }: {
   prizeLabel: string;
   prizeCode: string;
   rules: RedemptionRulesSnapshot | null;
   compact?: boolean;
+  forceMobileLayout?: boolean;
 }) {
   const { t, locale } = useI18n();
   const ruleLines = rules ? formatRedemptionRuleLines(rules, t, locale) : [];
 
   return (
-    <div
-      className={`brutal-card border-dashed bg-[var(--c-cream)] text-center ${
-        compact ? "px-3 py-4" : "px-4 py-6"
-      }`}
-    >
+    <div className={`public-coupon text-center ${compact ? "px-3 py-4" : "px-5 py-6"}`}>
       <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{t("public.youWon")}</p>
       <p
-        className={`mt-2 font-[family-name:var(--font-display)] font-extrabold uppercase leading-tight text-ink ${
-          compact ? "text-lg" : "text-2xl sm:text-3xl"
+        className={`public-heading mt-2 font-extrabold leading-tight ${
+          compact ? "text-lg" : forceMobileLayout ? "text-2xl" : "text-2xl sm:text-3xl"
         }`}
       >
         {prizeLabel}
       </p>
-      <div className="mt-4 rounded-[12px] border-2 border-dashed border-black bg-white px-3 py-4">
+      <div
+        className="mt-4 border-2 border-dashed px-3 py-4"
+        style={{
+          borderRadius: "12px",
+          borderColor: "var(--pj-accent, #0a0a0a)",
+          background: "var(--pj-card-bg, #fff)",
+        }}
+      >
         <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{t("public.checkoutCode")}</p>
         <p className={`mt-2 font-mono font-extrabold tracking-wider text-ink ${compact ? "text-2xl" : "text-4xl"}`}>
           {prizeCode}
@@ -43,7 +48,7 @@ export function PrizeCoupon({
           <ul className="mt-2 space-y-1.5">
             {ruleLines.map((line) => (
               <li key={line} className="flex items-start gap-2 text-sm font-semibold text-ink">
-                <span className="mt-0.5 text-[var(--c-purple-deep)]" aria-hidden>
+                <span className="mt-0.5" style={{ color: "var(--pj-accent, var(--c-purple-deep))" }} aria-hidden>
                   ✓
                 </span>
                 <span>{line}</span>

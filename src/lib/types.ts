@@ -31,6 +31,7 @@ export interface Merchant {
   customer_page_headline?: string | null;
   customer_page_subtitle?: string | null;
   spin_button_label?: string | null;
+  journey_theme?: Record<string, unknown> | null;
   created_at: string;
 }
 

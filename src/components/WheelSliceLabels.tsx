@@ -12,12 +12,14 @@ export function WheelSliceLabels({
   cy,
   r,
   clipIdPrefix,
+  color = "#0a0a0a",
 }: {
   slices: { prize: { id: string; label: string }; start: number; end: number }[];
   cx: number;
   cy: number;
   r: number;
   clipIdPrefix: string;
+  color?: string;
 }) {
   const sliceCount = slices.length;
 
@@ -46,7 +48,7 @@ export function WheelSliceLabels({
             <text
               x={labelPos.x}
               y={labelPos.y}
-              fill="#0a0a0a"
+              fill={color}
               fontSize={layout.fontSize}
               fontWeight="800"
               textAnchor="middle"

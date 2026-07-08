@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import { MerchantInactiveNotice } from "./MerchantInactiveNotice";
 import type { Merchant, Prize } from "@/lib/types";
+import { journeyFontHref, parseJourneyTheme } from "@/lib/journey-theme";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,12 @@ export default async function PublicMerchantPage({
     .eq("active", true)
     .order("created_at");
 
+  const fontHref = journeyFontHref(parseJourneyTheme(merchant.journey_theme).template);
+
   return (
-    <PublicFlow merchant={merchant} prizes={activeWheelPrizes((prizes ?? []) as Prize[])} />
+    <>
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <PublicFlow merchant={merchant} prizes={activeWheelPrizes((prizes ?? []) as Prize[])} />
+    </>
   );
 }

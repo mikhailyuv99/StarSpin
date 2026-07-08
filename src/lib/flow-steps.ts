@@ -57,8 +57,14 @@ export function resolveActiveFlowSteps(merchant: Merchant): FlowActionStep[] {
   return configured.length > 0 ? configured : [...DEFAULT_FLOW_STEPS];
 }
 
-export function buildPublicStepOrder(merchant: Merchant): PublicStep[] {
-  return [...resolveActiveFlowSteps(merchant), "wheel", "claim", "result"];
+export function buildPublicStepOrder(
+  merchant: Merchant,
+  opts?: { preview?: boolean },
+): PublicStep[] {
+  const actions = opts?.preview
+    ? normalizeFlowSteps(merchant.flow_steps)
+    : resolveActiveFlowSteps(merchant);
+  return [...actions, "wheel", "claim", "result"];
 }
 
 export function isSocialFlowStep(step: FlowActionStep): boolean {
@@ -69,12 +75,10 @@ export function isSocialFlowStep(step: FlowActionStep): boolean {
 export function journeyStepPosition(
   stepOrder: PublicStep[],
   step: PublicStep,
+  opts?: { includeResult?: boolean },
 ): { current: number; total: number } {
-  const displaySteps = stepOrder.filter((s) => s !== "result");
-  const index =
-    step === "result"
-      ? displaySteps.length - 1
-      : displaySteps.indexOf(step);
+  const displaySteps = stepOrder.filter((s) => opts?.includeResult || s !== "result");
+  const index = displaySteps.indexOf(step);
   return {
     current: index >= 0 ? index + 1 : 1,
     total: displaySteps.length,

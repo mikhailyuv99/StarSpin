@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { localeLabels, locales, type Locale } from "@/i18n/config";
 
-type Variant = "light" | "dark" | "minimal" | "brutal";
+type Variant = "light" | "dark" | "minimal" | "brutal" | "journey";
 
 const localeFlags: Record<Locale, string> = {
   en: "🇬🇧",
@@ -67,12 +67,16 @@ export function LocaleSwitcher({
   }
 
   const triggerClass =
-    variant === "dark"
-      ? "locale-switcher-trigger locale-switcher-trigger--dark"
-      : "locale-switcher-trigger";
+    variant === "journey"
+      ? "locale-switcher-trigger locale-switcher-trigger--journey"
+      : variant === "dark"
+        ? "locale-switcher-trigger locale-switcher-trigger--dark"
+        : "locale-switcher-trigger";
+
+  const menuMinimal = variant === "journey";
 
   return (
-    <div className="locale-switcher" ref={rootRef}>
+    <div className={`locale-switcher${variant === "journey" ? " locale-switcher--journey" : ""}`} ref={rootRef}>
       <button
         type="button"
         className={triggerClass}
@@ -95,6 +99,8 @@ export function LocaleSwitcher({
           setLocale={setLocale}
           onPick={() => setOpen(false)}
           align={align}
+          minimal={menuMinimal}
+          journey={variant === "journey"}
         />
       )}
     </div>
@@ -107,16 +113,18 @@ function LocaleMenu({
   onPick,
   align,
   minimal,
+  journey = false,
 }: {
   locale: Locale;
   setLocale: (l: Locale) => void;
   onPick: () => void;
   align: "left" | "right";
   minimal?: boolean;
+  journey?: boolean;
 }) {
   return (
     <ul
-      className={`locale-switcher-menu ${align === "left" ? "locale-switcher-menu--left" : ""} ${minimal ? "locale-switcher-menu--minimal" : ""}`}
+      className={`locale-switcher-menu ${align === "left" ? "locale-switcher-menu--left" : ""} ${minimal ? "locale-switcher-menu--minimal" : ""} ${journey ? "locale-switcher-menu--journey" : ""}`}
       role="listbox"
     >
       {locales.map((loc) => (
