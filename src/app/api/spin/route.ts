@@ -116,7 +116,10 @@ export async function POST(request: Request) {
       completed_flow_steps: Array.isArray(completedFlowSteps) ? completedFlowSteps : [],
     });
 
-    if (spinError) throw spinError;
+    if (spinError || !spin?.id) {
+      console.error("Spin insert error:", spinError);
+      return NextResponse.json({ error: t("api.spinError") }, { status: 500 });
+    }
 
     let resolvedPrize: Prize | null = null;
     if (resolution.resolvedPrizeId) {
