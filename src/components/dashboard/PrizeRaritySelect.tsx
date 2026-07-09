@@ -105,7 +105,7 @@ export function PrizeRaritySelect({
   onChange: (tier: PrizeRarityTier) => void;
   disabled?: boolean;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
