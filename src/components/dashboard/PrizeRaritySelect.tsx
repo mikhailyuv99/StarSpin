@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PRIZE_RARITY_TIERS, type PrizeRarityTier } from "@/lib/prize-rarity";
-import { useTranslations } from "@/i18n/client";
+import { useI18n } from "@/i18n/client";
 
 export const TIER_DOT: Record<PrizeRarityTier, string> = {
   common: "#22c55e",
@@ -48,7 +48,7 @@ function RarityPanel({
   onClose: () => void;
   style?: React.CSSProperties;
 }) {
-  const t = useTranslations();
+  const { t } = useI18n();
 
   return (
     <div
@@ -237,7 +237,7 @@ export function PrizeRaritySelect({
 }
 
 export function PrizeRarityBadge({ tier }: { tier: PrizeRarityTier }) {
-  const t = useTranslations();
+  const { t } = useI18n();
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted">
       <span
