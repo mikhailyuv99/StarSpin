@@ -26,6 +26,7 @@ import {
 import { clampPrizeLabel } from "@/lib/wheel";
 import type { Prize, SocialLinks } from "@/lib/types";
 import { socialUrlForStep, type FlowActionStep } from "@/lib/flow-steps";
+import { hasMinimumWheelPrizes } from "@/lib/prizes";
 
 type PrizeBody = {
   id?: string;
@@ -97,6 +98,13 @@ async function validateActiveWinChances(
   if (activePrizes(list).length === 0) return null;
   if (totalActiveWinChance(list) !== WIN_CHANCE_TARGET) {
     return "win_chances_must_sum_100";
+  }
+  return null;
+}
+
+function validateMinWheelPrizes(prizes: Prize[]): string | null {
+  if (!hasMinimumWheelPrizes(prizes)) {
+    return "min_wheel_prizes";
   }
   return null;
 }
@@ -239,6 +247,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: chanceError }, { status: 400 });
     }
 
+    const { data: allPrizes } = await db.from("prizes").select("*").eq("merchant_id", merchant.id);
+    const afterToggle = ((allPrizes ?? []) as Prize[]).map((p) =>
+      p.id === body.id ? { ...p, active: Boolean(body.active) } : p,
+    );
+    const minError = validateMinWheelPrizes(afterToggle);
+    if (minError) {
+      return NextResponse.json({ error: minError }, { status: 400 });
+    }
+
     const { data, error } = await db
       .from("prizes")
       .update({ active: body.active })
@@ -305,6 +322,13 @@ export async function DELETE(request: Request) {
   const id = new URL(request.url).searchParams.get("id")?.trim();
   if (!id) {
     return NextResponse.json({ error: "Missing prize id" }, { status: 400 });
+  }
+
+  const { data: allPrizes } = await db.from("prizes").select("*").eq("merchant_id", merchant.id);
+  const afterDelete = ((allPrizes ?? []) as Prize[]).filter((p) => p.id !== id);
+  const minError = validateMinWheelPrizes(afterDelete);
+  if (minError) {
+    return NextResponse.json({ error: minError }, { status: 400 });
   }
 
   const { error } = await deleteMerchantPrize(db, id, merchant.id);

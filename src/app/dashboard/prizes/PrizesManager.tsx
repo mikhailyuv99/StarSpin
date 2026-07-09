@@ -28,7 +28,7 @@ import {
   type SocialUnlockPlatform,
 } from "@/lib/prize-mechanics";
 import { Wheel } from "@/components/Wheel";
-import { activeWheelPrizes } from "@/lib/prizes";
+import { activeWheelPrizes, hasMinimumWheelPrizes, MIN_WHEEL_PRIZES } from "@/lib/prizes";
 import { resolveJourneyTheme } from "@/lib/journey-theme";
 import { PrizeIconPicker } from "@/components/dashboard/PrizeIconPicker";
 import { PrizeMechanicSelect } from "@/components/dashboard/PrizeMechanicSelect";
@@ -172,6 +172,7 @@ function mapPrizeApiError(code: string | undefined, t: (key: string) => string):
   if (code === "invalid_win_chance") return t("dashboard.winChanceInvalid");
   if (code === "social_unlock_platform_required") return t("dashboard.socialUnlockPlatformRequired");
   if (code === "social_unlock_url_missing") return t("dashboard.socialUnlockUrlMissingSave");
+  if (code === "min_wheel_prizes") return t("dashboard.minWheelPrizes");
   if (code === "empty_label" || code === "invalid_valid_days" || code === "invalid_stock") {
     if (code === "invalid_valid_days") return t("dashboard.redeemValidDaysInvalid");
     if (code === "invalid_stock") return t("dashboard.prizeStockInvalid");
@@ -259,6 +260,7 @@ export function PrizesManager({
 
   const previewPrizes = useMemo(() => activeWheelPrizes(draftPrizes), [draftPrizes]);
   const hiddenInactiveCount = draftPrizes.length - previewPrizes.length;
+  const wheelReady = hasMinimumWheelPrizes(draftPrizes);
 
   const activeChanceTotal = useMemo(() => totalActiveWinChance(prizes), [prizes]);
   const chancesValid = useMemo(() => activeWinChanceIsValid(prizes), [prizes]);
@@ -451,6 +453,13 @@ export function PrizesManager({
   };
 
   const toggleActive = async (prize: Prize) => {
+    if (prize.active) {
+      const after = prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p));
+      if (!hasMinimumWheelPrizes(after)) {
+        setError(t("dashboard.minWheelPrizes"));
+        return;
+      }
+    }
     setError(null);
     const apiRes = await fetch("/api/dashboard/prizes", {
       method: "PATCH",
@@ -474,6 +483,11 @@ export function PrizesManager({
   };
 
   const deletePrize = async (id: string) => {
+    const after = prizes.filter((p) => p.id !== id);
+    if (!hasMinimumWheelPrizes(after)) {
+      setError(t("dashboard.minWheelPrizes"));
+      return;
+    }
     setError(null);
     const apiRes = await fetch(`/api/dashboard/prizes?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
@@ -509,6 +523,12 @@ export function PrizesManager({
   const prizeListCard = (
     <div className={ui.card}>
       <h2 className={ui.h2}>{t("dashboard.prizesConfigured")}</h2>
+      {!wheelReady && prizes.some((p) => p.active) && (
+        <div className="mb-4 rounded-none border-2 border-amber-600 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900" role="status">
+          {t("dashboard.minWheelPrizes", { min: MIN_WHEEL_PRIZES })}
+        </div>
+      )}
+
       {prizes.some((p) => p.active) && (
         <div
           className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border-2 px-4 py-3 ${
@@ -678,10 +698,20 @@ export function PrizesManager({
                     <button type="button" onClick={() => startEdit(prize)} className={ui.btnOutline}>
                       {t("common.edit")}
                     </button>
-                    <button type="button" onClick={() => toggleActive(prize)} className={ui.btnOutline}>
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(prize)}
+                      disabled={prize.active && !hasMinimumWheelPrizes(prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p)))}
+                      className={ui.btnOutline}
+                    >
                       {prize.active ? t("common.deactivate") : t("common.activate")}
                     </button>
-                    <button type="button" onClick={() => deletePrize(prize.id)} className={ui.btnDanger}>
+                    <button
+                      type="button"
+                      onClick={() => deletePrize(prize.id)}
+                      disabled={!hasMinimumWheelPrizes(prizes.filter((p) => p.id !== prize.id))}
+                      className={ui.btnDanger}
+                    >
                       {t("common.delete")}
                     </button>
                   </div>
@@ -700,9 +730,11 @@ export function PrizesManager({
       <p className={`mt-2 ${ui.muted}`}>{t("dashboard.prizeWheelPreviewHint")}</p>
 
       <div className="mt-5 flex flex-col items-center gap-4">
-        {previewPrizes.length === 0 ? (
+        {!wheelReady ? (
           <p className="py-8 text-center text-sm font-semibold text-muted">
-            {t("dashboard.prizeWheelPreviewEmpty")}
+            {previewPrizes.length === 0
+              ? t("dashboard.prizeWheelPreviewEmpty")
+              : t("dashboard.minWheelPrizes", { min: MIN_WHEEL_PRIZES })}
           </p>
         ) : (
           <Wheel

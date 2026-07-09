@@ -12,6 +12,7 @@ import {
   isNoWinPrize,
 } from "@/lib/prize-outcomes";
 import { merchantNeedsSocialBonusStep, requiredSocialUnlockPlatforms } from "@/lib/prize-mechanics";
+import { hasMinimumWheelPrizes } from "@/lib/prizes";
 import { resolveSpinOutcome } from "@/lib/spin-resolution";
 import type { Merchant, Prize } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
@@ -952,7 +953,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                     <button
                       type="button"
                       onClick={() => void handleSpinClick()}
-                      disabled={prefetchingSpin || spinning}
+                      disabled={prefetchingSpin || spinning || !hasMinimumWheelPrizes(prizes)}
                       className="public-btn public-touch-target w-full"
                       style={btnStyle}
                     >

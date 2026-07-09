@@ -10,6 +10,7 @@ import {
   pickWeightedPrize,
   prizeEqualSliceAngles,
 } from "@/lib/wheel";
+import { MIN_WHEEL_PRIZES } from "@/lib/prizes";
 import { WheelSliceLabels } from "@/components/WheelSliceLabels";
 import {
   computeSpinDelta,
@@ -218,6 +219,14 @@ export function Wheel({
 
   if (slices.length === 0) {
     return <p className="text-center text-sm font-semibold text-muted">{t("public.wheelEmpty")}</p>;
+  }
+
+  if (slices.length < MIN_WHEEL_PRIZES) {
+    return (
+      <p className="text-center text-sm font-semibold text-muted">
+        {t("public.minWheelPrizes", { min: MIN_WHEEL_PRIZES })}
+      </p>
+    );
   }
 
   return (

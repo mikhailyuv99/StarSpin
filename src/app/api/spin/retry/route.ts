@@ -5,6 +5,8 @@ import { isRetrySpinPrize, isNearMissPrize } from "@/lib/prize-outcomes";
 import { pickRetrySpinPrize } from "@/lib/wheel";
 import { resolveSpinOutcome } from "@/lib/spin-resolution";
 import { isNonClaimMechanic } from "@/lib/prize-mechanics";
+import { hasMinimumWheelPrizes } from "@/lib/prizes";
+import { updateSpinPrizeResolution } from "@/lib/spin-persistence";
 import type { Prize } from "@/lib/types";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
@@ -55,6 +57,10 @@ export async function POST(request: Request) {
       .eq("active", true);
 
     const prizeList = (prizes ?? []) as Prize[];
+    if (!hasMinimumWheelPrizes(prizeList)) {
+      return NextResponse.json({ error: t("api.minWheelPrizes") }, { status: 400 });
+    }
+
     const selected = pickRetrySpinPrize(prizeList);
     if (!selected) {
       return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
@@ -62,14 +68,12 @@ export async function POST(request: Request) {
 
     const resolution = resolveSpinOutcome(prizeList, selected);
 
-    const { error: updateError } = await supabase
-      .from("spins")
-      .update({
-        prize_id: selected.id,
-        resolved_prize_id: resolution.resolvedPrizeId,
-      })
-      .eq("id", spinId)
-      .is("prize_code", null);
+    const { error: updateError } = await updateSpinPrizeResolution(
+      supabase,
+      spinId,
+      selected.id,
+      resolution.resolvedPrizeId,
+    );
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });

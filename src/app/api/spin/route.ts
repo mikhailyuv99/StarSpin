@@ -7,6 +7,8 @@ import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
 import { isOutcomePrize } from "@/lib/prize-outcomes";
 import { resolveSpinOutcome, prizeForClaim } from "@/lib/spin-resolution";
+import { hasMinimumWheelPrizes } from "@/lib/prizes";
+import { insertSpinRow } from "@/lib/spin-persistence";
 import type { Prize } from "@/lib/types";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
@@ -90,6 +92,10 @@ export async function POST(request: Request) {
       .eq("active", true);
 
     const prizeList = (prizes ?? []) as Prize[];
+    if (!hasMinimumWheelPrizes(prizeList)) {
+      return NextResponse.json({ error: t("api.minWheelPrizes") }, { status: 400 });
+    }
+
     const selected = pickWeightedPrize(prizeList);
     if (!selected) {
       return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
@@ -98,21 +104,17 @@ export async function POST(request: Request) {
     const resolution = resolveSpinOutcome(prizeList, selected);
     const status = reviewScreenshotStatus ?? "pending";
 
-    const { data: spin, error: spinError } = await supabase
-      .from("spins")
-      .insert({
-        merchant_id: merchantId,
-        prize_id: selected.id,
-        resolved_prize_id: resolution.resolvedPrizeId,
-        device_fingerprint: fingerprint,
-        phone_number: null,
-        followed_social: Boolean(followedSocial),
-        review_screenshot_url: reviewScreenshotUrl ?? null,
-        review_screenshot_status: status,
-        completed_flow_steps: Array.isArray(completedFlowSteps) ? completedFlowSteps : [],
-      })
-      .select("*, prize:prizes(*)")
-      .single();
+    const { data: spin, error: spinError } = await insertSpinRow(supabase, {
+      merchant_id: merchantId,
+      prize_id: selected.id,
+      resolved_prize_id: resolution.resolvedPrizeId,
+      device_fingerprint: fingerprint,
+      phone_number: null,
+      followed_social: Boolean(followedSocial),
+      review_screenshot_url: reviewScreenshotUrl ?? null,
+      review_screenshot_status: status,
+      completed_flow_steps: Array.isArray(completedFlowSteps) ? completedFlowSteps : [],
+    });
 
     if (spinError) throw spinError;
 
