@@ -3,7 +3,16 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
-import { pickWeightedPrize } from "@/lib/wheel";
+import { pickWeightedPrize, pickRetrySpinPrize } from "@/lib/wheel";
+import {
+  isRetrySpinPrize,
+  isNearMissPrize,
+  isMysteryPrize,
+  isDoubleOrNothingPrize,
+  isNoWinPrize,
+} from "@/lib/prize-outcomes";
+import { merchantNeedsSocialBonusStep, requiredSocialUnlockPlatforms } from "@/lib/prize-mechanics";
+import { resolveSpinOutcome } from "@/lib/spin-resolution";
 import type { Merchant, Prize } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
@@ -12,6 +21,7 @@ import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { PrizeCoupon } from "@/components/PrizeCoupon";
+import { PrizeWheelIcon } from "@/components/PrizeWheelIcon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 import { computePreviewWheelSize } from "@/components/dashboard/JourneyPhonePreview";
 import { resolveJourneyTheme } from "@/lib/journey-theme";
@@ -19,7 +29,10 @@ import { compressImageForUpload } from "@/lib/compress-image";
 import {
   buildPublicStepOrder,
   isSocialFlowStep,
+  isSocialUnlockBonusStep,
   journeyStepPosition,
+  parseSocialUnlockBonusStep,
+  socialUnlockBonusStepForPlatform,
   socialUrlForStep,
   type FlowActionStep,
   type PublicStep,
@@ -28,9 +41,15 @@ import {
 interface PublicFlowProps {
   merchant: Merchant;
   prizes: Prize[];
-  /** Dashboard preview: fully interactive but stubs all network + external links. */
   preview?: boolean;
 }
+
+type PreparedSpin = {
+  spinId: string;
+  prize: Prize;
+  resolvedPrize?: Prize | null;
+  nearMissTarget?: string | null;
+};
 
 const stepVariants = {
   enter: { opacity: 0, x: 24 },
@@ -61,10 +80,16 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const claimFormRef = useRef<HTMLFormElement>(null);
-  const stepOrder = useMemo(
-    () => buildPublicStepOrder(merchant, { preview }),
-    [merchant, preview],
-  );
+  const stepOrder = useMemo(() => {
+    const base = buildPublicStepOrder(merchant, { preview });
+    if (!merchantNeedsSocialBonusStep(prizes)) return base;
+    const wheelIdx = base.indexOf("wheel");
+    if (wheelIdx < 0) return base;
+    const bonusSteps = requiredSocialUnlockPlatforms(prizes).map(socialUnlockBonusStepForPlatform);
+    const next = [...base];
+    next.splice(wheelIdx, 0, ...bonusSteps);
+    return next;
+  }, [merchant, preview, prizes]);
   const [step, setStep] = useState<PublicStep>(stepOrder[0]);
   const [completedSteps, setCompletedSteps] = useState<FlowActionStep[]>([]);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
@@ -81,8 +106,14 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   const [claimPhone, setClaimPhone] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [targetPrizeId, setTargetPrizeId] = useState<string | undefined>();
-  const [preparedSpin, setPreparedSpin] = useState<{ spinId: string; prize: Prize } | null>(null);
+  const [preparedSpin, setPreparedSpin] = useState<PreparedSpin | null>(null);
   const [prefetchingSpin, setPrefetchingSpin] = useState(false);
+  const [retryOffer, setRetryOffer] = useState(false);
+  const [nearMissLabel, setNearMissLabel] = useState<string | null>(null);
+  const [mysteryReveal, setMysteryReveal] = useState(false);
+  const [gambleOffer, setGambleOffer] = useState(false);
+  const [gamblePrize, setGamblePrize] = useState<Prize | null>(null);
+  const [noWinResult, setNoWinResult] = useState(false);
   const spinPrefetchStarted = useRef(false);
 
   const theme = useMemo(() => resolveJourneyTheme(merchant), [merchant]);
@@ -154,8 +185,8 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   };
 
   useEffect(() => {
-    if (step === "result" && wonPrize) fireConfetti(accent);
-  }, [step, wonPrize, accent]);
+    if (step === "result" && wonPrize && !noWinResult) fireConfetti(accent);
+  }, [step, wonPrize, noWinResult, accent]);
 
   const advance = useCallback(
     (completed?: FlowActionStep) => {
@@ -179,7 +210,14 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       const priorActions: FlowActionStep[] = [];
       for (let i = 0; i < targetIdx; i++) {
         const s = stepOrder[i];
-        if (s !== "wheel" && s !== "claim" && s !== "result") priorActions.push(s);
+        if (
+          s !== "wheel" &&
+          s !== "claim" &&
+          s !== "result" &&
+          !isSocialUnlockBonusStep(s)
+        ) {
+          priorActions.push(s);
+        }
       }
 
       setError(null);
@@ -187,6 +225,12 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       setCompletedSteps(priorActions);
       setScreenshotUrl(priorActions.includes("google_review") ? "preview" : null);
       setReviewStatus(priorActions.includes("google_review") ? "verified" : "pending");
+      setRetryOffer(false);
+      setNearMissLabel(null);
+      setMysteryReveal(false);
+      setGambleOffer(false);
+      setGamblePrize(null);
+      setNoWinResult(false);
       setSpinning(false);
       setTargetPrizeId(undefined);
       setPreparedSpin(null);
@@ -303,12 +347,62 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     }
   };
 
-  const prepareSpin = useCallback(async (): Promise<{ spinId: string; prize: Prize } | null> => {
+  const prepareRetrySpin = useCallback(
+    async (existingSpinId: string): Promise<PreparedSpin | null> => {
+      setError(null);
+      if (preview) {
+        const prize = pickRetrySpinPrize(prizes) ?? prizes[0];
+        if (!prize) return null;
+        const resolution = resolveSpinOutcome(prizes, prize);
+        const prepared: PreparedSpin = {
+          spinId: existingSpinId,
+          prize,
+          resolvedPrize: resolution.resolvedPrizeId
+            ? prizes.find((p) => p.id === resolution.resolvedPrizeId) ?? null
+            : null,
+          nearMissTarget: resolution.nearMissTargetLabel,
+        };
+        setPreparedSpin(prepared);
+        return prepared;
+      }
+      try {
+        const res = await fetch("/api/spin/retry", {
+          method: "POST",
+          headers: localeHeaders(locale),
+          body: JSON.stringify({ spinId: existingSpinId }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? t("public.error"));
+        const prepared: PreparedSpin = {
+          spinId: data.spinId as string,
+          prize: data.prize as Prize,
+          resolvedPrize: (data.resolvedPrize as Prize | null) ?? null,
+          nearMissTarget: (data.nearMissTarget as string | null) ?? null,
+        };
+        setPreparedSpin(prepared);
+        return prepared;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("public.error"));
+        return null;
+      }
+    },
+    [locale, t, preview, prizes],
+  );
+
+  const prepareSpin = useCallback(async (): Promise<PreparedSpin | null> => {
     setError(null);
     if (preview) {
       const prize = pickWeightedPrize(prizes) ?? prizes[0];
       if (!prize) return null;
-      const prepared = { spinId: "preview", prize };
+      const resolution = resolveSpinOutcome(prizes, prize);
+      const prepared: PreparedSpin = {
+        spinId: "preview",
+        prize,
+        resolvedPrize: resolution.resolvedPrizeId
+          ? prizes.find((p) => p.id === resolution.resolvedPrizeId) ?? null
+          : null,
+        nearMissTarget: resolution.nearMissTargetLabel,
+      };
       setPreparedSpin(prepared);
       return prepared;
     }
@@ -326,7 +420,12 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("public.error"));
-      const prepared = { spinId: data.spinId as string, prize: data.prize as Prize };
+      const prepared: PreparedSpin = {
+        spinId: data.spinId as string,
+        prize: data.prize as Prize,
+        resolvedPrize: (data.resolvedPrize as Prize | null) ?? null,
+        nearMissTarget: (data.nearMissTarget as string | null) ?? null,
+      };
       setPreparedSpin(prepared);
       return prepared;
     } catch (e) {
@@ -336,17 +435,24 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, completedSteps, locale, t, preview, prizes]);
 
   useEffect(() => {
-    if (step !== "wheel" || preparedSpin || spinPrefetchStarted.current) return;
+    if (step !== "wheel" || preparedSpin || spinPrefetchStarted.current || retryOffer) return;
     spinPrefetchStarted.current = true;
     setPrefetchingSpin(true);
     void prepareSpin().finally(() => setPrefetchingSpin(false));
-  }, [step, preparedSpin, prepareSpin]);
+  }, [step, preparedSpin, prepareSpin, retryOffer]);
 
   const handleSpinClick = useCallback(async () => {
     if (spinning || targetPrizeId) return;
 
     let ready = preparedSpin;
-    if (!ready) {
+    if (retryOffer && spinId) {
+      setPrefetchingSpin(true);
+      ready = await prepareRetrySpin(spinId);
+      setPrefetchingSpin(false);
+      if (!ready) return;
+      setRetryOffer(false);
+      setNearMissLabel(null);
+    } else if (!ready) {
       setPrefetchingSpin(true);
       ready = await prepareSpin();
       setPrefetchingSpin(false);
@@ -355,11 +461,94 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
 
     setSpinId(ready.spinId);
     setTargetPrizeId(ready.prize.id);
-  }, [spinning, targetPrizeId, preparedSpin, prepareSpin]);
+  }, [spinning, targetPrizeId, preparedSpin, prepareSpin, retryOffer, spinId, prepareRetrySpin]);
 
-  const onSpinComplete = (prize: Prize) => {
-    setWonPrize(prize);
+  const onSpinComplete = (landed: Prize) => {
+    const resolved = preparedSpin?.resolvedPrize ?? null;
+    const nearMiss = preparedSpin?.nearMissTarget ?? null;
+
+    if (isRetrySpinPrize(landed) || isNearMissPrize(landed)) {
+      if (isNearMissPrize(landed) && nearMiss) setNearMissLabel(nearMiss);
+      setRetryOffer(true);
+      setTargetPrizeId(undefined);
+      setPreparedSpin(null);
+      setPrefetchingSpin(false);
+      spinPrefetchStarted.current = true;
+      return;
+    }
+
+    if (isNoWinPrize(landed)) {
+      setWonPrize(null);
+      setNoWinResult(true);
+      setStep("result");
+      return;
+    }
+
+    if (isMysteryPrize(landed) && resolved) {
+      setWonPrize(resolved);
+      setMysteryReveal(true);
+      setTargetPrizeId(undefined);
+      setPreparedSpin(null);
+      window.setTimeout(() => {
+        setMysteryReveal(false);
+        setStep("claim");
+      }, 2200);
+      return;
+    }
+
+    if (isDoubleOrNothingPrize(landed) && resolved) {
+      setGamblePrize(resolved);
+      setGambleOffer(true);
+      setTargetPrizeId(undefined);
+      setPreparedSpin(null);
+      return;
+    }
+
+    setWonPrize(resolved ?? landed);
     setStep("claim");
+  };
+
+  const handleGamble = async (choice: "keep" | "risk") => {
+    if (!spinId || !gamblePrize) return;
+    setLoading(true);
+    setError(null);
+    try {
+      if (preview) {
+        const won = choice === "keep" ? true : Math.random() < 0.5;
+        if (won) {
+          setWonPrize(gamblePrize);
+          setGambleOffer(false);
+          setStep("claim");
+        } else {
+          setWonPrize(null);
+          setGambleOffer(false);
+          setNoWinResult(true);
+          setStep("result");
+        }
+        return;
+      }
+      const res = await fetch("/api/spin/gamble", {
+        method: "POST",
+        headers: localeHeaders(locale),
+        body: JSON.stringify({ spinId, choice }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? t("public.error"));
+      if (data.outcome === "lost") {
+        setWonPrize(null);
+        setGambleOffer(false);
+        setNoWinResult(true);
+        setStep("result");
+        return;
+      }
+      setWonPrize((data.prize as Prize) ?? gamblePrize);
+      setGambleOffer(false);
+      setStep("claim");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("public.error"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitClaim = async (event?: React.FormEvent) => {
@@ -591,7 +780,62 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
 
           <div className={preview ? "p-4" : "p-4 sm:p-6"}>
             <AnimatePresence mode="wait">
-              {step !== "wheel" && step !== "claim" && step !== "result" && renderActionStep(step)}
+              {step !== "wheel" &&
+                step !== "claim" &&
+                step !== "result" &&
+                !isSocialUnlockBonusStep(step) &&
+                renderActionStep(step)}
+
+              {isSocialUnlockBonusStep(step) && (
+                <motion.div
+                  key={step}
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="text-center">
+                    <p className="text-3xl" aria-hidden>
+                      🔓
+                    </p>
+                    <h2 className="public-heading mt-2 text-xl font-extrabold">{stepHeading}</h2>
+                    <p className="mt-1 text-sm font-medium text-muted">
+                      {t("public.socialUnlockSubtitle")}
+                    </p>
+                  </div>
+                  {(() => {
+                    const actionStep = parseSocialUnlockBonusStep(step);
+                    if (!actionStep) return null;
+                    const url = socialUrlForStep(actionStep, merchant.social_links);
+                    if (!url) {
+                      return (
+                        <p className="text-center text-sm font-medium text-muted">
+                          {t("public.stepNotConfigured")}
+                        </p>
+                      );
+                    }
+                    const brand = socialBrandForStep(actionStep);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!preview) window.open(url, "_blank", "noopener,noreferrer");
+                          advance();
+                        }}
+                        className="public-btn public-touch-target flex items-center justify-center gap-2.5"
+                        style={accentBtnStyle}
+                      >
+                        <span className="public-social-icon-box">
+                          <SocialIcon brand={brand} size={22} />
+                        </span>
+                        {t(`public.follow_${actionStep}`)}
+                      </button>
+                    );
+                  })()}
+                </motion.div>
+              )}
 
               {step === "wheel" && (
                 <motion.div
@@ -603,7 +847,70 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                   transition={{ duration: 0.3 }}
                   className={preview ? "space-y-4" : "public-wheel-step"}
                 >
-                  {preview ? (
+                  {retryOffer ? (
+                    <div className="text-center">
+                      <p className="text-3xl" aria-hidden>
+                        {nearMissLabel ? "😮" : "🔄"}
+                      </p>
+                      <h2 className="public-heading mt-2 text-xl font-extrabold">
+                        {nearMissLabel ? t("public.nearMissTitle") : t("public.tryAgainTitle")}
+                      </h2>
+                      <p className="mt-1 text-sm font-medium text-muted">
+                        {nearMissLabel
+                          ? t("public.nearMissSubtitle", { prize: nearMissLabel })
+                          : t("public.tryAgainSubtitle")}
+                      </p>
+                    </div>
+                  ) : gambleOffer && gamblePrize ? (
+                    <div className="space-y-4 text-center">
+                      <p className="text-3xl" aria-hidden>
+                        🔥
+                      </p>
+                      <h2 className="public-heading text-xl font-extrabold">
+                        {t("public.doubleOrNothingTitle")}
+                      </h2>
+                      <p className="text-sm font-medium text-muted">
+                        {t("public.doubleOrNothingSubtitle", { prize: gamblePrize.label })}
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleGamble("keep")}
+                          disabled={loading}
+                          className="public-btn public-touch-target"
+                          style={btnStyle}
+                        >
+                          {t("public.doubleOrNothingKeep")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleGamble("risk")}
+                          disabled={loading}
+                          className="public-btn public-btn-outline public-touch-target"
+                        >
+                          {t("public.doubleOrNothingRisk")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : mysteryReveal && wonPrize ? (
+                    <motion.div
+                      className="text-center"
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 280, damping: 20 }}
+                    >
+                      <p className="text-3xl" aria-hidden>
+                        ❓
+                      </p>
+                      <h2 className="public-heading mt-2 text-xl font-extrabold">
+                        {t("public.mysteryRevealTitle")}
+                      </h2>
+                      <div className="mx-auto mt-3 flex h-16 w-16 items-center justify-center rounded-[18px] border-2 border-black bg-[var(--c-cream,#fff8e7)]">
+                        <PrizeWheelIcon icon={wonPrize.icon} size={40} />
+                      </div>
+                      <p className="public-heading mt-3 text-2xl font-extrabold">{wonPrize.label}</p>
+                    </motion.div>
+                  ) : preview ? (
                     <div className="text-center">
                       <p className="text-xs font-extrabold uppercase tracking-widest text-muted">
                         {stepHeading}
@@ -638,7 +945,10 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                     sizePx={preview ? previewWheelSize : undefined}
                   />
 
-                  {!spinning && !targetPrizeId && (
+                  {!spinning &&
+                    !targetPrizeId &&
+                    !gambleOffer &&
+                    !mysteryReveal && (
                     <button
                       type="button"
                       onClick={() => void handleSpinClick()}
@@ -650,7 +960,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                         ? t("public.spinPreparing")
                         : spinning
                           ? t("public.wheelSpinning")
-                          : spinLabel}
+                          : retryOffer
+                            ? t("public.spinAgain")
+                            : spinLabel}
                     </button>
                   )}
                 </motion.div>
@@ -668,7 +980,10 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                 >
                   <div className="text-center">
                     <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{stepHeading}</p>
-                    <p className="public-heading mt-2 text-2xl font-extrabold leading-tight">
+                    <div className="mx-auto mt-3 flex h-16 w-16 items-center justify-center rounded-[18px] border-2 border-black bg-[var(--c-cream,#fff8e7)]">
+                      <PrizeWheelIcon icon={wonPrize.icon} size={40} />
+                    </div>
+                    <p className="public-heading mt-3 text-2xl font-extrabold leading-tight">
                       {wonPrize.label}
                     </p>
                     <p className="mt-1 text-sm font-medium text-muted">{t("public.claimSubtitle")}</p>
@@ -723,6 +1038,21 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                 </motion.div>
               )}
 
+              {step === "result" && noWinResult && (
+                <motion.div
+                  key="result-nowin"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-4 py-4 text-center"
+                >
+                  <p className="text-4xl" aria-hidden>
+                    😔
+                  </p>
+                  <h2 className="public-heading text-xl font-extrabold">{t("public.noWinTitle")}</h2>
+                  <p className="text-sm font-medium text-muted">{t("public.noWinSubtitle")}</p>
+                </motion.div>
+              )}
+
               {step === "result" && wonPrize && prizeCode && (
                 <motion.div
                   key="result"
@@ -742,6 +1072,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                   </motion.p>
                   <PrizeCoupon
                     prizeLabel={wonPrize.label}
+                    prizeIcon={wonPrize.icon}
                     prizeCode={prizeCode}
                     rules={redemptionRules}
                     compact={preview}

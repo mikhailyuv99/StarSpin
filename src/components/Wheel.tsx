@@ -10,7 +10,13 @@ import {
   pickWeightedPrize,
   prizeEqualSliceAngles,
 } from "@/lib/wheel";
-import { WheelSliceLabels, wheelClipPrefix } from "@/components/WheelSliceLabels";
+import { WheelSliceLabels } from "@/components/WheelSliceLabels";
+import {
+  computeSpinDelta,
+  easeOutQuart,
+  equalSliceBoundaryCrossings,
+  type WheelSlice,
+} from "@/lib/wheel-spin";
 
 export interface WheelColors {
   palette: string[];
@@ -33,8 +39,9 @@ interface WheelProps {
   targetPrizeId?: string;
   hideSpinButton?: boolean;
   colors?: WheelColors;
-  /** Fixed wheel diameter (px). Used in the dashboard phone preview. */
   sizePx?: number;
+  spinButtonLabel?: string;
+  spinningLabel?: string;
 }
 
 const DEFAULT_WHEEL_COLORS: WheelColors = {
@@ -48,6 +55,8 @@ const DEFAULT_WHEEL_COLORS: WheelColors = {
   pointerInner: "#f5e08e",
 };
 
+const SPIN_MS = 4500;
+
 export function Wheel({
   prizes,
   primaryColor,
@@ -58,13 +67,18 @@ export function Wheel({
   hideSpinButton = false,
   colors = DEFAULT_WHEEL_COLORS,
   sizePx,
+  spinButtonLabel,
+  spinningLabel,
 }: WheelProps) {
   const t = useTranslations();
   const [dynamicSize, setDynamicSize] = useState(() => sizePx ?? 280);
   const wheelSize = sizePx ?? dynamicSize;
   const spunRef = useRef<string | undefined>(undefined);
-  const slices = prizeEqualSliceAngles(prizes);
-  const clipPrefix = wheelClipPrefix(slices.map((s) => s.prize));
+  const rafRef = useRef<number | null>(null);
+  const rotationRef = useRef(0);
+  const pointerElRef = useRef<HTMLDivElement>(null);
+  const tickSideRef = useRef<"l" | "r">("l");
+  const slices = prizeEqualSliceAngles(prizes) as WheelSlice[];
 
   const cx = 50;
   const cy = 50;
@@ -73,6 +87,27 @@ export function Wheel({
   const pointerH = Math.round(wheelSize * 0.17);
 
   const [rotation, setRotation] = useState(0);
+  const [animating, setAnimating] = useState(false);
+
+  const bumpPointer = useCallback(() => {
+    const el = pointerElRef.current;
+    if (!el) return;
+    tickSideRef.current = tickSideRef.current === "l" ? "r" : "l";
+    const cls =
+      tickSideRef.current === "l"
+        ? "marketing-wheel-pointer--tick-l"
+        : "marketing-wheel-pointer--tick-r";
+    el.classList.remove(
+      "marketing-wheel-pointer--tick-l",
+      "marketing-wheel-pointer--tick-r",
+    );
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }, []);
+
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
 
   useEffect(() => {
     if (sizePx != null) return;
@@ -85,8 +120,64 @@ export function Wheel({
     return () => window.removeEventListener("resize", update);
   }, [sizePx]);
 
+  useEffect(() => {
+    if (!targetPrizeId) {
+      spunRef.current = undefined;
+    }
+  }, [targetPrizeId]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const runSpinAnimation = useCallback(
+    (target: WheelSlice, onDone: () => void) => {
+      const sliceMid = (target.start + target.end) / 2;
+      const startRotation = rotationRef.current;
+      const delta = computeSpinDelta(startRotation, sliceMid);
+      const endRotation = startRotation + delta;
+      const startTime = performance.now();
+      let lastFrameRotation = startRotation;
+
+      setAnimating(true);
+
+      const frame = (now: number) => {
+        const tNorm = Math.min(1, (now - startTime) / SPIN_MS);
+        const eased = easeOutQuart(tNorm);
+        const current = startRotation + delta * eased;
+        setRotation(current);
+
+        const crossings = equalSliceBoundaryCrossings(
+          lastFrameRotation,
+          current,
+          slices.length,
+        );
+        if (crossings > 0) {
+          bumpPointer();
+        }
+        lastFrameRotation = current;
+
+        if (tNorm < 1) {
+          rafRef.current = requestAnimationFrame(frame);
+        } else {
+          setRotation(endRotation);
+          rotationRef.current = endRotation;
+          setAnimating(false);
+          rafRef.current = null;
+          bumpPointer();
+          onDone();
+        }
+      };
+
+      rafRef.current = requestAnimationFrame(frame);
+    },
+    [slices, bumpPointer],
+  );
+
   const spin = useCallback(() => {
-    if (spinning || slices.length === 0) return;
+    if (spinning || animating || slices.length === 0) return;
     setSpinning(true);
 
     const target = targetPrizeId
@@ -103,23 +194,27 @@ export function Wheel({
       return;
     }
 
-    const sliceMid = (target.start + target.end) / 2;
-    const extraTurns = 5 * 360;
-    const finalRotation = extraTurns + (360 - sliceMid);
-    setRotation((prev) => prev + finalRotation);
-
-    setTimeout(() => {
+    runSpinAnimation(target, () => {
       setSpinning(false);
       onSpinComplete(target.prize);
-    }, 4500);
-  }, [spinning, slices, targetPrizeId, setSpinning, onSpinComplete, prizes]);
+    });
+  }, [
+    spinning,
+    animating,
+    slices,
+    targetPrizeId,
+    setSpinning,
+    onSpinComplete,
+    prizes,
+    runSpinAnimation,
+  ]);
 
   useEffect(() => {
-    if (targetPrizeId && !spinning && spunRef.current !== targetPrizeId) {
+    if (targetPrizeId && !spinning && !animating && spunRef.current !== targetPrizeId) {
       spunRef.current = targetPrizeId;
       spin();
     }
-  }, [targetPrizeId, spinning, spin]);
+  }, [targetPrizeId, spinning, animating, spin]);
 
   if (slices.length === 0) {
     return <p className="text-center text-sm font-semibold text-muted">{t("public.wheelEmpty")}</p>;
@@ -128,7 +223,7 @@ export function Wheel({
   return (
     <div className="public-wheel-stage">
       <div className="marketing-wheel-wrap" style={{ width: wheelSize, height: wheelSize }}>
-        <div className="marketing-wheel-pointer" aria-hidden>
+        <div ref={pointerElRef} className="marketing-wheel-pointer" aria-hidden>
           <WheelPointer
             width={pointerW}
             height={pointerH}
@@ -149,7 +244,7 @@ export function Wheel({
             className="marketing-wheel__disc"
             style={{
               transform: `rotate(${rotation}deg)`,
-              transition: "transform 4500ms cubic-bezier(0.15, 0.85, 0.25, 1)",
+              transition: animating ? "none" : undefined,
             }}
           >
             {slices.map((slice, i) => {
@@ -170,7 +265,6 @@ export function Wheel({
               cx={cx}
               cy={cy}
               r={r}
-              clipIdPrefix={clipPrefix}
               color={colors.label}
             />
           </g>
@@ -183,11 +277,13 @@ export function Wheel({
         <button
           type="button"
           onClick={spin}
-          disabled={spinning}
+          disabled={spinning || animating}
           className="public-btn public-touch-target max-w-xs"
           style={{ backgroundColor: primaryColor, color: contrastTextColor(primaryColor) }}
         >
-          {spinning ? t("public.wheelSpinning") : t("public.wheelSpin")}
+          {spinning || animating
+            ? (spinningLabel ?? t("public.wheelSpinning"))
+            : (spinButtonLabel ?? t("public.wheelSpin"))}
         </button>
       )}
     </div>

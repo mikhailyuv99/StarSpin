@@ -6,12 +6,12 @@ import type { Merchant, Prize } from "@/lib/types";
 import type { JourneyTemplateId } from "@/lib/journey-theme";
 
 const PRIZES: Prize[] = [
-  { id: "p1", merchant_id: "dev", label: "Free coffee", probability_weight: 30, stock_remaining: null, active: true, created_at: "" },
-  { id: "p2", merchant_id: "dev", label: "-10%", probability_weight: 30, stock_remaining: null, active: true, created_at: "" },
-  { id: "p3", merchant_id: "dev", label: "Dessert", probability_weight: 20, stock_remaining: null, active: true, created_at: "" },
-  { id: "p4", merchant_id: "dev", label: "-20%", probability_weight: 10, stock_remaining: null, active: true, created_at: "" },
-  { id: "p5", merchant_id: "dev", label: "Free menu", probability_weight: 5, stock_remaining: null, active: true, created_at: "" },
-  { id: "p6", merchant_id: "dev", label: "Try again", probability_weight: 5, stock_remaining: null, active: true, created_at: "" },
+  { id: "p1", merchant_id: "dev", label: "Free coffee", icon: "coffee_cup", probability_weight: 30, stock_remaining: null, active: true, created_at: "" },
+  { id: "p2", merchant_id: "dev", label: "-10%", icon: "percent_10", probability_weight: 30, stock_remaining: null, active: true, created_at: "" },
+  { id: "p3", merchant_id: "dev", label: "Dessert", icon: "cupcake", probability_weight: 20, stock_remaining: null, active: true, created_at: "" },
+  { id: "p4", merchant_id: "dev", label: "-20%", icon: "percent_20", probability_weight: 10, stock_remaining: null, active: true, created_at: "" },
+  { id: "p5", merchant_id: "dev", label: "Free menu", icon: "salad", probability_weight: 5, stock_remaining: null, active: true, created_at: "" },
+  { id: "p6", merchant_id: "dev", label: "Try again", icon: "try_again", probability_weight: 5, stock_remaining: null, active: true, created_at: "" },
 ];
 
 const LOGO =

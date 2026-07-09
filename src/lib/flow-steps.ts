@@ -1,3 +1,4 @@
+import type { SocialUnlockPlatform } from "@/lib/prize-mechanics";
 import type { Merchant, SocialLinks } from "@/lib/types";
 
 export type FlowActionStep =
@@ -8,7 +9,37 @@ export type FlowActionStep =
   | "tripadvisor";
 
 export type FixedPublicStep = "wheel" | "claim" | "result";
-export type PublicStep = FlowActionStep | FixedPublicStep;
+
+export type SocialUnlockBonusStep =
+  | "wheel_social_instagram"
+  | "wheel_social_facebook"
+  | "wheel_social_tiktok";
+
+/** Injected before wheel from social-unlock prizes (not in journey editor). */
+export type BonusPublicStep = SocialUnlockBonusStep;
+
+export type PublicStep = FlowActionStep | FixedPublicStep | BonusPublicStep;
+
+export function socialUnlockBonusStepForPlatform(
+  platform: SocialUnlockPlatform,
+): SocialUnlockBonusStep {
+  return `wheel_social_${platform}` as SocialUnlockBonusStep;
+}
+
+export function parseSocialUnlockBonusStep(step: PublicStep): FlowActionStep | null {
+  if (step === "wheel_social_instagram") return "instagram";
+  if (step === "wheel_social_facebook") return "facebook";
+  if (step === "wheel_social_tiktok") return "tiktok";
+  return null;
+}
+
+export function isSocialUnlockBonusStep(step: PublicStep): step is SocialUnlockBonusStep {
+  return (
+    step === "wheel_social_instagram" ||
+    step === "wheel_social_facebook" ||
+    step === "wheel_social_tiktok"
+  );
+}
 
 export const FLOW_ACTION_STEPS: FlowActionStep[] = [
   "google_review",

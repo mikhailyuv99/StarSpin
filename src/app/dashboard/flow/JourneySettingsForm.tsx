@@ -127,12 +127,12 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       created_at: "",
     } as const;
     return [
-      { ...base, id: "pp1", label: t("dashboard.previewPrize1"), probability_weight: 30 },
-      { ...base, id: "pp2", label: t("dashboard.previewPrize2"), probability_weight: 25 },
-      { ...base, id: "pp3", label: t("dashboard.previewPrize3"), probability_weight: 20 },
-      { ...base, id: "pp4", label: t("dashboard.previewPrize4"), probability_weight: 15 },
-      { ...base, id: "pp5", label: t("dashboard.previewPrize5"), probability_weight: 7 },
-      { ...base, id: "pp6", label: t("dashboard.previewPrize6"), probability_weight: 3 },
+      { ...base, id: "pp1", label: t("dashboard.previewPrize1"), icon: "coffee_cup", probability_weight: 30 },
+      { ...base, id: "pp2", label: t("dashboard.previewPrize2"), icon: "percent_10", probability_weight: 25 },
+      { ...base, id: "pp3", label: t("dashboard.previewPrize3"), icon: "cupcake", probability_weight: 20 },
+      { ...base, id: "pp4", label: t("dashboard.previewPrize4"), icon: "percent_20", probability_weight: 15 },
+      { ...base, id: "pp5", label: t("dashboard.previewPrize5"), icon: "gift", probability_weight: 7 },
+      { ...base, id: "pp6", label: t("dashboard.previewPrize6"), icon: "soda", probability_weight: 3 },
     ];
   }, [merchant.id, t]);
 

@@ -1,9 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Prize } from "@/lib/types";
 
+import type { PrizeMechanic, SocialUnlockPlatform } from "@/lib/prize-mechanics";
+
 export type PrizeWritePayload = {
   label: string;
+  icon: string;
   probability_weight: number;
+  prize_mechanic?: PrizeMechanic;
+  social_unlock_platform?: SocialUnlockPlatform | null;
   stock_remaining: number | null;
   redeem_next_visit?: boolean;
   redeem_min_spend_cents?: number | null;
@@ -22,11 +27,48 @@ export function isMissingRedemptionSchemaError(message: string): boolean {
   );
 }
 
+export function isMissingIconSchemaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("icon") &&
+    (lower.includes("schema cache") ||
+      lower.includes("does not exist") ||
+      lower.includes("could not find"))
+  );
+}
+
 export function corePrizePayload(payload: PrizeWritePayload) {
   return {
     label: payload.label,
     probability_weight: payload.probability_weight,
     stock_remaining: payload.stock_remaining,
+  };
+}
+
+export function isMissingMechanicSchemaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("prize_mechanic") &&
+    (lower.includes("schema cache") ||
+      lower.includes("does not exist") ||
+      lower.includes("could not find"))
+  );
+}
+
+export function isMissingSocialUnlockPlatformSchemaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("social_unlock_platform") &&
+    (lower.includes("schema cache") ||
+      lower.includes("does not exist") ||
+      lower.includes("could not find"))
+  );
+}
+
+export function corePrizePayloadWithIcon(payload: PrizeWritePayload) {
+  return {
+    ...corePrizePayload(payload),
+    icon: payload.icon,
   };
 }
 
@@ -45,8 +87,44 @@ export async function insertMerchantPrize(
 ) {
   await ensurePrizeRedemptionSchema(admin);
 
-  const fullRow = { merchant_id: merchantId, ...payload };
+  const fullRow = {
+    merchant_id: merchantId,
+    ...payload,
+    prize_mechanic: payload.prize_mechanic ?? "standard",
+  };
   let result = await admin.from("prizes").insert(fullRow).select().single();
+
+  if (result.error && isMissingMechanicSchemaError(result.error.message)) {
+    const { prize_mechanic: _m, social_unlock_platform: _p, ...withoutMechanic } = fullRow;
+    result = await admin.from("prizes").insert(withoutMechanic).select().single();
+  }
+
+  if (result.error && isMissingSocialUnlockPlatformSchemaError(result.error.message)) {
+    const { social_unlock_platform: _p, ...withoutPlatform } = fullRow;
+    result = await admin.from("prizes").insert(withoutPlatform).select().single();
+  }
+
+  if (result.error && isMissingIconSchemaError(result.error.message)) {
+    result = await admin
+      .from("prizes")
+      .insert({
+        merchant_id: merchantId,
+        ...corePrizePayload(payload),
+        redeem_next_visit: payload.redeem_next_visit,
+        redeem_min_spend_cents: payload.redeem_min_spend_cents,
+        redeem_valid_days: payload.redeem_valid_days,
+      })
+      .select()
+      .single();
+  }
+
+  if (result.error && isMissingRedemptionSchemaError(result.error.message)) {
+    result = await admin
+      .from("prizes")
+      .insert({ merchant_id: merchantId, ...corePrizePayloadWithIcon(payload) })
+      .select()
+      .single();
+  }
 
   if (result.error && isMissingRedemptionSchemaError(result.error.message)) {
     result = await admin
@@ -69,11 +147,54 @@ export async function updateMerchantPrize(
 
   let result = await admin
     .from("prizes")
-    .update(payload)
+    .update({ ...payload, prize_mechanic: payload.prize_mechanic ?? "standard" })
     .eq("id", prizeId)
     .eq("merchant_id", merchantId)
     .select()
     .single();
+
+  if (result.error && isMissingMechanicSchemaError(result.error.message)) {
+    const { prize_mechanic: _m, social_unlock_platform: _p, ...withoutMechanic } = payload;
+    result = await admin
+      .from("prizes")
+      .update(withoutMechanic)
+      .eq("id", prizeId)
+      .eq("merchant_id", merchantId)
+      .select()
+      .single();
+  }
+
+  if (result.error && isMissingSocialUnlockPlatformSchemaError(result.error.message)) {
+    const { social_unlock_platform: _p, ...withoutPlatform } = payload;
+    result = await admin
+      .from("prizes")
+      .update(withoutPlatform)
+      .eq("id", prizeId)
+      .eq("merchant_id", merchantId)
+      .select()
+      .single();
+  }
+
+  if (result.error && isMissingIconSchemaError(result.error.message)) {
+    const { icon: _icon, ...withoutIcon } = payload;
+    result = await admin
+      .from("prizes")
+      .update(withoutIcon)
+      .eq("id", prizeId)
+      .eq("merchant_id", merchantId)
+      .select()
+      .single();
+  }
+
+  if (result.error && isMissingRedemptionSchemaError(result.error.message)) {
+    result = await admin
+      .from("prizes")
+      .update(corePrizePayloadWithIcon(payload))
+      .eq("id", prizeId)
+      .eq("merchant_id", merchantId)
+      .select()
+      .single();
+  }
 
   if (result.error && isMissingRedemptionSchemaError(result.error.message)) {
     result = await admin

@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -10,25 +11,35 @@ import {
   updateMerchantPrize,
   type PrizeWritePayload,
 } from "@/lib/prize-persistence";
+import { normalizePrizeIcon } from "@/lib/prize-icons";
+import {
+  defaultIconForMechanic,
+  normalizePrizeMechanic,
+  normalizeSocialUnlockPlatform,
+} from "@/lib/prize-mechanics";
+import {
+  activePrizes,
+  parseWinChancePercent,
+  totalActiveWinChance,
+  WIN_CHANCE_TARGET,
+} from "@/lib/prize-chances";
 import { clampPrizeLabel } from "@/lib/wheel";
-import type { Prize } from "@/lib/types";
+import type { Prize, SocialLinks } from "@/lib/types";
+import { socialUrlForStep, type FlowActionStep } from "@/lib/flow-steps";
 
 type PrizeBody = {
   id?: string;
   active?: boolean;
   label?: string;
-  probability_weight?: number;
+  icon?: string | null;
+  prize_mechanic?: string | null;
+  social_unlock_platform?: string | null;
+  probability_weight?: number | string;
   stock_remaining?: number | null;
   redeem_next_visit?: boolean;
   redeem_min_spend?: string;
   redeem_valid_days?: number | null;
 };
-
-function normalizeWeight(value: unknown): number {
-  const n = typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
-  if (!Number.isFinite(n) || n < 1) return 1;
-  return Math.floor(n);
-}
 
 function buildPayload(body: PrizeBody): { error: string } | { payload: PrizeWritePayload } {
   const label = clampPrizeLabel(body.label ?? "");
@@ -46,16 +57,62 @@ function buildPayload(body: PrizeBody): { error: string } | { payload: PrizeWrit
     return { error: "invalid_stock" };
   }
 
+  const mechanic = normalizePrizeMechanic(body.prize_mechanic ?? undefined);
+  const chance = parseWinChancePercent(body.probability_weight ?? 0);
+  if (chance < 1) {
+    return { error: "invalid_win_chance" };
+  }
+
+  const social_unlock_platform =
+    mechanic === "social_unlock"
+      ? normalizeSocialUnlockPlatform(body.social_unlock_platform)
+      : null;
+  if (mechanic === "social_unlock" && !social_unlock_platform) {
+    return { error: "social_unlock_platform_required" };
+  }
+
   return {
     payload: {
       label,
-      probability_weight: normalizeWeight(body.probability_weight),
+      icon: normalizePrizeIcon(body.icon ?? defaultIconForMechanic(mechanic)),
+      prize_mechanic: mechanic,
+      social_unlock_platform,
+      probability_weight: chance,
       stock_remaining: stock ?? null,
       redeem_next_visit: Boolean(body.redeem_next_visit),
       redeem_min_spend_cents: parseMinSpendInput(body.redeem_min_spend ?? ""),
       redeem_valid_days: validDays && validDays > 0 ? validDays : null,
     },
   };
+}
+
+async function validateActiveWinChances(
+  db: SupabaseClient,
+  merchantId: string,
+  draft: Prize,
+  editingId?: string,
+): Promise<string | null> {
+  const { data: rows } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
+  const list = ((rows ?? []) as Prize[]).map((p) => (p.id === editingId ? draft : p));
+  if (activePrizes(list).length === 0) return null;
+  if (totalActiveWinChance(list) !== WIN_CHANCE_TARGET) {
+    return "win_chances_must_sum_100";
+  }
+  return null;
+}
+
+function validateSocialUnlockUrl(
+  payload: PrizeWritePayload,
+  socialLinks: SocialLinks,
+): string | null {
+  if (payload.prize_mechanic !== "social_unlock" || !payload.social_unlock_platform) {
+    return null;
+  }
+  const step = payload.social_unlock_platform as FlowActionStep;
+  if (!socialUrlForStep(step, socialLinks)) {
+    return "social_unlock_url_missing";
+  }
+  return null;
 }
 
 async function getOwnedMerchant() {
@@ -68,7 +125,7 @@ async function getOwnedMerchant() {
 
   const { data: merchant } = await supabase
     .from("merchants")
-    .select("id, slug")
+    .select("id, slug, social_links")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -76,14 +133,14 @@ async function getOwnedMerchant() {
     return { error: NextResponse.json({ error: "No merchant" }, { status: 400 }) };
   }
 
-  let admin;
+  let db: SupabaseClient;
   try {
-    admin = createAdminClient();
+    db = createAdminClient();
   } catch {
-    return { error: NextResponse.json({ error: "Server misconfigured" }, { status: 500 }) };
+    db = supabase;
   }
 
-  return { merchant, admin };
+  return { merchant, db };
 }
 
 function revalidateMerchantPages(slug: string) {
@@ -94,9 +151,9 @@ function revalidateMerchantPages(slug: string) {
 export async function POST(request: Request) {
   const ctx = await getOwnedMerchant();
   if ("error" in ctx && ctx.error) return ctx.error;
-  const { merchant, admin } = ctx as {
-    merchant: { id: string; slug: string };
-    admin: ReturnType<typeof createAdminClient>;
+  const { merchant, db } = ctx as {
+    merchant: { id: string; slug: string; social_links: SocialLinks };
+    db: SupabaseClient;
   };
 
   let body: PrizeBody;
@@ -111,7 +168,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }
 
-  const { data, error } = await insertMerchantPrize(admin, merchant.id, built.payload);
+  const socialError = validateSocialUnlockUrl(built.payload, merchant.social_links ?? {});
+  if (socialError) {
+    return NextResponse.json({ error: socialError }, { status: 400 });
+  }
+
+  const draft: Prize = {
+    id: "__new__",
+    merchant_id: merchant.id,
+    active: true,
+    created_at: new Date().toISOString(),
+    stock_remaining: built.payload.stock_remaining,
+    probability_weight: built.payload.probability_weight,
+    label: built.payload.label,
+    icon: built.payload.icon,
+    prize_mechanic: built.payload.prize_mechanic,
+    social_unlock_platform: built.payload.social_unlock_platform,
+  };
+
+  const chanceError = await validateActiveWinChances(db, merchant.id, draft);
+  if (chanceError) {
+    return NextResponse.json({ error: chanceError }, { status: 400 });
+  }
+
+  const { data, error } = await insertMerchantPrize(db, merchant.id, built.payload);
   const result = prizeMutationResult(data as Prize | null, error, built.payload);
 
   if (result.error) {
@@ -125,9 +205,9 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const ctx = await getOwnedMerchant();
   if ("error" in ctx && ctx.error) return ctx.error;
-  const { merchant, admin } = ctx as {
-    merchant: { id: string; slug: string };
-    admin: ReturnType<typeof createAdminClient>;
+  const { merchant, db } = ctx as {
+    merchant: { id: string; slug: string; social_links: SocialLinks };
+    db: SupabaseClient;
   };
 
   let body: PrizeBody;
@@ -142,7 +222,24 @@ export async function PATCH(request: Request) {
   }
 
   if (body.active !== undefined && body.label === undefined) {
-    const { data, error } = await admin
+    const { data: existing } = await db
+      .from("prizes")
+      .select("*")
+      .eq("id", body.id)
+      .eq("merchant_id", merchant.id)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json({ error: "Prize not found" }, { status: 404 });
+    }
+
+    const draft = { ...(existing as Prize), active: Boolean(body.active) };
+    const chanceError = await validateActiveWinChances(db, merchant.id, draft, body.id);
+    if (chanceError) {
+      return NextResponse.json({ error: chanceError }, { status: 400 });
+    }
+
+    const { data, error } = await db
       .from("prizes")
       .update({ active: body.active })
       .eq("id", body.id)
@@ -163,7 +260,30 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }
 
-  const { data, error } = await updateMerchantPrize(admin, body.id, merchant.id, built.payload);
+  const socialError = validateSocialUnlockUrl(built.payload, merchant.social_links ?? {});
+  if (socialError) {
+    return NextResponse.json({ error: socialError }, { status: 400 });
+  }
+
+  const draft: Prize = {
+    id: body.id,
+    merchant_id: merchant.id,
+    active: true,
+    created_at: new Date().toISOString(),
+    stock_remaining: built.payload.stock_remaining,
+    probability_weight: built.payload.probability_weight,
+    label: built.payload.label,
+    icon: built.payload.icon,
+    prize_mechanic: built.payload.prize_mechanic,
+    social_unlock_platform: built.payload.social_unlock_platform,
+  };
+
+  const chanceError = await validateActiveWinChances(db, merchant.id, draft, body.id);
+  if (chanceError) {
+    return NextResponse.json({ error: chanceError }, { status: 400 });
+  }
+
+  const { data, error } = await updateMerchantPrize(db, body.id, merchant.id, built.payload);
   const result = prizeMutationResult(data as Prize | null, error, built.payload);
 
   if (result.error) {
@@ -177,9 +297,9 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const ctx = await getOwnedMerchant();
   if ("error" in ctx && ctx.error) return ctx.error;
-  const { merchant, admin } = ctx as {
-    merchant: { id: string; slug: string };
-    admin: ReturnType<typeof createAdminClient>;
+  const { merchant, db } = ctx as {
+    merchant: { id: string; slug: string; social_links: SocialLinks };
+    db: SupabaseClient;
   };
 
   const id = new URL(request.url).searchParams.get("id")?.trim();
@@ -187,7 +307,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Missing prize id" }, { status: 400 });
   }
 
-  const { error } = await deleteMerchantPrize(admin, id, merchant.id);
+  const { error } = await deleteMerchantPrize(db, id, merchant.id);
   if (error) {
     const msg = error.message.toLowerCase();
     if (msg.includes("foreign key") || msg.includes("violates") || error.code === "23503") {

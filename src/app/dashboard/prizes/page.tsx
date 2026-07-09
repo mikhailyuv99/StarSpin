@@ -23,7 +23,14 @@ export default async function PrizesPage() {
         <p className={ui.muted}>{t("dashboard.prizesSubtitle")}</p>
       </div>
       <SpinCooldownForm merchantId={merchant.id} initialDays={merchant.spin_cooldown_days ?? 0} />
-      <PrizesManager merchantId={merchant.id} initialPrizes={(prizes ?? []) as Prize[]} />
+      <PrizesManager
+        merchantId={merchant.id}
+        initialPrizes={(prizes ?? []) as Prize[]}
+        primaryColor={merchant.primary_color}
+        secondaryColor={merchant.secondary_color}
+        journeyTheme={merchant.journey_theme ?? null}
+        socialLinks={merchant.social_links ?? {}}
+      />
     </div>
   );
 }

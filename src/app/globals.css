@@ -1235,6 +1235,45 @@ html.locale-es .cadeo-hero-accent {
   line-height: 0;
 }
 
+.marketing-wheel-pointer--tick-l,
+.marketing-wheel-pointer--tick-r {
+  animation-duration: 0.09s;
+  animation-timing-function: cubic-bezier(0.2, 0.85, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.marketing-wheel-pointer--tick-l {
+  animation-name: wheel-pointer-tick-l;
+}
+
+.marketing-wheel-pointer--tick-r {
+  animation-name: wheel-pointer-tick-r;
+}
+
+@keyframes wheel-pointer-tick-l {
+  0% {
+    transform: translate(-50%, -48%) rotate(0deg);
+  }
+  40% {
+    transform: translate(-50%, -56%) rotate(-14deg);
+  }
+  100% {
+    transform: translate(-50%, -48%) rotate(0deg);
+  }
+}
+
+@keyframes wheel-pointer-tick-r {
+  0% {
+    transform: translate(-50%, -48%) rotate(0deg);
+  }
+  40% {
+    transform: translate(-50%, -56%) rotate(14deg);
+  }
+  100% {
+    transform: translate(-50%, -48%) rotate(0deg);
+  }
+}
+
 .marketing-wheel-wrap .marketing-wheel {
   display: block;
   width: 100%;
@@ -1248,6 +1287,11 @@ html.locale-es .cadeo-hero-accent {
 
 .marketing-wheel__disc {
   transform-origin: 50px 50px;
+}
+
+.marketing-wheel__disc image,
+.marketing-wheel__disc .wheel-slice-icon {
+  opacity: 1;
 }
 
 .public-wheel-stage {

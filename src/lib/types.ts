@@ -35,11 +35,26 @@ export interface Merchant {
   created_at: string;
 }
 
+export type PrizeMechanic =
+  | "standard"
+  | "retry"
+  | "no_win"
+  | "near_miss"
+  | "mystery"
+  | "double_or_nothing"
+  | "social_unlock";
+
 export interface Prize {
   id: string;
   merchant_id: string;
   label: string;
+  /** Catalog key for the wheel silhouette (see prize-icons). */
+  icon?: string | null;
+  /** Win chance percent (1–100); active wheel prizes should sum to 100. */
   probability_weight: number;
+  prize_mechanic?: PrizeMechanic | string | null;
+  /** Required when prize_mechanic is social_unlock. */
+  social_unlock_platform?: "instagram" | "facebook" | "tiktok" | string | null;
   stock_remaining: number | null;
   active: boolean;
   redeem_next_visit?: boolean;
@@ -52,6 +67,7 @@ export interface Spin {
   id: string;
   merchant_id: string;
   prize_id: string;
+  resolved_prize_id?: string | null;
   device_fingerprint: string;
   phone_number: string | null;
   followed_social: boolean;

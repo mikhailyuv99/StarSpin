@@ -148,10 +148,10 @@ export function SetupForm() {
     }
 
     const defaultPrizes = [
-      { label: t("setup.defaultPrize1"), probability_weight: 40, stock_remaining: null },
-      { label: t("setup.defaultPrize2"), probability_weight: 30, stock_remaining: 50 },
-      { label: t("setup.defaultPrize3"), probability_weight: 20, stock_remaining: 30 },
-      { label: t("setup.defaultPrize4"), probability_weight: 10, stock_remaining: null },
+      { label: t("setup.defaultPrize1"), icon: "percent_10", probability_weight: 40, stock_remaining: null },
+      { label: t("setup.defaultPrize2"), icon: "soda", probability_weight: 30, stock_remaining: 50 },
+      { label: t("setup.defaultPrize3"), icon: "cupcake", probability_weight: 20, stock_remaining: 30 },
+      { label: t("setup.defaultPrize4"), icon: "try_again", probability_weight: 10, stock_remaining: null },
     ];
 
     const { data: merchant } = await supabase

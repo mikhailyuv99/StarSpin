@@ -147,7 +147,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.spinNotFound") }, { status: 404 });
     }
 
-    const prize = Array.isArray(spin.prize) ? spin.prize[0] : spin.prize;
+    const displayPrize = Array.isArray(spin.prize) ? spin.prize[0] : spin.prize;
+    let prize = displayPrize;
+    const resolvedId = (spin as { resolved_prize_id?: string | null }).resolved_prize_id;
+    if (resolvedId) {
+      const { data: resolved } = await supabase.from("prizes").select("*").eq("id", resolvedId).maybeSingle();
+      if (resolved) prize = resolved;
+    }
     const prizeLabel = prize?.label ?? "Prize";
     const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin(spin);
 

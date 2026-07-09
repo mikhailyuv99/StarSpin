@@ -1,0 +1,5 @@
+Icon sources:
+- Cute food pack from Vecteezy (GIU JEN 753-51) — Vecteezy.com
+- Additional icons from Twemoji (CC-BY 4.0) — https://github.com/twitter/twemoji
+
+Raster assets: 157 food/drink icons + vector offer/service marks.

@@ -5,8 +5,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
+import { isOutcomePrize } from "@/lib/prize-outcomes";
+import { resolveSpinOutcome, prizeForClaim } from "@/lib/spin-resolution";
 import type { Prize } from "@/lib/types";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
+
+async function decrementStock(
+  supabase: ReturnType<typeof createAdminClient>,
+  prize: Prize,
+): Promise<boolean> {
+  if (prize.stock_remaining === null) return true;
+  const { data } = await supabase
+    .from("prizes")
+    .update({ stock_remaining: prize.stock_remaining - 1 })
+    .eq("id", prize.id)
+    .gt("stock_remaining", 0)
+    .select("id")
+    .maybeSingle();
+  return Boolean(data);
+}
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
@@ -72,11 +89,13 @@ export async function POST(request: Request) {
       .eq("merchant_id", merchantId)
       .eq("active", true);
 
-    const selected = pickWeightedPrize((prizes ?? []) as Prize[]);
+    const prizeList = (prizes ?? []) as Prize[];
+    const selected = pickWeightedPrize(prizeList);
     if (!selected) {
       return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
     }
 
+    const resolution = resolveSpinOutcome(prizeList, selected);
     const status = reviewScreenshotStatus ?? "pending";
 
     const { data: spin, error: spinError } = await supabase
@@ -84,6 +103,7 @@ export async function POST(request: Request) {
       .insert({
         merchant_id: merchantId,
         prize_id: selected.id,
+        resolved_prize_id: resolution.resolvedPrizeId,
         device_fingerprint: fingerprint,
         phone_number: null,
         followed_social: Boolean(followedSocial),
@@ -96,16 +116,20 @@ export async function POST(request: Request) {
 
     if (spinError) throw spinError;
 
-    if (selected.stock_remaining !== null) {
-      const { data: decremented } = await supabase
+    let resolvedPrize: Prize | null = null;
+    if (resolution.resolvedPrizeId) {
+      const { data } = await supabase
         .from("prizes")
-        .update({ stock_remaining: selected.stock_remaining - 1 })
-        .eq("id", selected.id)
-        .gt("stock_remaining", 0)
-        .select("id")
+        .select("*")
+        .eq("id", resolution.resolvedPrizeId)
         .maybeSingle();
+      resolvedPrize = (data as Prize | null) ?? null;
+    }
 
-      if (!decremented) {
+    const stockPrize = resolvedPrize ?? (isOutcomePrize(selected) ? null : selected);
+    if (stockPrize) {
+      const ok = await decrementStock(supabase, stockPrize);
+      if (!ok) {
         return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
       }
     }
@@ -113,6 +137,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       spinId: spin.id,
       prize: selected,
+      resolvedPrize: resolvedPrize ? prizeForClaim(selected, resolvedPrize) : null,
+      nearMissTarget: resolution.nearMissTargetLabel,
     });
   } catch (err) {
     console.error("Spin error:", err);

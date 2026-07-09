@@ -1,4 +1,5 @@
 import type { Prize } from "./types";
+import { isRetryPoolExcluded } from "./prize-mechanics";
 
 /** Max characters merchants can enter; wheel layout also clamps at render time. */
 export const PRIZE_LABEL_MAX_LENGTH = 24;
@@ -115,14 +116,28 @@ export function pickWeightedPrize(prizes: Prize[]): Prize | null {
   if (eligible.length === 0) return null;
 
   const totalWeight = eligible.reduce((sum, p) => sum + p.probability_weight, 0);
-  let roll = Math.random() * totalWeight;
+  if (totalWeight <= 0) return null;
+
+  const roll = Math.random() * (totalWeight === 100 ? 100 : totalWeight);
+  let cursor = roll;
 
   for (const prize of eligible) {
-    roll -= prize.probability_weight;
-    if (roll <= 0) return prize;
+    cursor -= prize.probability_weight;
+    if (cursor <= 0) return prize;
   }
 
   return eligible[eligible.length - 1] ?? null;
+}
+
+/** Re-roll after retry / near-miss (excludes mechanic slices that re-trigger). */
+export function pickRetrySpinPrize(prizes: Prize[]): Prize | null {
+  const pool = prizes.filter(
+    (p) =>
+      p.active &&
+      (p.stock_remaining === null || p.stock_remaining > 0) &&
+      !isRetryPoolExcluded(p),
+  );
+  return pickWeightedPrize(pool);
 }
 
 export function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
@@ -209,6 +224,35 @@ export function splitSliceLabel(label: string, sliceAngle: number): string[] {
   return kept;
 }
 
+/** Width of an arc at a given radius (SVG viewBox units). */
+export function arcChordWidthAtRadius(radius: number, sliceAngleDeg: number): number {
+  const halfRad = ((sliceAngleDeg / 2) * Math.PI) / 180;
+  return 2 * radius * Math.sin(halfRad);
+}
+
+export type WheelSliceIconLayout = {
+  iconSize: number;
+  labelRadius: number;
+};
+
+/** Size & radial position for a prize icon inside one equal wedge (viewBox 0–100). */
+export function layoutWheelSliceIcon(
+  sliceAngleDeg: number,
+  sliceCount: number,
+  wheelRadius = 44,
+): WheelSliceIconLayout {
+  const hubRadius = 10;
+  const labelRadius = sliceLabelRadius(wheelRadius, sliceAngleDeg);
+  const halfRad = ((sliceAngleDeg / 2) * Math.PI) / 180;
+  // Conservative square that fits inside the wedge without clipping corners.
+  const angularLimit = 2 * labelRadius * Math.sin(halfRad) * 0.82;
+  const radialLimit =
+    Math.min(labelRadius - hubRadius, wheelRadius - 2 - labelRadius) * 1.45;
+  const byCount = 46 / Math.sqrt(Math.max(sliceCount, 1));
+  const iconSize = Math.min(17.5, Math.max(7, Math.min(angularLimit, radialLimit, byCount)));
+  return { iconSize, labelRadius };
+}
+
 /** Place label in the readable zone of each slice */
 export function sliceLabelRadius(r: number, sliceAngle: number): number {
   const t = Math.min(Math.max(sliceAngle / 360, 0.1), 0.38);
@@ -244,4 +288,18 @@ export function prizeEqualSliceAngles(prizes: Prize[]): { prize: Prize; start: n
     start: i * sliceAngle,
     end: (i + 1) * sliceAngle,
   }));
+}
+
+export function wheelEligiblePrizes(prizes: Prize[]): Prize[] {
+  return prizes.filter((p) => p.active && (p.stock_remaining === null || p.stock_remaining > 0));
+}
+
+export function totalPrizeWeight(prizes: Prize[]): number {
+  return wheelEligiblePrizes(prizes).reduce((sum, p) => sum + p.probability_weight, 0);
+}
+
+/** Literal win % stored on the prize (active wheel prizes should sum to 100). */
+export function prizeWinChancePercent(prize: Prize, _prizes?: Prize[]): number | null {
+  if (!prize.active || (prize.stock_remaining !== null && prize.stock_remaining <= 0)) return null;
+  return prize.probability_weight;
 }
