@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import type { Prize, SocialLinks } from "@/lib/types";
-import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { useI18n } from "@/i18n/client";
 import { formatMinSpendVnd, parseMinSpendInput } from "@/lib/redemption-rules";
@@ -195,6 +194,31 @@ function mapPrizeApiError(code: string | undefined, t: (key: string) => string):
   return code ?? t("dashboard.prizeSaveFailed");
 }
 
+function mergePrizesFromApi(
+  prev: Prize[],
+  data: { prize?: Prize; prizes?: Prize[] },
+): Prize[] {
+  if (data.prizes?.length) return data.prizes;
+  if (data.prize) return prev.map((p) => (p.id === data.prize!.id ? data.prize! : p));
+  return prev;
+}
+
+function buildOptimisticPrize(prize: Prize, payload: ReturnType<typeof buildPrizePayload>): Prize {
+  return {
+    ...prize,
+    label: payload.label,
+    icon: payload.icon,
+    prize_mechanic: payload.prize_mechanic,
+    social_unlock_platform: payload.social_unlock_platform,
+    rarity_tier: payload.rarity_tier,
+    probability_weight: payload.probability_weight,
+    stock_remaining: payload.stock_remaining,
+    redeem_next_visit: payload.redeem_next_visit,
+    redeem_min_spend_cents: payload.redeem_min_spend_cents,
+    redeem_valid_days: payload.redeem_valid_days,
+  };
+}
+
 export function PrizesManager({
   merchantId,
   initialPrizes,
@@ -213,13 +237,14 @@ export function PrizesManager({
   socialLinks: SocialLinks;
 }) {
   const { t, locale } = useI18n();
-  const router = useRouter();
   const [prizes, setPrizes] = useState(initialPrizes);
   const [oddsMode, setOddsMode] = useState<PrizeOddsMode>(normalizePrizeOddsMode(initialOddsMode));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
   const [newPrize, setNewPrize] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
   const [saving, setSaving] = useState(false);
+  const [savingPrizeId, setSavingPrizeId] = useState<string | null>(null);
+  const [togglingPrizeId, setTogglingPrizeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [previewWonLabel, setPreviewWonLabel] = useState<string | null>(null);
@@ -288,70 +313,80 @@ export function PrizesManager({
     [oddsMode, prizes],
   );
 
-  const setOddsModeAndPersist = async (nextMode: PrizeOddsMode) => {
-    if (nextMode === oddsMode) return;
-    setSaving(true);
-    setError(null);
-    try {
-      if (nextMode === "advanced" && oddsMode === "simple") {
-        const synced = applyTierWinChances(prizes);
-        setPrizes(synced);
-        if (editingId) {
-          const edited = synced.find((p) => p.id === editingId);
-          if (edited) {
-            setEditForm((f) => ({
-              ...f,
-              probability_weight: String(edited.probability_weight),
-            }));
-          }
-        }
-        setNewPrize((p) => ({
-          ...p,
-          probability_weight: String(
-            previewWinChanceForTier("__new__", [
-              ...synced,
-              { id: "__new__", active: true, rarity_tier: p.rarity_tier },
-            ]) ?? p.probability_weight,
-          ),
-        }));
-      }
-      if (nextMode === "simple" && oddsMode === "advanced") {
-        setPrizes((prev) =>
-          prev.map((p) => ({
-            ...p,
-            rarity_tier: closestTierForPercent(p.probability_weight),
-          })),
-        );
-        if (editingId) {
-          setEditForm((f) => ({
-            ...f,
-            rarity_tier: closestTierForPercent(normalizeWinChance(f.probability_weight)),
-          }));
-        }
-        setNewPrize((p) => ({
-          ...p,
-          rarity_tier: closestTierForPercent(normalizeWinChance(p.probability_weight)),
-        }));
-      }
-
-      const res = await fetch("/api/dashboard/prizes/odds-mode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: nextMode }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
-      if (!res.ok) {
-        setError(mapPrizeApiError(data.error, t));
-        return;
-      }
-      if (data.prizes) setPrizes(data.prizes);
-      setOddsMode(nextMode);
-      refresh();
-    } catch {
-      setError(t("dashboard.prizeSaveFailed"));
-    } finally {
-      setSaving(false);
+  const applyOddsModeLocally = (nextMode: PrizeOddsMode, list: Prize[]): Prize[] => {
+    if (nextMode === "advanced") {
+      return applyTierWinChances(list);
     }
+    const withTiers = list.map((p) => ({
+      ...p,
+      rarity_tier: closestTierForPercent(p.probability_weight),
+    }));
+    return applyTierWinChances(withTiers);
+  };
+
+  const syncFormsForOddsMode = (nextMode: PrizeOddsMode, list: Prize[]) => {
+    if (nextMode === "advanced") {
+      if (editingId) {
+        const edited = list.find((p) => p.id === editingId);
+        if (edited) {
+          setEditForm((f) => ({ ...f, probability_weight: String(edited.probability_weight) }));
+        }
+      }
+      setNewPrize((p) => ({
+        ...p,
+        probability_weight: String(
+          previewWinChanceForTier("__new__", [
+            ...list,
+            { id: "__new__", active: true, rarity_tier: p.rarity_tier },
+          ]) ?? p.probability_weight,
+        ),
+      }));
+      return;
+    }
+    if (editingId) {
+      setEditForm((f) => ({
+        ...f,
+        rarity_tier: closestTierForPercent(normalizeWinChance(f.probability_weight)),
+      }));
+    }
+    setNewPrize((p) => ({
+      ...p,
+      rarity_tier: closestTierForPercent(normalizeWinChance(p.probability_weight)),
+    }));
+  };
+
+  const switchOddsMode = (nextMode: PrizeOddsMode) => {
+    if (nextMode === oddsMode) return;
+    const prevMode = oddsMode;
+    const prevPrizes = prizes;
+    const nextPrizes = applyOddsModeLocally(nextMode, prizes);
+    setOddsMode(nextMode);
+    setPrizes(nextPrizes);
+    syncFormsForOddsMode(nextMode, nextPrizes);
+    setError(null);
+
+    void fetch("/api/dashboard/prizes/odds-mode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: nextMode }),
+    })
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
+        if (!res.ok) {
+          setOddsMode(prevMode);
+          setPrizes(prevPrizes);
+          syncFormsForOddsMode(prevMode, prevPrizes);
+          setError(mapPrizeApiError(data.error, t));
+          return;
+        }
+        if (data.prizes) setPrizes(data.prizes);
+      })
+      .catch(() => {
+        setOddsMode(prevMode);
+        setPrizes(prevPrizes);
+        syncFormsForOddsMode(prevMode, prevPrizes);
+        setError(t("dashboard.prizeSaveFailed"));
+      });
   };
 
   const splitChancesEvenly = async () => {
@@ -381,15 +416,12 @@ export function PrizesManager({
           prizes.map((prize) => byId.get(prize.id) ?? prize),
         ),
       }));
-      refresh();
     } catch {
       setError(t("dashboard.prizeSaveFailed"));
     } finally {
       setSaving(false);
     }
   };
-
-  const refresh = () => router.refresh();
 
   const startEdit = (prize: Prize) => {
     if (editingId === prize.id) {
@@ -404,9 +436,14 @@ export function PrizesManager({
     setEditingId(null);
   };
 
+  const applyPrizesList = (data: { prize?: Prize; prizes?: Prize[] }) => {
+    setPrizes((prev) => mergePrizesFromApi(prev, data));
+  };
+
   const updatePrizeIcon = async (prize: Prize, icon: PrizeIconId) => {
-    setSaving(true);
     setError(null);
+    const snapshot = prizes;
+    setPrizes((p) => p.map((x) => (x.id === prize.id ? { ...x, icon } : x)));
 
     const redemption = redemptionFormFromPrize(prize);
     const apiRes = await fetch("/api/dashboard/prizes", {
@@ -429,27 +466,26 @@ export function PrizesManager({
 
     if (!apiRes.ok) {
       const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setPrizes(snapshot);
       setError(mapPrizeApiError(errBody.error, t));
-      setSaving(false);
       return;
     }
 
-    const apiData = (await apiRes.json()) as { prize?: Prize };
-    if (apiData.prize) {
-      setPrizes((p) => p.map((x) => (x.id === prize.id ? apiData.prize! : x)));
-      refresh();
+    const apiData = (await apiRes.json()) as { prize?: Prize; prizes?: Prize[] };
+    if (apiData.prize || apiData.prizes) {
+      applyPrizesList(apiData);
     }
-    setSaving(false);
   };
 
   const saveEdit = async (id: string) => {
-    setSaving(true);
+    const prize = prizes.find((p) => p.id === id);
+    if (!prize) return;
+
     setError(null);
     let payload;
     try {
       payload = buildPrizePayload(editForm);
     } catch (e) {
-      setSaving(false);
       if (e instanceof Error && e.message === "invalid_valid_days") {
         setError(t("dashboard.redeemValidDaysInvalid"));
       } else if (e instanceof Error && e.message === "invalid_stock") {
@@ -461,6 +497,17 @@ export function PrizesManager({
       }
       return;
     }
+
+    const snapshot = prizes;
+    const optimistic = buildOptimisticPrize(prize, payload);
+    let optimisticList = prizes.map((p) => (p.id === id ? optimistic : p));
+    if (oddsMode === "simple") {
+      optimisticList = applyTierWinChances(optimisticList);
+    }
+
+    setPrizes(optimisticList);
+    setEditingId(null);
+    setSavingPrizeId(id);
 
     const apiRes = await fetch("/api/dashboard/prizes", {
       method: "PATCH",
@@ -480,20 +527,19 @@ export function PrizesManager({
       }),
     });
 
+    setSavingPrizeId(null);
+
     if (!apiRes.ok) {
       const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setPrizes(snapshot);
+      setEditingId(id);
+      setEditForm(prizeFormFromPrize(prize));
       setError(mapPrizeApiError(errBody.error, t));
-      setSaving(false);
       return;
     }
 
-    const apiData = (await apiRes.json()) as { prize?: Prize };
-    if (apiData.prize) {
-      setPrizes((p) => p.map((x) => (x.id === id ? apiData.prize! : x)));
-      setEditingId(null);
-      refresh();
-    }
-    setSaving(false);
+    const apiData = (await apiRes.json()) as { prize?: Prize; prizes?: Prize[] };
+    applyPrizesList(apiData);
   };
 
   const addPrize = async () => {
@@ -539,16 +585,20 @@ export function PrizesManager({
       return;
     }
 
-    const apiData = (await apiRes.json()) as { prize?: Prize };
-    if (apiData.prize) {
-      setPrizes((p) => [...p, apiData.prize!]);
-      setNewPrize(emptyPrizeForm([...prizes, apiData.prize!]));
-      refresh();
+    const apiData = (await apiRes.json()) as { prize?: Prize; prizes?: Prize[] };
+    if (apiData.prizes) {
+      setPrizes(apiData.prizes);
+      setNewPrize(emptyPrizeForm(apiData.prizes));
+    } else if (apiData.prize) {
+      const next = [...prizes, apiData.prize];
+      setPrizes(next);
+      setNewPrize(emptyPrizeForm(next));
     }
     setSaving(false);
   };
 
   const toggleActive = async (prize: Prize) => {
+    const nextActive = !prize.active;
     if (prize.active) {
       const after = prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p));
       if (!hasMinimumWheelPrizes(after)) {
@@ -556,26 +606,33 @@ export function PrizesManager({
         return;
       }
     }
+
     setError(null);
+    const snapshot = prizes;
+    let optimistic = prizes.map((p) => (p.id === prize.id ? { ...p, active: nextActive } : p));
+    if (oddsMode === "simple") {
+      optimistic = applyTierWinChances(optimistic);
+    }
+    setPrizes(optimistic);
+    setTogglingPrizeId(prize.id);
+
     const apiRes = await fetch("/api/dashboard/prizes", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: prize.id, active: !prize.active }),
+      body: JSON.stringify({ id: prize.id, active: nextActive }),
     });
+
+    setTogglingPrizeId(null);
 
     if (!apiRes.ok) {
       const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setPrizes(snapshot);
       setError(mapPrizeApiError(errBody.error, t));
       return;
     }
 
-    const apiData = (await apiRes.json()) as { prize?: Prize };
-    if (apiData.prize) {
-      setPrizes((p) => p.map((x) => (x.id === prize.id ? apiData.prize! : x)));
-    } else {
-      setPrizes((p) => p.map((x) => (x.id === prize.id ? { ...x, active: !x.active } : x)));
-    }
-    refresh();
+    const apiData = (await apiRes.json()) as { prize?: Prize; prizes?: Prize[] };
+    applyPrizesList(apiData);
   };
 
   const deletePrize = async (id: string) => {
@@ -597,7 +654,6 @@ export function PrizesManager({
 
     setPrizes((p) => p.filter((x) => x.id !== id));
     if (editingId === id) setEditingId(null);
-    refresh();
   };
 
   const ruleSummary = (prize: Prize) => {
@@ -623,23 +679,21 @@ export function PrizesManager({
           {t("dashboard.prizesConfigured")}
           <span className="ml-2 text-base font-bold text-muted">({activeCount})</span>
         </h2>
-        <div className="flex rounded-[12px] border-2 border-black p-1">
+        <div className="flex rounded-[12px] border-2 border-black p-1 transition-colors duration-150">
           <button
             type="button"
-            disabled={saving || oddsMode === "simple"}
-            onClick={() => void setOddsModeAndPersist("simple")}
-            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase ${
-              oddsMode === "simple" ? "bg-black text-white" : "text-ink"
+            onClick={() => switchOddsMode("simple")}
+            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase transition-colors duration-150 ${
+              oddsMode === "simple" ? "bg-black text-white" : "text-ink hover:bg-black/5"
             }`}
           >
             {t("dashboard.prizeOddsSimple")}
           </button>
           <button
             type="button"
-            disabled={saving || oddsMode === "advanced"}
-            onClick={() => void setOddsModeAndPersist("advanced")}
-            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase ${
-              oddsMode === "advanced" ? "bg-black text-white" : "text-ink"
+            onClick={() => switchOddsMode("advanced")}
+            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase transition-colors duration-150 ${
+              oddsMode === "advanced" ? "bg-black text-white" : "text-ink hover:bg-black/5"
             }`}
           >
             {t("dashboard.prizeOddsAdvanced")}
@@ -685,9 +739,12 @@ export function PrizesManager({
       {prizes.length === 0 ? (
         <p className={`mt-4 ${ui.muted}`}>{t("dashboard.noPrizes")}</p>
       ) : (
-        <div className="mt-5 rounded-[14px] border-2 border-black">
-          {prizes.map((prize) => (
-            <div key={prize.id} className="border-b-2 border-black/10 bg-white px-4 py-4 last:border-b-0">
+        <div className="mt-5 overflow-hidden rounded-[14px] border-2 border-black bg-white shadow-[3px_3px_0_0_#0a0a0a]">
+          {prizes.map((prize, index) => (
+            <div
+              key={prize.id}
+              className={`bg-white px-4 py-4 ${index > 0 ? "border-t-2 border-black/10" : ""}`}
+            >
               {editingId === prize.id ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3 border-b border-black/10 pb-3">
@@ -809,10 +866,10 @@ export function PrizesManager({
                     <button
                       type="button"
                       onClick={() => saveEdit(prize.id)}
-                      disabled={saving || !editForm.label.trim()}
+                      disabled={savingPrizeId === prize.id || !editForm.label.trim()}
                       className={ui.btn}
                     >
-                      {saving ? t("common.saving") : t("common.save")}
+                      {savingPrizeId === prize.id ? t("common.saving") : t("common.save")}
                     </button>
                     <button type="button" onClick={cancelEdit} className={ui.btnOutline}>
                       {t("common.cancel")}
@@ -820,8 +877,8 @@ export function PrizesManager({
                   </div>
                 </div>
               ) : (
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
+                <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                  <div className="flex min-w-0 items-start gap-3">
                       <PrizeIconPicker
                         variant="compact"
                         value={normalizePrizeIcon(prize.icon)}
@@ -856,23 +913,37 @@ export function PrizesManager({
                         <p className="mt-1 text-xs font-medium text-muted">{ruleSummary(prize)}</p>
                       </div>
                     </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => startEdit(prize)} className={ui.btnOutline}>
+                  <div className="flex shrink-0 flex-nowrap items-center gap-2 lg:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(prize)}
+                      className={`${ui.btnOutline} shrink-0 whitespace-nowrap`}
+                    >
                       {editingId === prize.id ? t("dashboard.closeEditor") : t("common.edit")}
                     </button>
                     <button
                       type="button"
-                      onClick={() => toggleActive(prize)}
-                      disabled={prize.active && !hasMinimumWheelPrizes(prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p)))}
-                      className={ui.btnOutline}
+                      onClick={() => void toggleActive(prize)}
+                      disabled={
+                        togglingPrizeId === prize.id ||
+                        (prize.active &&
+                          !hasMinimumWheelPrizes(
+                            prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p)),
+                          ))
+                      }
+                      className={`${ui.btnOutline} shrink-0 whitespace-nowrap`}
                     >
-                      {prize.active ? t("common.deactivate") : t("common.activate")}
+                      {togglingPrizeId === prize.id
+                        ? t("common.saving")
+                        : prize.active
+                          ? t("common.deactivate")
+                          : t("common.activate")}
                     </button>
                     <button
                       type="button"
-                      onClick={() => deletePrize(prize.id)}
+                      onClick={() => void deletePrize(prize.id)}
                       disabled={!hasMinimumWheelPrizes(prizes.filter((p) => p.id !== prize.id))}
-                      className={ui.btnDanger}
+                      className={`${ui.btnDanger} shrink-0 whitespace-nowrap`}
                     >
                       {t("common.delete")}
                     </button>

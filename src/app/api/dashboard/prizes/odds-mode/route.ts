@@ -48,13 +48,17 @@ export async function POST(request: Request) {
 
   if (mode === "simple" && activePrizes(prizes).length > 0) {
     const synced = applyTierWinChances(prizes);
-    for (const prize of synced.filter((p) => p.active)) {
-      await supabase
-        .from("prizes")
-        .update({ probability_weight: prize.probability_weight })
-        .eq("id", prize.id)
-        .eq("merchant_id", merchant.id);
-    }
+    await Promise.all(
+      synced
+        .filter((p) => p.active)
+        .map((prize) =>
+          supabase
+            .from("prizes")
+            .update({ probability_weight: prize.probability_weight })
+            .eq("id", prize.id)
+            .eq("merchant_id", merchant.id),
+        ),
+    );
     prizes = synced;
   }
 

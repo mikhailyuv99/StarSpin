@@ -538,6 +538,7 @@
     "prizeOddsSimpleHint": "Pick a rarity per prize — StarSpin calculates the real odds automatically.",
     "prizeOddsAdvancedHint": "Set exact win % for each prize. Active prizes must total 100%.",
     "prizeRarity": "Rarity",
+    "prizeRarityChoose": "Choose rarity",
     "prizeRarityApprox": "≈ {pct}% win chance",
     "prizeRarity_common": "Common",
     "prizeRarity_uncommon": "Uncommon",

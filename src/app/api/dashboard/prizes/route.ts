@@ -106,13 +106,16 @@ async function getMerchantOddsMode(
 async function syncSimpleModeChances(db: SupabaseClient, merchantId: string): Promise<Prize[]> {
   const { data: rows } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
   const prizes = applyTierWinChances((rows ?? []) as Prize[]);
-  for (const prize of prizes.filter((p) => p.active)) {
-    await db
-      .from("prizes")
-      .update({ probability_weight: prize.probability_weight })
-      .eq("id", prize.id)
-      .eq("merchant_id", merchantId);
-  }
+  const active = prizes.filter((p) => p.active);
+  await Promise.all(
+    active.map((prize) =>
+      db
+        .from("prizes")
+        .update({ probability_weight: prize.probability_weight })
+        .eq("id", prize.id)
+        .eq("merchant_id", merchantId),
+    ),
+  );
   const { data: refreshed } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
   return (refreshed ?? []) as Prize[];
 }
@@ -245,7 +248,7 @@ export async function POST(request: Request) {
     const prizes = await syncSimpleModeChances(db, merchant.id);
     revalidateMerchantPages(merchant.slug);
     const synced = prizes.find((p) => p.id === result.prize?.id) ?? result.prize;
-    return NextResponse.json({ prize: synced, redemptionRulesSkipped: result.redemptionRulesSkipped });
+    return NextResponse.json({ prize: synced, prizes, redemptionRulesSkipped: result.redemptionRulesSkipped });
   }
 
   revalidateMerchantPages(merchant.slug);
@@ -312,7 +315,9 @@ export async function PATCH(request: Request) {
 
     const oddsMode = await getMerchantOddsMode(db, merchant.id);
     if (oddsMode === "simple") {
-      await syncSimpleModeChances(db, merchant.id);
+      const prizes = await syncSimpleModeChances(db, merchant.id);
+      revalidateMerchantPages(merchant.slug);
+      return NextResponse.json({ prize: data as Prize, prizes });
     }
 
     revalidateMerchantPages(merchant.slug);
@@ -359,7 +364,7 @@ export async function PATCH(request: Request) {
     const prizes = await syncSimpleModeChances(db, merchant.id);
     revalidateMerchantPages(merchant.slug);
     const synced = prizes.find((p) => p.id === result.prize?.id) ?? result.prize;
-    return NextResponse.json({ prize: synced, redemptionRulesSkipped: result.redemptionRulesSkipped });
+    return NextResponse.json({ prize: synced, prizes, redemptionRulesSkipped: result.redemptionRulesSkipped });
   }
 
   revalidateMerchantPages(merchant.slug);
