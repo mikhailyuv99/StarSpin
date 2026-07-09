@@ -109,6 +109,9 @@ export function journeyStepPosition(
   opts?: { includeResult?: boolean },
 ): { current: number; total: number } {
   const displaySteps = stepOrder.filter((s) => opts?.includeResult || s !== "result");
+  if (step === "result") {
+    return { current: displaySteps.length, total: displaySteps.length };
+  }
   const index = displaySteps.indexOf(step);
   return {
     current: index >= 0 ? index + 1 : 1,

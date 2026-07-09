@@ -1,5 +1,5 @@
 import type { Prize } from "./types";
-import { isRetryPoolExcluded } from "./prize-mechanics";
+import { isRetryPoolExcluded, resolvePrizeMechanic } from "./prize-mechanics";
 
 /** Max characters merchants can enter; wheel layout also clamps at render time. */
 export const PRIZE_LABEL_MAX_LENGTH = 24;
@@ -131,13 +131,13 @@ export function pickWeightedPrize(prizes: Prize[]): Prize | null {
 
 /** Re-roll after retry / near-miss (excludes mechanic slices that re-trigger). */
 export function pickRetrySpinPrize(prizes: Prize[]): Prize | null {
-  const pool = prizes.filter(
-    (p) =>
-      p.active &&
-      (p.stock_remaining === null || p.stock_remaining > 0) &&
-      !isRetryPoolExcluded(p),
+  const eligible = prizes.filter(
+    (p) => p.active && (p.stock_remaining === null || p.stock_remaining > 0),
   );
-  return pickWeightedPrize(pool);
+  const pool = eligible.filter((p) => !isRetryPoolExcluded(p));
+  if (pool.length > 0) return pickWeightedPrize(pool);
+  const fallback = eligible.filter((p) => resolvePrizeMechanic(p) !== "retry");
+  return pickWeightedPrize(fallback.length > 0 ? fallback : eligible);
 }
 
 export function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {

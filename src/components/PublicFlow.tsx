@@ -136,8 +136,8 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     ? `/api/google/review?slug=${encodeURIComponent(merchant.slug)}`
     : null;
   const stepPosition = useMemo(
-    () => journeyStepPosition(stepOrder, step, { includeResult: preview }),
-    [stepOrder, step, preview],
+    () => journeyStepPosition(stepOrder, step),
+    [stepOrder, step],
   );
   const stepHeading = t("public.journeyStepHeading", {
     current: stepPosition.current,

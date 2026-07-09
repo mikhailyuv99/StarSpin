@@ -33,11 +33,11 @@ export async function POST(request: Request) {
 
     const { data: spin, error: spinError } = await supabase
       .from("spins")
-      .select("id, merchant_id, prize_id, prize_code, prize:prizes(*)")
+      .select("id, merchant_id, prize_id, prize_code")
       .eq("id", spinId)
       .maybeSingle();
 
-    if (spinError || !spin) {
+    if (spinError || !spin || !spin.prize_id) {
       return NextResponse.json({ error: t("api.spinError") }, { status: 404 });
     }
 
@@ -45,7 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.spinAlreadyClaimed") }, { status: 409 });
     }
 
-    const currentPrize = (Array.isArray(spin.prize) ? spin.prize[0] : spin.prize) as Prize | null;
+    const { data: prizeRow } = await supabase
+      .from("prizes")
+      .select("*")
+      .eq("id", spin.prize_id)
+      .maybeSingle();
+
+    const currentPrize = (prizeRow as Prize | null) ?? null;
     if (!currentPrize || (!isRetrySpinPrize(currentPrize) && !isNearMissPrize(currentPrize))) {
       return NextResponse.json({ error: t("api.spinRetryNotAllowed") }, { status: 400 });
     }

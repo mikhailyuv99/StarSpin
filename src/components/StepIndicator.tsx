@@ -26,7 +26,10 @@ export function StepIndicator({
   const position = journeyStepPosition(steps, current, { includeResult: showResult });
 
   const resolvedCurrent = current === "result" ? "result" : current;
-  const currentIndex = displaySteps.indexOf(resolvedCurrent);
+  const onResult = current === "result";
+  const currentIndex = onResult
+    ? displaySteps.length
+    : displaySteps.indexOf(resolvedCurrent);
 
   return (
     <div className={`mb-5${forceMobileLayout ? "" : " sm:mb-6"}${onStepClick ? " public-step-nav" : ""}`}>
@@ -39,8 +42,8 @@ export function StepIndicator({
       <div className={`flex justify-center gap-1${forceMobileLayout ? "" : " sm:gap-1.5"}`}>
         {displaySteps.map((step, i) => {
           const onResult = current === "result";
-          const done = onResult ? i < displaySteps.length - 1 : i < currentIndex;
-          const active = onResult ? step === "result" : i === currentIndex;
+          const done = onResult || i < currentIndex;
+          const active = !onResult && i === currentIndex;
           const state = active ? "active" : done ? "done" : "idle";
           const label = t("public.journeyStepHeading", { current: i + 1, total: displaySteps.length });
           const pillClass = `public-step-pill public-step-pill--${state}${onStepClick ? " public-step-pill--nav" : ""}`;
@@ -55,7 +58,7 @@ export function StepIndicator({
                   aria-label={label}
                   onClick={() => onStepClick(step)}
                 >
-                  {done && !active ? "✓" : step === "result" ? "★" : i + 1}
+                  {done && !active ? "✓" : step === "result" && active ? "★" : i + 1}
                 </button>
               ) : (
                 <div className={pillClass} aria-current={active ? "step" : undefined} aria-label={label}>
