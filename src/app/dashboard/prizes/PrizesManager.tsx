@@ -34,12 +34,23 @@ import { PrizeIconPicker } from "@/components/dashboard/PrizeIconPicker";
 import { PrizeMechanicSelect } from "@/components/dashboard/PrizeMechanicSelect";
 import { SocialUnlockPlatformSelect } from "@/components/dashboard/SocialUnlockPlatformSelect";
 import { DEFAULT_PRIZE_ICON, normalizePrizeIcon, type PrizeIconId } from "@/lib/prize-icons";
+import {
+  applyTierWinChances,
+  closestTierForPercent,
+  normalizePrizeOddsMode,
+  normalizeRarityTier,
+  previewWinChanceForTier,
+  type PrizeOddsMode,
+  type PrizeRarityTier,
+} from "@/lib/prize-rarity";
+import { PrizeRarityBadge, PrizeRaritySelect } from "@/components/dashboard/PrizeRaritySelect";
 
 type PrizeForm = {
   label: string;
   icon: PrizeIconId;
   prize_mechanic: PrizeMechanic;
   social_unlock_platform: SocialUnlockPlatform | "";
+  rarity_tier: PrizeRarityTier;
   probability_weight: string;
   stock_remaining: string;
   redemption: RedemptionFormState;
@@ -120,6 +131,7 @@ function buildPrizePayload(form: PrizeForm) {
     prize_mechanic: form.prize_mechanic,
     social_unlock_platform:
       form.prize_mechanic === "social_unlock" ? form.social_unlock_platform : null,
+    rarity_tier: form.rarity_tier,
     probability_weight: normalizeWinChance(form.probability_weight),
     stock_remaining,
     ...buildRedemptionPayload(form.redemption),
@@ -144,6 +156,7 @@ function emptyPrizeForm(prizes: Prize[] = []): PrizeForm {
     icon: DEFAULT_PRIZE_ICON,
     prize_mechanic: "standard",
     social_unlock_platform: "",
+    rarity_tier: "common",
     probability_weight: defaultChanceForNewPrize(prizes),
     stock_remaining: "",
     redemption: emptyRedemptionForm(),
@@ -156,6 +169,7 @@ function prizeFormFromPrize(prize: Prize): PrizeForm {
     icon: normalizePrizeIcon(prize.icon),
     prize_mechanic: resolvePrizeMechanic(prize),
     social_unlock_platform: normalizeSocialUnlockPlatform(prize.social_unlock_platform) ?? "",
+    rarity_tier: normalizeRarityTier(prize.rarity_tier),
     probability_weight: String(prize.probability_weight),
     stock_remaining: prize.stock_remaining !== null ? String(prize.stock_remaining) : "",
     redemption: redemptionFormFromPrize(prize),
@@ -184,6 +198,7 @@ function mapPrizeApiError(code: string | undefined, t: (key: string) => string):
 export function PrizesManager({
   merchantId,
   initialPrizes,
+  initialOddsMode,
   primaryColor,
   secondaryColor,
   journeyTheme,
@@ -191,6 +206,7 @@ export function PrizesManager({
 }: {
   merchantId: string;
   initialPrizes: Prize[];
+  initialOddsMode?: string | null;
   primaryColor: string;
   secondaryColor: string;
   journeyTheme: Record<string, unknown> | null;
@@ -199,6 +215,7 @@ export function PrizesManager({
   const { t, locale } = useI18n();
   const router = useRouter();
   const [prizes, setPrizes] = useState(initialPrizes);
+  const [oddsMode, setOddsMode] = useState<PrizeOddsMode>(normalizePrizeOddsMode(initialOddsMode));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
   const [newPrize, setNewPrize] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
@@ -228,6 +245,7 @@ export function PrizesManager({
         prize_mechanic: editForm.prize_mechanic,
         social_unlock_platform:
           editForm.prize_mechanic === "social_unlock" ? editForm.social_unlock_platform || null : null,
+        rarity_tier: editForm.rarity_tier,
         probability_weight: normalizeWinChance(editForm.probability_weight),
         stock_remaining: parseOptionalStock(editForm.stock_remaining),
       };
@@ -247,6 +265,7 @@ export function PrizesManager({
             newPrize.prize_mechanic === "social_unlock"
               ? newPrize.social_unlock_platform || null
               : null,
+          rarity_tier: newPrize.rarity_tier,
           probability_weight: normalizeWinChance(newPrize.probability_weight),
           stock_remaining: parseOptionalStock(newPrize.stock_remaining),
           active: true,
@@ -255,15 +274,85 @@ export function PrizesManager({
       ];
     }
 
-    return next;
-  }, [prizes, editingId, editForm, newPrize, merchantId]);
+    return oddsMode === "simple" ? applyTierWinChances(next) : next;
+  }, [prizes, editingId, editForm, newPrize, merchantId, oddsMode]);
 
   const previewPrizes = useMemo(() => activeWheelPrizes(draftPrizes), [draftPrizes]);
   const hiddenInactiveCount = draftPrizes.length - previewPrizes.length;
   const wheelReady = hasMinimumWheelPrizes(draftPrizes);
 
+  const activeCount = useMemo(() => prizes.filter((p) => p.active).length, [prizes]);
   const activeChanceTotal = useMemo(() => totalActiveWinChance(prizes), [prizes]);
-  const chancesValid = useMemo(() => activeWinChanceIsValid(prizes), [prizes]);
+  const chancesValid = useMemo(
+    () => oddsMode === "simple" || activeWinChanceIsValid(prizes),
+    [oddsMode, prizes],
+  );
+
+  const setOddsModeAndPersist = async (nextMode: PrizeOddsMode) => {
+    if (nextMode === oddsMode) return;
+    setSaving(true);
+    setError(null);
+    try {
+      if (nextMode === "advanced" && oddsMode === "simple") {
+        const synced = applyTierWinChances(prizes);
+        setPrizes(synced);
+        if (editingId) {
+          const edited = synced.find((p) => p.id === editingId);
+          if (edited) {
+            setEditForm((f) => ({
+              ...f,
+              probability_weight: String(edited.probability_weight),
+            }));
+          }
+        }
+        setNewPrize((p) => ({
+          ...p,
+          probability_weight: String(
+            previewWinChanceForTier("__new__", [
+              ...synced,
+              { id: "__new__", active: true, rarity_tier: p.rarity_tier },
+            ]) ?? p.probability_weight,
+          ),
+        }));
+      }
+      if (nextMode === "simple" && oddsMode === "advanced") {
+        setPrizes((prev) =>
+          prev.map((p) => ({
+            ...p,
+            rarity_tier: closestTierForPercent(p.probability_weight),
+          })),
+        );
+        if (editingId) {
+          setEditForm((f) => ({
+            ...f,
+            rarity_tier: closestTierForPercent(normalizeWinChance(f.probability_weight)),
+          }));
+        }
+        setNewPrize((p) => ({
+          ...p,
+          rarity_tier: closestTierForPercent(normalizeWinChance(p.probability_weight)),
+        }));
+      }
+
+      const res = await fetch("/api/dashboard/prizes/odds-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: nextMode }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
+      if (!res.ok) {
+        setError(mapPrizeApiError(data.error, t));
+        return;
+      }
+      if (data.prizes) setPrizes(data.prizes);
+      setOddsMode(nextMode);
+      refresh();
+    } catch {
+      setError(t("dashboard.prizeSaveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const splitChancesEvenly = async () => {
     const active = prizes.filter((p) => p.active);
@@ -303,6 +392,10 @@ export function PrizesManager({
   const refresh = () => router.refresh();
 
   const startEdit = (prize: Prize) => {
+    if (editingId === prize.id) {
+      cancelEdit();
+      return;
+    }
     setEditingId(prize.id);
     setEditForm(prizeFormFromPrize(prize));
   };
@@ -326,6 +419,7 @@ export function PrizesManager({
         prize_mechanic: resolvePrizeMechanic(prize),
         social_unlock_platform: normalizeSocialUnlockPlatform(prize.social_unlock_platform),
         probability_weight: prize.probability_weight,
+        rarity_tier: normalizeRarityTier(prize.rarity_tier),
         stock_remaining: prize.stock_remaining,
         redeem_next_visit: prize.redeem_next_visit,
         redeem_min_spend: redemption.redeem_min_spend,
@@ -377,6 +471,7 @@ export function PrizesManager({
         icon: payload.icon,
         prize_mechanic: payload.prize_mechanic,
         social_unlock_platform: payload.social_unlock_platform,
+        rarity_tier: payload.rarity_tier,
         probability_weight: payload.probability_weight,
         stock_remaining: payload.stock_remaining,
         redeem_next_visit: payload.redeem_next_visit,
@@ -428,6 +523,7 @@ export function PrizesManager({
         icon: payload.icon,
         prize_mechanic: payload.prize_mechanic,
         social_unlock_platform: payload.social_unlock_platform,
+        rarity_tier: payload.rarity_tier,
         probability_weight: payload.probability_weight,
         stock_remaining: payload.stock_remaining,
         redeem_next_visit: payload.redeem_next_visit,
@@ -522,14 +618,44 @@ export function PrizesManager({
 
   const prizeListCard = (
     <div className={ui.card}>
-      <h2 className={ui.h2}>{t("dashboard.prizesConfigured")}</h2>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <h2 className={ui.h2}>
+          {t("dashboard.prizesConfigured")}
+          <span className="ml-2 text-base font-bold text-muted">({activeCount})</span>
+        </h2>
+        <div className="flex rounded-[12px] border-2 border-black p-1">
+          <button
+            type="button"
+            disabled={saving || oddsMode === "simple"}
+            onClick={() => void setOddsModeAndPersist("simple")}
+            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase ${
+              oddsMode === "simple" ? "bg-black text-white" : "text-ink"
+            }`}
+          >
+            {t("dashboard.prizeOddsSimple")}
+          </button>
+          <button
+            type="button"
+            disabled={saving || oddsMode === "advanced"}
+            onClick={() => void setOddsModeAndPersist("advanced")}
+            className={`rounded-[8px] px-3 py-1.5 text-xs font-extrabold uppercase ${
+              oddsMode === "advanced" ? "bg-black text-white" : "text-ink"
+            }`}
+          >
+            {t("dashboard.prizeOddsAdvanced")}
+          </button>
+        </div>
+      </div>
+      <p className="mt-2 text-sm text-muted">
+        {oddsMode === "simple" ? t("dashboard.prizeOddsSimpleHint") : t("dashboard.prizeOddsAdvancedHint")}
+      </p>
       {!wheelReady && prizes.some((p) => p.active) && (
         <div className="mb-4 rounded-none border-2 border-amber-600 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900" role="status">
           {t("dashboard.minWheelPrizes", { min: MIN_WHEEL_PRIZES })}
         </div>
       )}
 
-      {prizes.some((p) => p.active) && (
+      {prizes.some((p) => p.active) && oddsMode === "advanced" && (
         <div
           className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border-2 px-4 py-3 ${
             chancesValid ? "border-black/15 bg-white" : "border-[var(--c-coral,#f87171)] bg-[#fff5f5]"
@@ -551,7 +677,7 @@ export function PrizesManager({
           </button>
         </div>
       )}
-      {!chancesValid && prizes.some((p) => p.active) && (
+      {!chancesValid && oddsMode === "advanced" && prizes.some((p) => p.active) && (
         <p className="mt-2 text-sm font-semibold text-[var(--c-coral,#dc2626)]">
           {t("dashboard.winChancesMustSum100")}
         </p>
@@ -564,6 +690,14 @@ export function PrizesManager({
             <div key={prize.id} className="border-b-2 border-black/10 bg-white px-4 py-4 last:border-b-0">
               {editingId === prize.id ? (
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 border-b border-black/10 pb-3">
+                    <p className="text-sm font-extrabold uppercase tracking-wide text-ink">
+                      {t("dashboard.editingPrize", { label: prize.label })}
+                    </p>
+                    <button type="button" onClick={cancelEdit} className={ui.btnOutline}>
+                      {t("dashboard.closeEditor")}
+                    </button>
+                  </div>
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div>
                         <label className={ui.label}>{t("dashboard.label")}</label>
@@ -582,28 +716,46 @@ export function PrizesManager({
                           {t("dashboard.prizeLabelHint", { max: PRIZE_LABEL_MAX_LENGTH })}
                         </p>
                       </div>
-                      <div>
-                        <label className={ui.label}>{t("dashboard.winChance")}</label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={editForm.probability_weight}
-                            onChange={(e) =>
-                              setEditForm((f) => ({
-                                ...f,
-                                probability_weight: sanitizeWinChanceDraft(e.target.value),
-                              }))
-                            }
-                            className={`${ui.input} pr-10`}
+                      {oddsMode === "simple" ? (
+                        <div>
+                          <label className={ui.label}>{t("dashboard.prizeRarity")}</label>
+                          <PrizeRaritySelect
+                            value={editForm.rarity_tier}
+                            onChange={(rarity_tier) => setEditForm((f) => ({ ...f, rarity_tier }))}
+                            disabled={saving}
                           />
-                          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-muted">
-                            %
-                          </span>
+                          <p className="mt-1 text-xs font-medium text-muted">
+                            {t("dashboard.prizeRarityApprox", {
+                              pct:
+                                previewWinChanceForTier(prize.id, draftPrizes) ??
+                                prize.probability_weight,
+                            })}
+                          </p>
                         </div>
-                        <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.winChanceHint")}</p>
-                      </div>
+                      ) : (
+                        <div>
+                          <label className={ui.label}>{t("dashboard.winChance")}</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={editForm.probability_weight}
+                              onChange={(e) =>
+                                setEditForm((f) => ({
+                                  ...f,
+                                  probability_weight: sanitizeWinChanceDraft(e.target.value),
+                                }))
+                              }
+                              className={`${ui.input} pr-10`}
+                            />
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-muted">
+                              %
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.winChanceHint")}</p>
+                        </div>
+                      )}
                       <div>
                         <label className={ui.label}>{t("dashboard.stockOptional")}</label>
                         <input
@@ -679,12 +831,22 @@ export function PrizesManager({
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-ink">{prize.label}</p>
                         <p className="mt-0.5 font-mono text-xs text-muted">
-                          {(() => {
-                            const pct = prizeWinChancePercent(prize, prizes);
-                            return pct != null
-                              ? t("dashboard.winChanceSummary", { pct })
-                              : t("dashboard.winChanceInactive");
-                          })()}
+                          {oddsMode === "simple" ? (
+                            <>
+                              <PrizeRarityBadge tier={normalizeRarityTier(prize.rarity_tier)} />
+                              {" · "}
+                              {t("dashboard.prizeRarityApprox", {
+                                pct: prizeWinChancePercent(prize, draftPrizes) ?? prize.probability_weight,
+                              })}
+                            </>
+                          ) : (
+                            (() => {
+                              const pct = prizeWinChancePercent(prize, prizes);
+                              return pct != null
+                                ? t("dashboard.winChanceSummary", { pct })
+                                : t("dashboard.winChanceInactive");
+                            })()
+                          )}
                           {prize.stock_remaining !== null && ` · ${t("common.stock")} ${prize.stock_remaining}`}
                           {!prize.active && ` · ${t("common.inactive")}`}
                           {prize.prize_mechanic && resolvePrizeMechanic(prize) !== "standard" && (
@@ -696,7 +858,7 @@ export function PrizesManager({
                     </div>
                   <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={() => startEdit(prize)} className={ui.btnOutline}>
-                      {t("common.edit")}
+                      {editingId === prize.id ? t("dashboard.closeEditor") : t("common.edit")}
                     </button>
                     <button
                       type="button"
@@ -796,28 +958,48 @@ export function PrizesManager({
                   {t("dashboard.prizeLabelHint", { max: PRIZE_LABEL_MAX_LENGTH })}
                 </p>
               </div>
-              <div>
-                <label className={ui.label}>{t("dashboard.winChance")}</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={newPrize.probability_weight}
-                    onChange={(e) =>
-                      setNewPrize((p) => ({
-                        ...p,
-                        probability_weight: sanitizeWinChanceDraft(e.target.value),
-                      }))
-                    }
-                    className={`${ui.input} pr-10`}
+              {oddsMode === "simple" ? (
+                <div>
+                  <label className={ui.label}>{t("dashboard.prizeRarity")}</label>
+                  <PrizeRaritySelect
+                    value={newPrize.rarity_tier}
+                    onChange={(rarity_tier) => setNewPrize((p) => ({ ...p, rarity_tier }))}
+                    disabled={saving}
                   />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-muted">
-                    %
-                  </span>
+                  {clampPrizeLabel(newPrize.label) && (
+                    <p className="mt-1 text-xs font-medium text-muted">
+                      {t("dashboard.prizeRarityApprox", {
+                        pct:
+                          previewWinChanceForTier("__preview_draft__", draftPrizes) ??
+                          newPrize.probability_weight,
+                      })}
+                    </p>
+                  )}
                 </div>
-                <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.winChanceHint")}</p>
-              </div>
+              ) : (
+                <div>
+                  <label className={ui.label}>{t("dashboard.winChance")}</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={newPrize.probability_weight}
+                      onChange={(e) =>
+                        setNewPrize((p) => ({
+                          ...p,
+                          probability_weight: sanitizeWinChanceDraft(e.target.value),
+                        }))
+                      }
+                      className={`${ui.input} pr-10`}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-bold text-muted">
+                      %
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-muted">{t("dashboard.winChanceHint")}</p>
+                </div>
+              )}
               <div>
                 <label className={ui.label}>{t("dashboard.stockOptional")}</label>
                 <input

@@ -32,6 +32,7 @@ export interface Merchant {
   customer_page_subtitle?: string | null;
   spin_button_label?: string | null;
   journey_theme?: Record<string, unknown> | null;
+  prize_odds_mode?: import("@/lib/prize-rarity").PrizeOddsMode;
   created_at: string;
 }
 
@@ -50,8 +51,9 @@ export interface Prize {
   label: string;
   /** Catalog key for the wheel silhouette (see prize-icons). */
   icon?: string | null;
-  /** Win chance percent (1–100); active wheel prizes should sum to 100. */
+  /** Win chance percent (1–100); active wheel prizes should sum to 100 in advanced mode. */
   probability_weight: number;
+  rarity_tier?: import("@/lib/prize-rarity").PrizeRarityTier | string | null;
   prize_mechanic?: PrizeMechanic | string | null;
   /** Required when prize_mechanic is social_unlock. */
   social_unlock_platform?: "instagram" | "facebook" | "tiktok" | string | null;

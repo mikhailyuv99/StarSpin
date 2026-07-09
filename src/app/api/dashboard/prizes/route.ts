@@ -27,6 +27,12 @@ import { clampPrizeLabel } from "@/lib/wheel";
 import type { Prize, SocialLinks } from "@/lib/types";
 import { socialUrlForStep, type FlowActionStep } from "@/lib/flow-steps";
 import { hasMinimumWheelPrizes } from "@/lib/prizes";
+import {
+  applyTierWinChances,
+  normalizePrizeOddsMode,
+  normalizeRarityTier,
+  type PrizeOddsMode,
+} from "@/lib/prize-rarity";
 
 type PrizeBody = {
   id?: string;
@@ -36,6 +42,7 @@ type PrizeBody = {
   prize_mechanic?: string | null;
   social_unlock_platform?: string | null;
   probability_weight?: number | string;
+  rarity_tier?: string | null;
   stock_remaining?: number | null;
   redeem_next_visit?: boolean;
   redeem_min_spend?: string;
@@ -79,6 +86,7 @@ function buildPayload(body: PrizeBody): { error: string } | { payload: PrizeWrit
       prize_mechanic: mechanic,
       social_unlock_platform,
       probability_weight: chance,
+      rarity_tier: normalizeRarityTier(body.rarity_tier),
       stock_remaining: stock ?? null,
       redeem_next_visit: Boolean(body.redeem_next_visit),
       redeem_min_spend_cents: parseMinSpendInput(body.redeem_min_spend ?? ""),
@@ -87,12 +95,38 @@ function buildPayload(body: PrizeBody): { error: string } | { payload: PrizeWrit
   };
 }
 
+async function getMerchantOddsMode(
+  db: SupabaseClient,
+  merchantId: string,
+): Promise<PrizeOddsMode> {
+  const { data } = await db.from("merchants").select("prize_odds_mode").eq("id", merchantId).maybeSingle();
+  return normalizePrizeOddsMode(data?.prize_odds_mode);
+}
+
+async function syncSimpleModeChances(db: SupabaseClient, merchantId: string): Promise<Prize[]> {
+  const { data: rows } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
+  const prizes = applyTierWinChances((rows ?? []) as Prize[]);
+  for (const prize of prizes.filter((p) => p.active)) {
+    await db
+      .from("prizes")
+      .update({ probability_weight: prize.probability_weight })
+      .eq("id", prize.id)
+      .eq("merchant_id", merchantId);
+  }
+  const { data: refreshed } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
+  return (refreshed ?? []) as Prize[];
+}
+
 async function validateActiveWinChances(
   db: SupabaseClient,
   merchantId: string,
   draft: Prize,
   editingId?: string,
+  oddsMode?: PrizeOddsMode,
 ): Promise<string | null> {
+  const mode = oddsMode ?? (await getMerchantOddsMode(db, merchantId));
+  if (mode === "simple") return null;
+
   const { data: rows } = await db.from("prizes").select("*").eq("merchant_id", merchantId);
   const list = ((rows ?? []) as Prize[]).map((p) => (p.id === editingId ? draft : p));
   if (activePrizes(list).length === 0) return null;
@@ -206,6 +240,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
+  const oddsMode = await getMerchantOddsMode(db, merchant.id);
+  if (oddsMode === "simple") {
+    const prizes = await syncSimpleModeChances(db, merchant.id);
+    revalidateMerchantPages(merchant.slug);
+    const synced = prizes.find((p) => p.id === result.prize?.id) ?? result.prize;
+    return NextResponse.json({ prize: synced, redemptionRulesSkipped: result.redemptionRulesSkipped });
+  }
+
   revalidateMerchantPages(merchant.slug);
   return NextResponse.json({ prize: result.prize, redemptionRulesSkipped: result.redemptionRulesSkipped });
 }
@@ -268,6 +310,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const oddsMode = await getMerchantOddsMode(db, merchant.id);
+    if (oddsMode === "simple") {
+      await syncSimpleModeChances(db, merchant.id);
+    }
+
     revalidateMerchantPages(merchant.slug);
     return NextResponse.json({ prize: data as Prize });
   }
@@ -307,6 +354,14 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
+  const oddsMode = await getMerchantOddsMode(db, merchant.id);
+  if (oddsMode === "simple") {
+    const prizes = await syncSimpleModeChances(db, merchant.id);
+    revalidateMerchantPages(merchant.slug);
+    const synced = prizes.find((p) => p.id === result.prize?.id) ?? result.prize;
+    return NextResponse.json({ prize: synced, redemptionRulesSkipped: result.redemptionRulesSkipped });
+  }
+
   revalidateMerchantPages(merchant.slug);
   return NextResponse.json({ prize: result.prize, redemptionRulesSkipped: result.redemptionRulesSkipped });
 }
@@ -338,6 +393,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "prize_has_spins" }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const oddsMode = await getMerchantOddsMode(db, merchant.id);
+  if (oddsMode === "simple") {
+    await syncSimpleModeChances(db, merchant.id);
   }
 
   revalidateMerchantPages(merchant.slug);

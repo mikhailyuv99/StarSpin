@@ -2,11 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Prize } from "@/lib/types";
 
 import type { PrizeMechanic, SocialUnlockPlatform } from "@/lib/prize-mechanics";
+import type { PrizeRarityTier } from "@/lib/prize-rarity";
 
 export type PrizeWritePayload = {
   label: string;
   icon: string;
   probability_weight: number;
+  rarity_tier?: PrizeRarityTier;
   prize_mechanic?: PrizeMechanic;
   social_unlock_platform?: SocialUnlockPlatform | null;
   stock_remaining: number | null;
@@ -31,6 +33,16 @@ export function isMissingIconSchemaError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
     lower.includes("icon") &&
+    (lower.includes("schema cache") ||
+      lower.includes("does not exist") ||
+      lower.includes("could not find"))
+  );
+}
+
+export function isMissingRaritySchemaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("rarity_tier") &&
     (lower.includes("schema cache") ||
       lower.includes("does not exist") ||
       lower.includes("could not find"))

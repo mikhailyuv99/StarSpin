@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
 import { JourneyThemePicker } from "@/components/dashboard/JourneyThemePicker";
-import { WheelColorFields } from "@/components/dashboard/WheelColorFields";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { parseJourneyTheme, type JourneyTemplateId } from "@/lib/journey-theme";
 import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
@@ -73,8 +72,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
   const [form, setForm] = useState({
     name: merchant.name,
     slug: merchant.slug,
-    primary_color: merchant.primary_color,
-    secondary_color: merchant.secondary_color,
     google_review_link: merchant.google_review_link ?? "",
     google_place_id: merchant.google_place_id ?? "",
     instagram: merchant.social_links.instagram ?? "",
@@ -102,8 +99,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       ...merchant,
       name: form.name || merchant.name,
       slug: form.slug || merchant.slug,
-      primary_color: form.primary_color,
-      secondary_color: form.secondary_color,
       logo_url: form.logo_url || null,
       google_review_link: form.google_review_link || null,
       social_links: {
@@ -249,8 +244,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       .update({
         name: form.name,
         slug,
-        primary_color: form.primary_color,
-        secondary_color: form.secondary_color,
         google_review_link: googleReviewLink || null,
         google_place_id: resolvedPlaceId,
         social_links,
@@ -312,12 +305,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           onUpload={handleLogoUpload}
         />
 
-        <WheelColorFields
-          primaryColor={form.primary_color}
-          secondaryColor={form.secondary_color}
-          onPrimaryChange={(value) => update("primary_color", value)}
-          onSecondaryChange={(value) => update("secondary_color", value)}
-        />
       </section>
 
       <section className={`${ui.card} space-y-5`}>

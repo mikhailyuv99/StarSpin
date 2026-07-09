@@ -26,6 +26,7 @@ export default async function PrizesPage() {
       <PrizesManager
         merchantId={merchant.id}
         initialPrizes={(prizes ?? []) as Prize[]}
+        initialOddsMode={merchant.prize_odds_mode}
         primaryColor={merchant.primary_color}
         secondaryColor={merchant.secondary_color}
         journeyTheme={merchant.journey_theme ?? null}
