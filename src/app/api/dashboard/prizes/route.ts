@@ -402,7 +402,9 @@ export async function DELETE(request: Request) {
 
   const oddsMode = await getMerchantOddsMode(db, merchant.id);
   if (oddsMode === "simple") {
-    await syncSimpleModeChances(db, merchant.id);
+    const prizes = await syncSimpleModeChances(db, merchant.id);
+    revalidateMerchantPages(merchant.slug);
+    return NextResponse.json({ ok: true, prizes });
   }
 
   revalidateMerchantPages(merchant.slug);

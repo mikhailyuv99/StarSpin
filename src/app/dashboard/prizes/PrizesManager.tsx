@@ -14,6 +14,7 @@ import {
 import { PRIZE_LABEL_MAX_LENGTH, clampPrizeLabel, prizeWinChancePercent } from "@/lib/wheel";
 import {
   activeWinChanceIsValid,
+  equalWinChances,
   parseWinChancePercent,
   sanitizeWinChanceDraft,
   totalActiveWinChance,
@@ -245,6 +246,7 @@ export function PrizesManager({
   const [saving, setSaving] = useState(false);
   const [savingPrizeId, setSavingPrizeId] = useState<string | null>(null);
   const [togglingPrizeId, setTogglingPrizeId] = useState<string | null>(null);
+  const [deletingPrizeId, setDeletingPrizeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [previewWonLabel, setPreviewWonLabel] = useState<string | null>(null);
@@ -392,12 +394,22 @@ export function PrizesManager({
   const splitChancesEvenly = async () => {
     const active = prizes.filter((p) => p.active);
     if (active.length === 0) return;
-    setSaving(true);
     setError(null);
+
+    const snapshot = prizes;
+    const shares = equalWinChances(active.length);
+    const shareById = new Map(active.map((p, i) => [p.id, shares[i] ?? 0]));
+    setPrizes((prev) =>
+      prev.map((p) =>
+        shareById.has(p.id) ? { ...p, probability_weight: shareById.get(p.id)! } : p,
+      ),
+    );
+
     try {
       const res = await fetch("/api/dashboard/prizes/equalize-chances", { method: "POST" });
       const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
       if (!res.ok) {
+        setPrizes(snapshot);
         setError(mapPrizeApiError(data.error, t));
         return;
       }
@@ -417,9 +429,8 @@ export function PrizesManager({
         ),
       }));
     } catch {
+      setPrizes(snapshot);
       setError(t("dashboard.prizeSaveFailed"));
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -543,13 +554,11 @@ export function PrizesManager({
   };
 
   const addPrize = async () => {
-    setSaving(true);
     setError(null);
     let payload;
     try {
       payload = buildPrizePayload(newPrize);
     } catch (e) {
-      setSaving(false);
       if (e instanceof Error && e.message === "invalid_valid_days") {
         setError(t("dashboard.redeemValidDaysInvalid"));
       } else if (e instanceof Error && e.message === "invalid_stock") {
@@ -561,6 +570,35 @@ export function PrizesManager({
       }
       return;
     }
+
+    const snapshot = prizes;
+    const draftForm = newPrize;
+    const tempId = `__pending_${Date.now()}`;
+    const optimistic: Prize = {
+      id: tempId,
+      merchant_id: merchantId,
+      label: payload.label,
+      icon: payload.icon,
+      prize_mechanic: payload.prize_mechanic,
+      social_unlock_platform: payload.social_unlock_platform,
+      rarity_tier: payload.rarity_tier,
+      probability_weight: payload.probability_weight,
+      stock_remaining: payload.stock_remaining,
+      redeem_next_visit: payload.redeem_next_visit,
+      redeem_min_spend_cents: payload.redeem_min_spend_cents,
+      redeem_valid_days: payload.redeem_valid_days,
+      active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    let optimisticList = [...prizes, optimistic];
+    if (oddsMode === "simple") {
+      optimisticList = applyTierWinChances(optimisticList);
+    }
+
+    setPrizes(optimisticList);
+    setNewPrize(emptyPrizeForm(optimisticList));
+
     const apiRes = await fetch("/api/dashboard/prizes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -580,8 +618,9 @@ export function PrizesManager({
 
     if (!apiRes.ok) {
       const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setPrizes(snapshot);
+      setNewPrize(draftForm);
       setError(mapPrizeApiError(errBody.error, t));
-      setSaving(false);
       return;
     }
 
@@ -590,11 +629,12 @@ export function PrizesManager({
       setPrizes(apiData.prizes);
       setNewPrize(emptyPrizeForm(apiData.prizes));
     } else if (apiData.prize) {
-      const next = [...prizes, apiData.prize];
-      setPrizes(next);
+      const next = snapshot
+        .filter((p) => p.id !== tempId)
+        .concat(apiData.prize);
+      setPrizes(oddsMode === "simple" ? applyTierWinChances(next) : next);
       setNewPrize(emptyPrizeForm(next));
     }
-    setSaving(false);
   };
 
   const toggleActive = async (prize: Prize) => {
@@ -641,19 +681,41 @@ export function PrizesManager({
       setError(t("dashboard.minWheelPrizes"));
       return;
     }
+
     setError(null);
+    const snapshot = prizes;
+    const wasEditing = editingId === id;
+    let optimistic = after;
+    if (oddsMode === "simple") {
+      optimistic = applyTierWinChances(optimistic);
+    }
+
+    setPrizes(optimistic);
+    if (wasEditing) setEditingId(null);
+    setDeletingPrizeId(id);
+
     const apiRes = await fetch(`/api/dashboard/prizes?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
 
+    setDeletingPrizeId(null);
+
     if (!apiRes.ok) {
       const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
+      setPrizes(snapshot);
+      if (wasEditing) {
+        setEditingId(id);
+        const restored = snapshot.find((p) => p.id === id);
+        if (restored) setEditForm(prizeFormFromPrize(restored));
+      }
       setError(mapPrizeApiError(errBody.error, t));
       return;
     }
 
-    setPrizes((p) => p.filter((x) => x.id !== id));
-    if (editingId === id) setEditingId(null);
+    const apiData = (await apiRes.json().catch(() => ({}))) as { prizes?: Prize[] };
+    if (apiData.prizes?.length) {
+      setPrizes(apiData.prizes);
+    }
   };
 
   const ruleSummary = (prize: Prize) => {
