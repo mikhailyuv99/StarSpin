@@ -793,6 +793,7 @@
     "spinNotFound": "Spin not found",
     "phoneMismatch": "Phone number does not match this spin",
     "claimError": "Could not send your prize code",
+    "claimNotAllowed": "This spin cannot be claimed",
     "invalidEmail": "Invalid email address",
     "prizeSmsBody": "{merchant}: You won \"{prize}\"! Your code: {code}. Show it at checkout.",
     "merchantPhoneRequired": "merchantId and phone required",

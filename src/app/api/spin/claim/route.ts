@@ -11,6 +11,9 @@ import {
 } from "@/lib/redemption-rules";
 import { normalizePhone } from "@/lib/phone";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
+import { canClaimSpin, stockPrizeOnClaim } from "@/lib/spin-claim";
+import { decrementPrizeStock } from "@/lib/prize-stock";
+import type { Prize } from "@/lib/types";
 import {
   getMerchantOwnerEmail,
   sendMerchantJourneyCompleteEmail,
@@ -147,12 +150,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.spinNotFound") }, { status: 404 });
     }
 
-    const displayPrize = Array.isArray(spin.prize) ? spin.prize[0] : spin.prize;
-    let prize = displayPrize;
+    const displayPrize = (Array.isArray(spin.prize) ? spin.prize[0] : spin.prize) as Prize | null;
     const resolvedId = (spin as { resolved_prize_id?: string | null }).resolved_prize_id;
+
+    if (!canClaimSpin(displayPrize, resolvedId)) {
+      return NextResponse.json({ error: t("api.claimNotAllowed") }, { status: 400 });
+    }
+
+    let prize: Prize | null = displayPrize;
     if (resolvedId) {
       const { data: resolved } = await supabase.from("prizes").select("*").eq("id", resolvedId).maybeSingle();
-      if (resolved) prize = resolved;
+      if (resolved) prize = resolved as Prize;
+    }
+    if (!prize) {
+      return NextResponse.json({ error: t("api.claimNotAllowed") }, { status: 400 });
     }
     const prizeLabel = prize?.label ?? "Prize";
     const redemptionRules = prize ? snapshotFromPrize(prize) : snapshotFromSpin(spin);
@@ -197,6 +208,15 @@ export async function POST(request: Request) {
     if ("error" in persisted) {
       console.error("Claim persist failed for spin", spinId);
       return NextResponse.json({ error: t("api.claimError") }, { status: 500 });
+    }
+
+    const stockTarget =
+      displayPrize && stockPrizeOnClaim(displayPrize, prize, resolvedId);
+    if (stockTarget) {
+      const ok = await decrementPrizeStock(supabase, stockTarget);
+      if (!ok) {
+        return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
+      }
     }
 
     const { prizeCode } = persisted;

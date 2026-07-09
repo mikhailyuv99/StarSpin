@@ -793,6 +793,7 @@
     "spinNotFound": "스핀을 찾을 수 없습니다",
     "phoneMismatch": "전화번호가 이 스핀과 일치하지 않습니다",
     "claimError": "경품 코드를 보낼 수 없습니다",
+    "claimNotAllowed": "이 스핀은 수령할 수 없습니다",
     "invalidEmail": "유효하지 않은 이메일 주소입니다",
     "prizeSmsBody": "{merchant}: \"{prize}\"에 당첨되었습니다! 코드: {code}. 결제 시 제시하세요.",
     "merchantPhoneRequired": "merchantId와 phone이 필요합니다",

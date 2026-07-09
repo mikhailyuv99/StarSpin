@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
 import { JourneyThemePicker } from "@/components/dashboard/JourneyThemePicker";
+import { WheelColorFields } from "@/components/dashboard/WheelColorFields";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { parseJourneyTheme, type JourneyTemplateId } from "@/lib/journey-theme";
 import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
@@ -309,6 +310,13 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           label={t("dashboard.logo")}
           logoUrl={form.logo_url || null}
           onUpload={handleLogoUpload}
+        />
+
+        <WheelColorFields
+          primaryColor={form.primary_color}
+          secondaryColor={form.secondary_color}
+          onPrimaryChange={(value) => update("primary_color", value)}
+          onSecondaryChange={(value) => update("secondary_color", value)}
         />
       </section>
 

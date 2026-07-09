@@ -795,6 +795,7 @@
     "spinNotFound": "Giro no encontrado",
     "phoneMismatch": "El teléfono no coincide con este giro",
     "claimError": "No se pudo enviar tu código de premio",
+    "claimNotAllowed": "Este giro no se puede reclamar",
     "invalidEmail": "Correo electrónico inválido",
     "prizeSmsBody": "{merchant}: ¡Ganaste \"{prize}\"! Tu código: {code}. Muéstralo en caja.",
     "merchantPhoneRequired": "Se requieren merchantId y phone",

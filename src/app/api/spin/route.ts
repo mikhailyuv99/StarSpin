@@ -5,27 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createDeviceFingerprint, getClientIp } from "@/lib/fingerprint";
 import { findRecentSpinBlocker } from "@/lib/spin-limits";
 import { pickWeightedPrize } from "@/lib/wheel";
-import { isOutcomePrize } from "@/lib/prize-outcomes";
 import { resolveSpinOutcome, prizeForClaim } from "@/lib/spin-resolution";
+import { isMysteryMechanic, isDoubleOrNothingMechanic } from "@/lib/prize-mechanics";
+import { stockPrizeOnSpinCreate } from "@/lib/spin-claim";
+import { decrementPrizeStock } from "@/lib/prize-stock";
 import { hasMinimumWheelPrizes } from "@/lib/prizes";
 import { insertSpinRow } from "@/lib/spin-persistence";
 import type { Prize } from "@/lib/types";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
-
-async function decrementStock(
-  supabase: ReturnType<typeof createAdminClient>,
-  prize: Prize,
-): Promise<boolean> {
-  if (prize.stock_remaining === null) return true;
-  const { data } = await supabase
-    .from("prizes")
-    .update({ stock_remaining: prize.stock_remaining - 1 })
-    .eq("id", prize.id)
-    .gt("stock_remaining", 0)
-    .select("id")
-    .maybeSingle();
-  return Boolean(data);
-}
 
 export async function POST(request: Request) {
   const locale = resolveRequestLocale(request);
@@ -102,6 +89,13 @@ export async function POST(request: Request) {
     }
 
     const resolution = resolveSpinOutcome(prizeList, selected);
+    if (
+      (isMysteryMechanic(selected) || isDoubleOrNothingMechanic(selected)) &&
+      !resolution.resolvedPrizeId
+    ) {
+      return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
+    }
+
     const status = reviewScreenshotStatus ?? "pending";
 
     const { data: spin, error: spinError } = await insertSpinRow(supabase, {
@@ -131,9 +125,9 @@ export async function POST(request: Request) {
       resolvedPrize = (data as Prize | null) ?? null;
     }
 
-    const stockPrize = resolvedPrize ?? (isOutcomePrize(selected) ? null : selected);
+    const stockPrize = stockPrizeOnSpinCreate(selected, resolvedPrize);
     if (stockPrize) {
-      const ok = await decrementStock(supabase, stockPrize);
+      const ok = await decrementPrizeStock(supabase, stockPrize);
       if (!ok) {
         return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
       }

@@ -795,6 +795,7 @@
     "spinNotFound": "Вращение не найдено",
     "phoneMismatch": "Номер не совпадает с этим вращением",
     "claimError": "Не удалось отправить код приза",
+    "claimNotAllowed": "Это вращение нельзя получить",
     "invalidEmail": "Некорректный email",
     "prizeSmsBody": "{merchant}: Вы выиграли «{prize}»! Ваш код: {code}. Покажите на кассе.",
     "merchantPhoneRequired": "Требуются merchantId и phone",

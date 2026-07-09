@@ -115,7 +115,6 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   const [gambleOffer, setGambleOffer] = useState(false);
   const [gamblePrize, setGamblePrize] = useState<Prize | null>(null);
   const [noWinResult, setNoWinResult] = useState(false);
-  const spinPrefetchStarted = useRef(false);
 
   const theme = useMemo(() => resolveJourneyTheme(merchant), [merchant]);
   const accent = theme.accent;
@@ -235,7 +234,6 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       setSpinning(false);
       setTargetPrizeId(undefined);
       setPreparedSpin(null);
-      spinPrefetchStarted.current = false;
       setPrefetchingSpin(false);
 
       if (target === "claim" || target === "result") {
@@ -435,13 +433,6 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     }
   }, [merchant.id, followedSocial, screenshotUrl, reviewStatus, completedSteps, locale, t, preview, prizes]);
 
-  useEffect(() => {
-    if (step !== "wheel" || preparedSpin || spinPrefetchStarted.current || retryOffer) return;
-    spinPrefetchStarted.current = true;
-    setPrefetchingSpin(true);
-    void prepareSpin().finally(() => setPrefetchingSpin(false));
-  }, [step, preparedSpin, prepareSpin, retryOffer]);
-
   const handleSpinClick = useCallback(async () => {
     if (spinning || targetPrizeId) return;
 
@@ -474,7 +465,6 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       setTargetPrizeId(undefined);
       setPreparedSpin(null);
       setPrefetchingSpin(false);
-      spinPrefetchStarted.current = true;
       return;
     }
 

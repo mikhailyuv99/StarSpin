@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       smsSent,
-      devCode: smsSent ? undefined : code,
+      ...(process.env.NODE_ENV === "development" && !smsSent ? { devCode: code } : {}),
     });
   } catch (err) {
     console.error("OTP send error:", err);

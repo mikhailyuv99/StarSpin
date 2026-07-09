@@ -795,6 +795,7 @@
     "spinNotFound": "Không tìm thấy lượt quay",
     "phoneMismatch": "Số điện thoại không khớp với lượt quay này",
     "claimError": "Không thể gửi mã phần thưởng",
+    "claimNotAllowed": "Lượt quay này không thể nhận thưởng",
     "invalidEmail": "Email không hợp lệ",
     "prizeSmsBody": "{merchant}: Bạn thắng \"{prize}\"! Mã: {code}. Xuất trình tại quầy.",
     "merchantPhoneRequired": "Cần merchantId và phone",

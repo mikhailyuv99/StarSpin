@@ -4,8 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isRetrySpinPrize, isNearMissPrize } from "@/lib/prize-outcomes";
 import { pickRetrySpinPrize } from "@/lib/wheel";
 import { resolveSpinOutcome } from "@/lib/spin-resolution";
-import { isNonClaimMechanic } from "@/lib/prize-mechanics";
+import { isMysteryMechanic, isDoubleOrNothingMechanic } from "@/lib/prize-mechanics";
 import { hasMinimumWheelPrizes } from "@/lib/prizes";
+import { stockPrizeOnSpinCreate } from "@/lib/spin-claim";
+import { decrementPrizeStock } from "@/lib/prize-stock";
 import { updateSpinPrizeResolution } from "@/lib/spin-persistence";
 import type { Prize } from "@/lib/types";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
@@ -73,6 +75,12 @@ export async function POST(request: Request) {
     }
 
     const resolution = resolveSpinOutcome(prizeList, selected);
+    if (
+      (isMysteryMechanic(selected) || isDoubleOrNothingMechanic(selected)) &&
+      !resolution.resolvedPrizeId
+    ) {
+      return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
+    }
 
     const { error: updateError } = await updateSpinPrizeResolution(
       supabase,
@@ -95,21 +103,11 @@ export async function POST(request: Request) {
       resolvedPrize = (data as Prize | null) ?? null;
     }
 
-    const stockPrize =
-      resolvedPrize ?? (isNonClaimMechanic(selected) ? null : selected);
+    const stockPrize = stockPrizeOnSpinCreate(selected, resolvedPrize);
     if (stockPrize) {
-      if (stockPrize.stock_remaining !== null) {
-        const { data: decremented } = await supabase
-          .from("prizes")
-          .update({ stock_remaining: stockPrize.stock_remaining - 1 })
-          .eq("id", stockPrize.id)
-          .gt("stock_remaining", 0)
-          .select("id")
-          .maybeSingle();
-
-        if (!decremented) {
-          return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
-        }
+      const ok = await decrementPrizeStock(supabase, stockPrize);
+      if (!ok) {
+        return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
       }
     }
 
