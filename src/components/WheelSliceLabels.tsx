@@ -5,7 +5,7 @@ import {
 } from "@/lib/wheel";
 import { normalizePrizeIcon, PRIZE_ICONS } from "@/lib/prize-icons";
 import { PrizeMarkText } from "@/components/PrizeMarkText";
-import { rasterIconOriginOffset, rasterIconTransform } from "@/lib/prize-icon-render";
+import { rasterIconOriginOffset, rasterIconTransform, wheelRasterDrawSize } from "@/lib/prize-icon-render";
 
 export function WheelSliceLabels({
   slices,
@@ -36,9 +36,8 @@ export function WheelSliceLabels({
         const half = iconSize / 2;
 
         const nudge = def.assetNudge;
-        const scale = nudge?.scale ?? 1;
-        const imgSize = iconSize * scale;
-        const imgOffset = rasterIconOriginOffset(iconSize, scale);
+        const imgSize = wheelRasterDrawSize(iconSize, def.wheelScale ?? 1, nudge?.scale ?? 1);
+        const imgOffset = rasterIconOriginOffset(imgSize, 1);
 
         return (
           <g

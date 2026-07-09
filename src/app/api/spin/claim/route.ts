@@ -142,15 +142,24 @@ export async function POST(request: Request) {
 
     const { data: spin, error: spinError } = await supabase
       .from("spins")
-      .select("*, prize:prizes(*)")
+      .select("*")
       .eq("id", spinId)
       .maybeSingle();
 
     if (spinError || !spin) {
+      if (spinError) console.error("Claim spin lookup error:", spinError);
       return NextResponse.json({ error: t("api.spinNotFound") }, { status: 404 });
     }
 
-    const displayPrize = (Array.isArray(spin.prize) ? spin.prize[0] : spin.prize) as Prize | null;
+    let displayPrize: Prize | null = null;
+    if (spin.prize_id) {
+      const { data: prizeRow } = await supabase
+        .from("prizes")
+        .select("*")
+        .eq("id", spin.prize_id)
+        .maybeSingle();
+      displayPrize = (prizeRow as Prize | null) ?? null;
+    }
     const resolvedId = (spin as { resolved_prize_id?: string | null }).resolved_prize_id;
 
     if (!canClaimSpin(displayPrize, resolvedId)) {

@@ -30,11 +30,12 @@ export async function POST(request: Request) {
 
     const { data: spin, error: spinError } = await supabase
       .from("spins")
-      .select("id, prize_id, prize_code, resolved_prize_id, prize:prizes(*)")
+      .select("id, prize_id, prize_code, resolved_prize_id")
       .eq("id", spinId)
       .maybeSingle();
 
     if (spinError || !spin) {
+      if (spinError) console.error("Gamble spin lookup error:", spinError);
       return NextResponse.json({ error: t("api.spinNotFound") }, { status: 404 });
     }
 
@@ -42,7 +43,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: t("api.spinAlreadyClaimed") }, { status: 409 });
     }
 
-    const displayPrize = (Array.isArray(spin.prize) ? spin.prize[0] : spin.prize) as Prize | null;
+    let displayPrize: Prize | null = null;
+    if (spin.prize_id) {
+      const { data: prizeRow } = await supabase
+        .from("prizes")
+        .select("*")
+        .eq("id", spin.prize_id)
+        .maybeSingle();
+      displayPrize = (prizeRow as Prize | null) ?? null;
+    }
     if (!displayPrize || !isDoubleOrNothingMechanic(displayPrize)) {
       return NextResponse.json({ error: t("api.spinGambleNotAllowed") }, { status: 400 });
     }

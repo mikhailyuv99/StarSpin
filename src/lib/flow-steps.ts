@@ -58,14 +58,14 @@ export function isFlowActionStep(value: string): value is FlowActionStep {
 }
 
 export function normalizeFlowSteps(raw: unknown): FlowActionStep[] {
-  if (!Array.isArray(raw)) return [...DEFAULT_FLOW_STEPS];
+  if (!Array.isArray(raw)) return [];
   const steps: FlowActionStep[] = [];
   for (const item of raw) {
     if (typeof item === "string" && isFlowActionStep(item) && !steps.includes(item)) {
       steps.push(item);
     }
   }
-  return steps.length > 0 ? steps : [...DEFAULT_FLOW_STEPS];
+  return steps;
 }
 
 export function socialUrlForStep(step: FlowActionStep, links: SocialLinks): string | null {
@@ -82,10 +82,9 @@ export function isStepConfigured(step: FlowActionStep, merchant: Merchant): bool
 }
 
 export function resolveActiveFlowSteps(merchant: Merchant): FlowActionStep[] {
-  const configured = normalizeFlowSteps(merchant.flow_steps).filter((step) =>
+  return normalizeFlowSteps(merchant.flow_steps).filter((step) =>
     isStepConfigured(step, merchant),
   );
-  return configured.length > 0 ? configured : [...DEFAULT_FLOW_STEPS];
 }
 
 export function buildPublicStepOrder(

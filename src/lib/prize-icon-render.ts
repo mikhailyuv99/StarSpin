@@ -1,5 +1,16 @@
 import type { PrizeIconDef } from "@/lib/prize-icons";
 
+/** Uniform drawable size for raster icons on the wheel (fraction of wedge icon slot). */
+export const WHEEL_RASTER_FILL = 0.7;
+
+export function wheelRasterDrawSize(
+  iconSize: number,
+  wheelScale = 1,
+  nudgeScale = 1,
+): number {
+  return iconSize * WHEEL_RASTER_FILL * wheelScale * nudgeScale;
+}
+
 /** Apply per-asset optical centering (Twemoji padding varies by glyph). */
 export function rasterIconTransform(
   nudge: PrizeIconDef["assetNudge"],

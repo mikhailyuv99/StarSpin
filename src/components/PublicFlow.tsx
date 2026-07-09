@@ -840,9 +840,15 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                 >
                   {retryOffer ? (
                     <div className="text-center">
-                      <p className="text-3xl" aria-hidden>
-                        {nearMissLabel ? "😮" : "🔄"}
-                      </p>
+                      {nearMissLabel ? (
+                        <p className="text-3xl" aria-hidden>
+                          😮
+                        </p>
+                      ) : (
+                        <div className="mx-auto flex justify-center" aria-hidden>
+                          <PrizeWheelIcon icon="try_again" size={48} plain />
+                        </div>
+                      )}
                       <h2 className="public-heading mt-2 text-xl font-extrabold">
                         {nearMissLabel ? t("public.nearMissTitle") : t("public.tryAgainTitle")}
                       </h2>

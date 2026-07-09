@@ -25,6 +25,8 @@ export type PrizeIconShape = {
   fill: string;
   stroke?: string;
   strokeWidth?: number;
+  strokeLinecap?: "round" | "butt" | "square";
+  strokeLinejoin?: "round" | "miter" | "bevel";
 };
 
 export type PrizeIconDef = {
@@ -38,6 +40,8 @@ export type PrizeIconDef = {
   markTextSize?: number;
   /** Optical centering tweak for raster assets (fraction of icon size). */
   assetNudge?: { x: number; y: number; scale: number };
+  /** Extra scale on the wheel only (1 = default optical size). */
+  wheelScale?: number;
 };
 
 export const DEFAULT_PRIZE_ICON: PrizeIconId = "cupcake";
@@ -84,6 +88,7 @@ function assetFromManifest(entry: (typeof PRIZE_ASSET_MANIFEST)[number]): PrizeI
     plate: entry.plate,
     src: `/prize-icons/${entry.id}.webp`,
     assetNudge: nudge,
+    wheelScale: "wheelScale" in entry && typeof entry.wheelScale === "number" ? entry.wheelScale : 1,
   };
 }
 
@@ -222,11 +227,25 @@ const MARK_ICONS: Record<MarkIconId, PrizeIconDef> = {
   try_again: {
     id: "try_again",
     group: "outcomes",
-    plate: "#e8eefc",
+    plate: "#dbeafe",
+    fit: "translate(0 0.4)",
     shapes: [
-      { d: "M18.6 12a6.6 6.6 0 1 0-2.05 4.75", fill: "none", stroke: "#60a5fa", strokeWidth: 2.4 },
-      { d: "M16 14.2 19.4 16.6 15.8 18.2z", fill: "#60a5fa", stroke: INK, strokeWidth: 0.7 },
-      { d: "M18.6 12a6.6 6.6 0 1 0-2.05 4.75", fill: "none", stroke: INK, strokeWidth: 1 },
+      {
+        d: "M12 4.8a7.2 7.2 0 1 1-5.08 12.1",
+        fill: "none",
+        stroke: "#2563eb",
+        strokeWidth: 2.2,
+        strokeLinecap: "round",
+      },
+      { d: "M6.2 4.8H12V10", fill: "none", stroke: "#2563eb", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" },
+      {
+        d: "M12 19.2a7.2 7.2 0 1 1 5.08-12.1",
+        fill: "none",
+        stroke: "#60a5fa",
+        strokeWidth: 2.2,
+        strokeLinecap: "round",
+      },
+      { d: "M17.8 19.2H12V14", fill: "none", stroke: "#60a5fa", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" },
     ],
   },
   no_prize: {
@@ -298,6 +317,23 @@ export const PRIZE_ICONS: Record<PrizeIconId, PrizeIconDef> = {
   ...Object.fromEntries(ASSET_CATALOG.map((d) => [d.id, d])),
   ...MARK_ICONS,
 } as Record<PrizeIconId, PrizeIconDef>;
+
+/** Raster assets with tight artwork need a smaller wheel slot to match the pack baseline. */
+const WHEEL_SCALE_OVERRIDES: Partial<Record<PrizeIconId, number>> = {
+  tea: 0.74,
+  teapot: 0.74,
+  bubble_tea: 0.78,
+  coffee_cup: 0.82,
+  beer: 0.8,
+  broccoli: 0.85,
+  mushroom: 0.85,
+  pineapple: 0.82,
+};
+
+for (const [id, scale] of Object.entries(WHEEL_SCALE_OVERRIDES)) {
+  const icon = PRIZE_ICONS[id as PrizeIconId];
+  if (icon) icon.wheelScale = scale;
+}
 
 export function isPrizeIconId(value: string | null | undefined): value is PrizeIconId {
   return Boolean(value && (PRIZE_ICON_IDS as readonly string[]).includes(value));

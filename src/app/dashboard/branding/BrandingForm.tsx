@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
-import { contrastTextColor } from "@/lib/wheel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
@@ -20,8 +19,6 @@ export function BrandingForm({
   const router = useRouter();
   const [form, setForm] = useState({
     name: merchant.name,
-    primary_color: merchant.primary_color,
-    secondary_color: merchant.secondary_color,
     google_review_link: merchant.google_review_link ?? "",
     google_place_id: merchant.google_place_id ?? "",
     instagram: merchant.social_links.instagram ?? "",
@@ -85,8 +82,6 @@ export function BrandingForm({
       .from("merchants")
       .update({
         name: form.name,
-        primary_color: form.primary_color,
-        secondary_color: form.secondary_color,
         google_review_link: googleReviewLink || null,
         google_place_id: resolvedPlaceId,
         social_links,
@@ -114,55 +109,6 @@ export function BrandingForm({
           onChange={(e) => update("name", e.target.value)}
           className={ui.input}
         />
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="space-y-2">
-          <label className={ui.label}>{t("dashboard.primaryColor")}</label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={form.primary_color}
-              onChange={(e) => update("primary_color", e.target.value)}
-              className="h-12 w-full min-w-0 flex-1 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-            />
-            <span
-              className="inline-flex h-12 min-w-[5.5rem] items-center justify-center rounded-[14px] border-2 border-black px-3 text-xs font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a]"
-              style={{ backgroundColor: form.primary_color, color: contrastTextColor(form.primary_color) }}
-            >
-              Primary
-            </span>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className={ui.label}>{t("dashboard.secondaryColor")}</label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={form.secondary_color}
-              onChange={(e) => update("secondary_color", e.target.value)}
-              className="h-12 w-full min-w-0 flex-1 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-            />
-            <span
-              className="inline-flex h-12 min-w-[5.5rem] items-center justify-center rounded-[14px] border-2 border-black px-3 text-xs font-extrabold uppercase shadow-[3px_3px_0_0_#0a0a0a]"
-              style={{ backgroundColor: form.secondary_color, color: contrastTextColor(form.secondary_color) }}
-            >
-              Secondary
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <span
-          className="brutal-btn text-sm"
-          style={{ backgroundColor: form.primary_color, color: contrastTextColor(form.primary_color) }}
-        >
-          Spin button preview
-        </span>
-        <span className="brutal-btn brutal-btn-white text-sm" style={{ borderColor: form.secondary_color }}>
-          Outline preview
-        </span>
       </div>
 
       <LogoUploadField
