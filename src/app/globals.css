@@ -778,13 +778,24 @@ body {
 .cadeo-subscribe-back {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
+  line-height: 1;
 }
 
 .cadeo-subscribe-back-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  font-size: 0.95rem;
-  line-height: 1;
+  width: 0.72em;
+  height: 0.72em;
+  font-size: 1em;
+}
+
+.cadeo-subscribe-back-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .cadeo-subscribe-back-text {
@@ -792,6 +803,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1;
+  font-size: 1em;
 }
 
 @media (max-width: 639px) {

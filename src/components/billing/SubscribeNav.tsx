@@ -20,7 +20,15 @@ export function SubscribeNav({
         <div className="cadeo-nav-actions cadeo-subscribe-nav-actions">
           <Link href={backHref} className="cadeo-btn cadeo-btn-outline cadeo-subscribe-back">
             <span className="cadeo-subscribe-back-icon" aria-hidden>
-              ←
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
+                <path
+                  d="M10 3 5 8l5 5"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </span>
             <span className="cadeo-subscribe-back-text">
               <span className="cadeo-subscribe-back-short">{backLabelShort}</span>

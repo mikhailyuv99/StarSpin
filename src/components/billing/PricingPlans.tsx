@@ -77,6 +77,11 @@ export function PricingPlans({
             onClick={() => setPlan(value)}
           >
             {planLabel(value)}
+            {value === "monthly" && (
+              <span className="cadeo-pricing-save cadeo-pricing-save--spacer" aria-hidden>
+                {t("marketing.pricingQuarterlyBadge")}
+              </span>
+            )}
             {value === "quarterly" && (
               <span className="cadeo-pricing-save">{t("marketing.pricingQuarterlyBadge")}</span>
             )}

@@ -2739,7 +2739,10 @@
 
 .cadeo-pricing-toggle--3 .cadeo-pricing-toggle-btn {
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.2rem;
+  min-height: 3.15rem;
   min-width: 0;
   width: 100%;
   padding: 0.45rem 0.3rem;
@@ -2748,6 +2751,11 @@
   white-space: normal;
   text-align: center;
   border-radius: 12px;
+}
+
+.cadeo-pricing-save--spacer {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .cadeo-pricing-toggle--3 .cadeo-pricing-save {
@@ -3691,6 +3699,21 @@
   align-items: stretch;
   gap: 0.5rem;
   width: 100%;
+}
+
+.cadeo-subscribe-btn-wrap > .cadeo-btn {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+@media (max-width: 639px) {
+  .cadeo-subscribe-btn-wrap > .cadeo-btn-lg {
+    font-size: 0.82rem;
+    padding: 0.85rem 0.9rem;
+  }
 }
 
 .cadeo-subscribe-btn-error,
