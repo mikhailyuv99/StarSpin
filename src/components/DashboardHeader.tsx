@@ -46,11 +46,11 @@ export function DashboardHeader({
 
   return (
     <header className="brutal-nav brutal-nav--dashboard">
-      <StarspinLogo href="/dashboard" variant="light" size="sm" wordmark="DASHBOARD" />
-      {establishmentSwitcher ? (
-        <div className="brutal-nav-establishment">{establishmentSwitcher}</div>
-      ) : null}
-      <div className="brutal-nav-toolbar">
+      <div className="brutal-nav-brand">
+        <StarspinLogo href="/dashboard" variant="light" size="sm" wordmark="DASHBOARD" />
+      </div>
+      <div className="brutal-nav-controls">
+        {establishmentSwitcher}
         <LocaleSwitcher variant="brutal" />
         <BrutalMobileMenu items={menuItems} />
       </div>

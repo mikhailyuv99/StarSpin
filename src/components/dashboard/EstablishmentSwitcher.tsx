@@ -59,7 +59,10 @@ export function EstablishmentSwitcher({
   };
 
   return (
-    <div className="establishment-switcher" ref={rootRef}>
+    <div
+      className={`establishment-switcher${open ? " establishment-switcher--open" : ""}`}
+      ref={rootRef}
+    >
       <button
         type="button"
         className="establishment-switcher-trigger"

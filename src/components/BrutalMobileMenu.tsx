@@ -44,11 +44,18 @@ export function BrutalMobileMenu({
         aria-label={t("common.menu")}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="brutal-mobile-menu-icon" aria-hidden>
-          <span />
-          <span />
-          <span />
-        </span>
+        <svg
+          className="brutal-mobile-menu-icon"
+          width="18"
+          height="14"
+          viewBox="0 0 18 14"
+          fill="none"
+          aria-hidden
+        >
+          <rect x="0" y="0" width="18" height="2" rx="1" fill="currentColor" />
+          <rect x="0" y="6" width="18" height="2" rx="1" fill="currentColor" />
+          <rect x="0" y="12" width="18" height="2" rx="1" fill="currentColor" />
+        </svg>
       </button>
 
       {open && (
