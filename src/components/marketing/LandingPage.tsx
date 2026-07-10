@@ -277,7 +277,9 @@ function AdvVisualJourney() {
         {chips.map((chip, i) => (
           <div key={chip.label} className="cadeo-adv-flow-chip">
             <span className="cadeo-adv-flow-num">{i + 1}</span>
-            <SocialIcon brand={chip.brand} size={14} />
+            <span className="cadeo-adv-flow-icon">
+              <SocialIcon brand={chip.brand} size={14} />
+            </span>
             <span>{chip.label}</span>
           </div>
         ))}

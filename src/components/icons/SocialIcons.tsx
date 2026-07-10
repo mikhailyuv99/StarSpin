@@ -24,6 +24,12 @@ const BRAND_ICONS: Record<Exclude<SocialBrand, "google" | "instagram" | "tiktok"
   tripadvisor: siTripadvisor,
 };
 
+const iconSvgStyle = {
+  display: "block",
+  flexShrink: 0,
+  overflow: "visible",
+} as const;
+
 /** Official TikTok logomark — cyan / red chromatic aberration layers. */
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
   const d = siTiktok.path;
@@ -37,6 +43,7 @@ function TikTokIcon({ size, className, label }: { size: number; className: strin
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
       overflow="visible"
+      style={iconSvgStyle}
     >
       <title>{label}</title>
       <path d={d} fill="#25F4EE" transform="translate(-0.45 -0.45)" />
@@ -53,11 +60,13 @@ function InstagramIcon({ size, className, label }: { size: number; className: st
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="-1 -1 26 26"
       className={className}
       role="img"
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
+      overflow="visible"
+      style={iconSvgStyle}
     >
       <title>{label}</title>
       <defs>
@@ -92,11 +101,13 @@ function SimpleBrandIcon({
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="-1 -1 26 26"
       className={className}
       role="img"
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
+      overflow="visible"
+      style={iconSvgStyle}
     >
       <title>{label}</title>
       <path d={icon.path} fill={`#${icon.hex}`} />
@@ -114,6 +125,8 @@ function GoogleIcon({ size, className, label }: { size: number; className: strin
       role="img"
       aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
+      overflow="visible"
+      style={iconSvgStyle}
     >
       <title>{label}</title>
       <path

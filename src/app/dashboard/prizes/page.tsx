@@ -17,7 +17,7 @@ export default async function PrizesPage() {
     .order("created_at");
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 overflow-x-clip">
       <div>
         <h1 className={ui.h1}>{t("dashboard.prizesTitle")}</h1>
         <p className={ui.muted}>{t("dashboard.prizesSubtitle")}</p>

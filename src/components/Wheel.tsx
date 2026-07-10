@@ -114,7 +114,8 @@ export function Wheel({
     if (sizePx != null) return;
     const update = () => {
       const w = window.innerWidth;
-      setDynamicSize(Math.min(Math.max(w - 72, 260), 320));
+      // Keep room for page + card padding on narrow phones (e.g. 375px).
+      setDynamicSize(Math.min(Math.max(w - 112, 200), 280));
     };
     update();
     window.addEventListener("resize", update);
@@ -231,7 +232,10 @@ export function Wheel({
 
   return (
     <div className="public-wheel-stage">
-      <div className="marketing-wheel-wrap" style={{ width: wheelSize, height: wheelSize }}>
+      <div
+        className="marketing-wheel-wrap"
+        style={{ width: wheelSize, height: wheelSize, maxWidth: "100%" }}
+      >
         <div ref={pointerElRef} className="marketing-wheel-pointer" aria-hidden>
           <WheelPointer
             width={pointerW}
@@ -287,7 +291,7 @@ export function Wheel({
           type="button"
           onClick={spin}
           disabled={spinning || animating}
-          className="public-btn public-touch-target max-w-xs"
+          className="public-btn public-touch-target w-full max-w-full sm:max-w-xs"
           style={{ backgroundColor: primaryColor, color: contrastTextColor(primaryColor) }}
         >
           {spinning || animating

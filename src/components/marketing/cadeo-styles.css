@@ -1890,23 +1890,27 @@
 }
 
 .cadeo-adv-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 0.45rem 0.5rem;
   justify-content: center;
+  justify-items: stretch;
   width: 100%;
+  max-width: 16rem;
+  margin-inline: auto;
 }
 
 .cadeo-adv-flow-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.35rem 0.55rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
   border: 2px solid var(--c-black);
   border-radius: 999px;
   background: #fff;
   font-size: 0.65rem;
   font-weight: 800;
+  min-width: 0;
 }
 
 .cadeo-adv-flow-num {
@@ -1919,6 +1923,25 @@
   background: var(--c-purple-deep);
   color: #fff;
   font-size: 0.55rem;
+  flex-shrink: 0;
+}
+
+.cadeo-adv-flow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.cadeo-adv-flow-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .cadeo-adv-odds {
@@ -2133,6 +2156,8 @@
 
 .cadeo-journey-phone-wrap {
   position: relative;
+  /* Optical balance for the step badge hanging off the left */
+  margin-inline: 0.55rem 0;
 }
 
 .cadeo-journey-num {
@@ -2296,8 +2321,12 @@
 .cadeo-jwin {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
   height: 100%;
-  padding: 1.85rem 0.75rem 0.95rem;
+  padding: 2.1rem 0.95rem 1.15rem;
 }
 
 .cadeo-jtasks {
@@ -2305,19 +2334,19 @@
 }
 
 .cadeo-jtasks--dense {
-  gap: 0.32rem;
-  padding-top: 1.7rem;
+  gap: 0.36rem;
+  padding: 2rem 0.9rem 1.1rem;
 }
 
 .cadeo-jtasks--dense .cadeo-jtask {
-  padding: 0.34rem 0.45rem;
+  padding: 0.36rem 0.5rem;
   font-size: 0.52rem;
   border-width: 1.5px;
   border-radius: 9px;
 }
 
 .cadeo-jtasks--dense .cadeo-jtasks-title {
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.2rem;
   font-size: 0.58rem;
 }
 
@@ -2335,6 +2364,8 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.42rem 0.5rem;
   border: 1.5px solid rgb(10 10 10 / 0.85);
   border-radius: 10px;
@@ -2352,12 +2383,19 @@
 .cadeo-jtask-ic {
   display: inline-flex;
   flex-shrink: 0;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.2rem;
+  height: 1.2rem;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
   background: #f4f4f5;
+  overflow: visible;
+}
+
+.cadeo-jtask-ic svg {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .cadeo-jtask-label {
@@ -2373,7 +2411,7 @@
 }
 
 .cadeo-jtask-bar {
-  margin-top: auto;
+  margin-top: 0.55rem;
   height: 0.5rem;
   border: 1.5px solid rgb(10 10 10 / 0.2);
   border-radius: 99px;
@@ -2389,7 +2427,7 @@
 }
 
 .cadeo-jwin {
-  align-items: center;
+  align-items: stretch;
   gap: 0.5rem;
 }
 
@@ -2397,6 +2435,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   padding: 0.28rem 0.65rem;
   border-radius: 99px;
   background: var(--c-lavender);
@@ -2409,6 +2448,7 @@
 }
 
 .cadeo-jwin-prize {
+  align-self: center;
   font-size: 1rem;
   font-weight: 900;
   text-align: center;
@@ -2452,7 +2492,7 @@
 .cadeo-jclaim-btn {
   width: 100%;
   text-align: center;
-  margin-top: auto;
+  margin-top: 0.45rem;
   padding: 0.58rem;
   background: var(--c-purple-deep);
   color: #fff;

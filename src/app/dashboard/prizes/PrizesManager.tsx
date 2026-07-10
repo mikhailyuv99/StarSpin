@@ -770,13 +770,13 @@ export function PrizesManager({
  };
 
  const prizeListCard = (
- <div className={ui.card}>
- <div className="flex flex-wrap items-start justify-between gap-4">
+ <div className={`${ui.card} min-w-0 overflow-x-clip p-4 sm:p-6`}>
+ <div className="flex flex-wrap items-start justify-between gap-3">
  <h2 className={ui.h2}>
  {t("dashboard.prizesConfigured")}
  <span className="ml-2 text-base font-bold text-muted">({activeCount})</span>
  </h2>
- <div className="flex rounded-[12px] border-2 border-black p-1 transition-colors duration-150">
+ <div className="flex max-w-full rounded-[12px] border-2 border-black p-1 transition-colors duration-150">
  <button
  type="button"
  onClick={() => switchOddsMode("simple")}
@@ -1006,11 +1006,11 @@ export function PrizesManager({
  <p className="mt-1 text-xs font-medium text-muted">{ruleSummary(display)}</p>
  </div>
  </div>
- <div className="flex shrink-0 flex-nowrap items-center gap-2 lg:justify-end">
+ <div className="flex min-w-0 flex-wrap items-center gap-2 lg:justify-end">
  <button
  type="button"
  onClick={() => startEdit(prize)}
- className={`${ui.btnOutline} shrink-0 whitespace-nowrap`}
+ className={`${ui.btnOutline} shrink-0 whitespace-nowrap !px-3 !py-1.5 text-sm`}
  >
  {editingId === prize.id ? t("dashboard.closeEditor") : t("common.edit")}
  </button>
@@ -1024,7 +1024,7 @@ export function PrizesManager({
  prizes.map((p) => (p.id === prize.id ? { ...p, active: false } : p)),
  ))
  }
- className={`${ui.btnOutline} shrink-0 whitespace-nowrap`}
+ className={`${ui.btnOutline} shrink-0 whitespace-nowrap !px-3 !py-1.5 text-sm`}
  >
  {togglingPrizeId === prize.id
  ? t("common.saving")
@@ -1060,11 +1060,11 @@ export function PrizesManager({
  );
 
  const previewCard = (
- <section className={`${ui.card} lg:sticky lg:top-6`}>
+ <section className={`${ui.card} min-w-0 overflow-x-clip p-4 sm:p-6 lg:sticky lg:top-6`}>
  <h2 className={ui.h2}>{t("dashboard.prizeWheelPreviewTitle")}</h2>
  <p className={`mt-2 ${ui.muted}`}>{t("dashboard.prizeWheelPreviewHint")}</p>
 
- <div className="mt-5 flex flex-col items-center gap-4">
+ <div className="mt-5 flex w-full min-w-0 flex-col items-center gap-4">
  {!wheelReady ? (
  <p className="py-8 text-center text-sm font-semibold text-muted">
  {previewPrizes.length === 0
@@ -1079,7 +1079,6 @@ export function PrizesManager({
  colors={theme.wheel}
  spinning={spinning}
  setSpinning={setSpinning}
- sizePx={280}
  spinButtonLabel={t("dashboard.prizeWheelPreviewSpin")}
  spinningLabel={t("public.wheelSpinning")}
  onSpinComplete={(prize) => {
@@ -1104,16 +1103,16 @@ export function PrizesManager({
  );
 
  return (
- <div className="space-y-8">
+ <div className="min-w-0 space-y-8 overflow-x-clip">
  {error && <p className={ui.alertError}>{error}</p>}
 
- <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start">
- <div className="order-2 space-y-8 lg:order-1">
+ <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
+ <div className="order-2 min-w-0 space-y-8 lg:order-1">
  {prizeListCard}
 
- <div className={ui.card}>
+ <div className={`${ui.card} min-w-0 overflow-x-clip p-4 sm:p-6`}>
  <h2 className={ui.h2}>{t("dashboard.addPrize")}</h2>
- <div className="mt-5 grid items-start gap-4 sm:grid-cols-3">
+ <div className="mt-5 grid min-w-0 items-start gap-4 sm:grid-cols-3">
  <div>
  <label className={ui.label}>{t("dashboard.label")}</label>
  <input
@@ -1231,7 +1230,7 @@ export function PrizesManager({
  </div>
  </div>
 
- <div className="order-1 lg:order-2">{previewCard}</div>
+ <div className="order-1 min-w-0 lg:order-2">{previewCard}</div>
  </div>
  </div>
  );

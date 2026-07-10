@@ -32,8 +32,8 @@ export function DashboardShell({
         <DashboardHeader nav={nav} />
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6">
-        <main>{children}</main>
+      <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

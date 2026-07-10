@@ -1267,9 +1267,23 @@ html.locale-es .cadeo-hero-accent {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  max-width: 100%;
   overflow: visible;
   margin-inline: auto;
+}
+
+.public-wheel-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+  padding-top: 0.75rem;
+  box-sizing: border-box;
 }
 
 .marketing-wheel-pointer {
@@ -1339,16 +1353,6 @@ html.locale-es .cadeo-hero-accent {
 .marketing-wheel__disc image,
 .marketing-wheel__disc .wheel-slice-icon {
   opacity: 1;
-}
-
-.public-wheel-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  width: 100%;
-  overflow: visible;
-  padding-top: 0.75rem;
 }
 
 .public-wheel-step {
