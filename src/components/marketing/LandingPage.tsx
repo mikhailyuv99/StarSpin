@@ -412,8 +412,7 @@ function Pricing() {
           <div className="cadeo-pricing-wrap cadeo-pricing-wrap--solo">
             <div className="cadeo-pricing-main">
               <div className="cadeo-pricing-header">
-                <h3 className="cadeo-pricing-name">{t("marketing.pricingName")}</h3>
-                <PricingPlans />
+                <PricingPlans showTierName />
               </div>
               <div className="cadeo-pricing-features">
                 {features.map((f) => (

@@ -2608,6 +2608,94 @@
   max-width: 22rem;
 }
 
+.cadeo-pricing-tier-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.25rem;
+  border: var(--c-border);
+  border-radius: 16px;
+  background: var(--c-cream);
+  box-shadow: var(--c-shadow);
+}
+
+.cadeo-pricing-tier-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.65rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--c-black);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.cadeo-pricing-tier-btn:active {
+  transform: scale(0.98);
+}
+
+.cadeo-pricing-tier-btn--active {
+  background: var(--c-lavender);
+  border-color: var(--c-black);
+  box-shadow: none;
+}
+
+.cadeo-pricing-tier-btn-label {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.cadeo-pricing-tier-btn-sub {
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: rgb(0 0 0 / 0.62);
+  text-align: center;
+}
+
+.cadeo-pricing-tier-head {
+  width: 100%;
+  animation: cadeo-pricing-tier-in 0.2s ease;
+}
+
+.cadeo-pricing-tier-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgb(0 0 0 / 0.62);
+}
+
+.cadeo-pricing-name--tier {
+  margin: 0;
+}
+
+.cadeo-pricing-vnd-line--animate {
+  animation: cadeo-pricing-tier-in 0.2s ease;
+}
+
+@keyframes cadeo-pricing-tier-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .cadeo-pricing-toggle {
   display: inline-flex;
   padding: 0.25rem;

@@ -2,34 +2,33 @@
 
 import { useI18n } from "@/i18n/client";
 import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
-import type { BillingPlan } from "@/lib/billing";
-import { marketingPeriodForPlan } from "@/lib/billing-display";
-import { formatPlanEur, formatPlanVnd, getPlanPricing } from "@/lib/plan-pricing";
+import type { BillingPlan, PricingTier } from "@/lib/billing";
+import { marketingPeriodForPlan, marketingPriceForPlan } from "@/lib/billing-display";
 
 type PlanPriceDisplayProps = {
   plan: BillingPlan;
+  tier?: PricingTier;
   className?: string;
   priceClassName?: string;
   periodClassName?: string;
-  /** Kept for call-site compatibility; dual-currency display is intentionally disabled. */
   eurClassName?: string;
 };
 
 export function PlanPriceDisplay({
   plan,
+  tier = "solo",
   className = "cadeo-pricing-amount",
   priceClassName = "cadeo-pricing-price",
   periodClassName = "cadeo-pricing-period",
 }: PlanPriceDisplayProps) {
   const { t } = useI18n();
   const market = usePricingMarket();
-  const pricing = getPlanPricing(plan, market);
   const periodLabel = marketingPeriodForPlan(plan, t);
-  const amount = market === "fr" ? formatPlanEur(pricing.eur) : formatPlanVnd(pricing.vnd);
+  const amount = marketingPriceForPlan(plan, market, tier);
 
   return (
-    <div className={className}>
-      <div className="cadeo-pricing-vnd-line">
+    <div className={className} key={`${tier}-${plan}`}>
+      <div className="cadeo-pricing-vnd-line cadeo-pricing-vnd-line--animate">
         <span className={priceClassName}>{amount}</span>
         <span className={periodClassName}> {periodLabel}</span>
       </div>

@@ -75,8 +75,7 @@ export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
                   </div>
                   <div className="cadeo-pricing-main">
                     <div className="cadeo-pricing-header">
-                      <h3 className="cadeo-pricing-name">{t("marketing.pricingName")}</h3>
-                      <PricingPlans />
+                      <PricingPlans showTierName />
                     </div>
                     <p className="cadeo-pricing-includes">{t("marketing.pricingIncludes")}</p>
                     <div className="cadeo-pricing-features">
