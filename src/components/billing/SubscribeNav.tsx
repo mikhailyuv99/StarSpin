@@ -19,12 +19,17 @@ export function SubscribeNav({
         </div>
         <div className="cadeo-nav-actions cadeo-subscribe-nav-actions">
           <Link href={backHref} className="cadeo-btn cadeo-btn-outline cadeo-subscribe-back">
-            <span className="cadeo-subscribe-back-short">{backLabelShort}</span>
-            <span className="cadeo-subscribe-back-full">{backLabel}</span>
+            <span className="cadeo-subscribe-back-icon" aria-hidden>
+              ←
+            </span>
+            <span className="cadeo-subscribe-back-text">
+              <span className="cadeo-subscribe-back-short">{backLabelShort}</span>
+              <span className="cadeo-subscribe-back-full">{backLabel}</span>
+            </span>
           </Link>
           <div className="cadeo-subscribe-nav-tools">
             <div className="cadeo-nav-locale cadeo-subscribe-nav-locale">
-              <LocaleSwitcher variant="brutal" />
+              <LocaleSwitcher variant="brutal" compact />
             </div>
           </div>
         </div>

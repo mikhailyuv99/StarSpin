@@ -15,12 +15,23 @@ const localeFlags: Record<Locale, string> = {
   ko: "🇰🇷",
 };
 
+const localeCodes: Record<Locale, string> = {
+  en: "EN",
+  fr: "FR",
+  ru: "RU",
+  vi: "VI",
+  es: "ES",
+  ko: "KO",
+};
+
 export function LocaleSwitcher({
   variant = "brutal",
   align = "right",
+  compact = false,
 }: {
   variant?: Variant;
   align?: "left" | "right";
+  compact?: boolean;
 }) {
   const { locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
@@ -78,7 +89,10 @@ export function LocaleSwitcher({
   const menuMinimal = variant === "journey";
 
   return (
-    <div className={`locale-switcher${variant === "journey" ? " locale-switcher--journey" : ""}`} ref={rootRef}>
+    <div
+      className={`locale-switcher${variant === "journey" ? " locale-switcher--journey" : ""}${compact ? " locale-switcher--compact" : ""}`}
+      ref={rootRef}
+    >
       <button
         type="button"
         className={triggerClass}
@@ -89,6 +103,9 @@ export function LocaleSwitcher({
       >
         <span className="locale-switcher-flag" aria-hidden>
           {localeFlags[locale]}
+        </span>
+        <span className="locale-switcher-code" aria-hidden>
+          {localeCodes[locale]}
         </span>
         <span className="locale-switcher-label">{localeLabels[locale]}</span>
         <span className="locale-switcher-chevron" aria-hidden>

@@ -52,7 +52,7 @@ export function DashboardHeader({
       <div className="brutal-nav-controls">
         <div className="brutal-nav-controls-start">{establishmentSwitcher}</div>
         <div className="brutal-nav-controls-end">
-          <LocaleSwitcher variant="brutal" />
+          <LocaleSwitcher variant="brutal" compact />
           <BrutalMobileMenu items={menuItems} />
         </div>
       </div>
