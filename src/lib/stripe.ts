@@ -13,13 +13,13 @@ const DEFAULT_MONTHLY_FR = "price_1TrHSELdigJa0nWp25cuwWlp";
 const DEFAULT_QUARTERLY_FR = "price_1TrHSuLdigJa0nWpqjHiovM3";
 const DEFAULT_ANNUAL_FR = "price_1TrHU3LdigJa0nWpxVanWFWt";
 
-/** Placeholder Stripe price IDs for multi-business add-on (replace via env when products are created). */
-const DEFAULT_MULTI_MONTHLY_VN = "price_multi_business_monthly_vn";
-const DEFAULT_MULTI_QUARTERLY_VN = "price_multi_business_quarterly_vn";
-const DEFAULT_MULTI_ANNUAL_VN = "price_multi_business_annual_vn";
-const DEFAULT_MULTI_MONTHLY_FR = "price_multi_business_monthly_fr";
-const DEFAULT_MULTI_QUARTERLY_FR = "price_multi_business_quarterly_fr";
-const DEFAULT_MULTI_ANNUAL_FR = "price_multi_business_annual_fr";
+/** Multi-business (Solo → Multi tier) Stripe price IDs. */
+const DEFAULT_MULTI_MONTHLY_VN = "price_1TrawkLdigJa0nWpG6twMv86";
+const DEFAULT_MULTI_QUARTERLY_VN = "price_1Trb18LdigJa0nWpGCOkm5wi";
+const DEFAULT_MULTI_ANNUAL_VN = "price_1Trb1XLdigJa0nWpWwHuNiwW";
+const DEFAULT_MULTI_MONTHLY_FR = "price_1Trb3ELdigJa0nWpIBUvP3gC";
+const DEFAULT_MULTI_QUARTERLY_FR = "price_1Trb3cLdigJa0nWpMGRfycWH";
+const DEFAULT_MULTI_ANNUAL_FR = "price_1Trb4ELdigJa0nWpjnf5KxYm";
 
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -57,14 +57,20 @@ export function marketFromPriceId(priceId: string): PricingMarket | null {
   if (
     priceId === getMonthlyPriceId("vn") ||
     priceId === getQuarterlyPriceId("vn") ||
-    priceId === getAnnualPriceId("vn")
+    priceId === getAnnualPriceId("vn") ||
+    priceId === getMultiBusinessMonthlyPriceId("vn") ||
+    priceId === getMultiBusinessQuarterlyPriceId("vn") ||
+    priceId === getMultiBusinessAnnualPriceId("vn")
   ) {
     return "vn";
   }
   if (
     priceId === getMonthlyPriceId("fr") ||
     priceId === getQuarterlyPriceId("fr") ||
-    priceId === getAnnualPriceId("fr")
+    priceId === getAnnualPriceId("fr") ||
+    priceId === getMultiBusinessMonthlyPriceId("fr") ||
+    priceId === getMultiBusinessQuarterlyPriceId("fr") ||
+    priceId === getMultiBusinessAnnualPriceId("fr")
   ) {
     return "fr";
   }
