@@ -2989,6 +2989,7 @@
   box-shadow: var(--c-shadow-lg);
   background: var(--c-lavender);
   padding: clamp(1.25rem, 4vw, 2rem);
+  overflow-x: clip;
 }
 
 .cadeo-footer-top {
@@ -3005,32 +3006,35 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem 2rem;
   width: 100%;
+  justify-items: start;
+  text-align: left;
+}
+
+.cadeo-footer-cols--stacked {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  gap: 1.15rem;
+}
+
+.cadeo-footer-cols--stacked .cadeo-footer-sticker,
+.cadeo-footer-cols--stacked .cadeo-footer-sticker--2 {
+  transform: none;
+  text-align: center;
+}
+
+.cadeo-footer-cols--stacked .cadeo-footer-links li {
+  display: flex;
+  justify-content: center;
 }
 
 .cadeo-footer-col {
   min-width: 0;
 }
 
-@media (max-width: 720px) {
-  .cadeo-footer-cols {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem 0.45rem;
-  }
-
-  .cadeo-footer-sticker {
-    font-size: 0.62rem;
-    padding: 0.2rem 0.45rem;
-    margin-bottom: 0.45rem;
-  }
-
-  .cadeo-footer-links a {
-    font-size: 0.68rem;
-    line-height: 1.35;
-  }
-}
-
 .cadeo-footer-sticker {
   display: inline-block;
+  max-width: 100%;
   background: var(--c-purple-deep);
   color: #fff;
   font-size: 0.75rem;
@@ -3041,6 +3045,10 @@
   box-shadow: var(--c-shadow);
   transform: rotate(-2deg);
   margin-bottom: 0.65rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .cadeo-footer-sticker--2 {
@@ -3058,10 +3066,15 @@
 }
 
 .cadeo-footer-links a {
+  display: inline-block;
+  max-width: 100%;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--c-black);
   text-decoration: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .cadeo-footer-links a:hover {

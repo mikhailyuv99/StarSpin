@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
@@ -481,7 +481,41 @@ function FAQ() {
 }
 
 function Footer() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const colsRef = useRef<HTMLDivElement>(null);
+  const [stacked, setStacked] = useState(false);
+
+  useLayoutEffect(() => {
+    const cols = colsRef.current;
+    if (!cols) return;
+
+    const measure = () => {
+      const gap = parseFloat(getComputedStyle(cols).columnGap) || 32;
+      const colSlot = (cols.clientWidth - gap * 2) / 3;
+      if (colSlot <= 0) return;
+
+      let maxNeed = 0;
+      const children = Array.from(cols.querySelectorAll<HTMLElement>(".cadeo-footer-col"));
+
+      for (const col of children) {
+        for (const el of col.querySelectorAll<HTMLElement>(".cadeo-footer-sticker, .cadeo-footer-links a")) {
+          const prev = el.style.whiteSpace;
+          el.style.whiteSpace = "nowrap";
+          maxNeed = Math.max(maxNeed, el.scrollWidth);
+          el.style.whiteSpace = prev;
+        }
+      }
+
+      setStacked(maxNeed > colSlot + 1);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(cols);
+    if (cols.parentElement) observer.observe(cols.parentElement);
+    return () => observer.disconnect();
+  }, [locale]);
+
   return (
     <footer className="cadeo-footer">
       <div className="cadeo-footer-box">
@@ -499,7 +533,10 @@ function Footer() {
             </span>
           </div>
         </div>
-        <div className="cadeo-footer-cols">
+        <div
+          ref={colsRef}
+          className={`cadeo-footer-cols${stacked ? " cadeo-footer-cols--stacked" : ""}`}
+        >
           <div className="cadeo-footer-col">
             <span className="cadeo-footer-sticker">{t("marketing.footerSocial")}</span>
             <ul className="cadeo-footer-links">
