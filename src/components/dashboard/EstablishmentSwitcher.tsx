@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "@/i18n/client";
 
 type EstablishmentOption = { id: string; name: string };
@@ -15,14 +15,36 @@ export function EstablishmentSwitcher({
 }) {
   const t = useTranslations();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const activeEstablishment =
+    establishments.find((e) => e.id === activeMerchantId) ?? establishments[0];
+
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   if (establishments.length <= 1) return null;
 
-  const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const merchantId = event.target.value;
-    if (merchantId === activeMerchantId) return;
+  const handlePick = async (merchantId: string) => {
+    if (merchantId === activeMerchantId || switching) return;
 
+    setOpen(false);
     setSwitching(true);
     const res = await fetch("/api/merchants/switch", {
       method: "POST",
@@ -37,21 +59,45 @@ export function EstablishmentSwitcher({
   };
 
   return (
-    <label className="flex items-center gap-2">
-      <span className="sr-only">{t("establishments.switcherLabel")}</span>
-      <select
-        value={activeMerchantId}
-        onChange={handleChange}
+    <div className="establishment-switcher" ref={rootRef}>
+      <button
+        type="button"
+        className="establishment-switcher-trigger"
+        onClick={() => setOpen((value) => !value)}
         disabled={switching}
-        className="max-w-[10rem] truncate rounded-lg border-2 border-black bg-white px-2 py-1.5 text-xs font-bold text-ink sm:max-w-[12rem]"
+        aria-expanded={open}
+        aria-haspopup="listbox"
         aria-label={t("establishments.switcherLabel")}
       >
-        {establishments.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.name}
-          </option>
-        ))}
-      </select>
-    </label>
+        <span className="establishment-switcher-label">
+          {switching ? t("common.loading") : activeEstablishment?.name}
+        </span>
+        <span className="establishment-switcher-chevron" aria-hidden>
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+      {open && (
+        <ul className="establishment-switcher-menu" role="listbox">
+          {establishments.map((establishment) => (
+            <li key={establishment.id} role="option" aria-selected={establishment.id === activeMerchantId}>
+              <button
+                type="button"
+                className={`establishment-switcher-option${
+                  establishment.id === activeMerchantId ? " establishment-switcher-option--active" : ""
+                }`}
+                onClick={() => void handlePick(establishment.id)}
+              >
+                <span className="establishment-switcher-option-label">{establishment.name}</span>
+                {establishment.id === activeMerchantId && (
+                  <span className="establishment-switcher-check" aria-hidden>
+                    ✓
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

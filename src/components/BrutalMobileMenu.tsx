@@ -44,9 +44,11 @@ export function BrutalMobileMenu({
         aria-label={t("common.menu")}
         onClick={() => setOpen((value) => !value)}
       >
-        <span aria-hidden />
-        <span aria-hidden />
-        <span aria-hidden />
+        <span className="brutal-mobile-menu-icon" aria-hidden>
+          <span />
+          <span />
+          <span />
+        </span>
       </button>
 
       {open && (
