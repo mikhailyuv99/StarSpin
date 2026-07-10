@@ -166,7 +166,8 @@
     "wheelSlice2": "음료 무료",
     "wheelSlice3": "디저트 무료",
     "wheelSlice4": "다시 도전",
-    "wheelSpin": "SPIN"
+    "wheelSpin": "SPIN",
+    "journeyVenue": "YOUR VENUE"
   },
   "public": {
     "headerSubtitle": "참여하려면 단계를 따라주세요",
@@ -374,7 +375,8 @@
     "activatingBody": "결제가 완료되었습니다. 룰렛을 켜는 중입니다 — 보통 몇 초면 됩니다."
   },
   "dashboard": {
-    "navHome": "홈",
+    "navHome": "대시보드",
+    "navMarketing": "홈",
     "navSetup": "게임 설정",
     "navCustomers": "고객",
     "viewSite": "여정 테스트",
@@ -386,7 +388,7 @@
     "navFlow": "여정",
     "navQr": "QR 코드",
     "navBilling": "결제",
-    "homeTitle": "홈",
+    "homeTitle": "대시보드",
     "homeSubtitle": "아래 체크리스트를 따라주세요 — 먼저 설정하고, 구독하여 활성화한 뒤 QR을 공유하세요.",
     "setupTitle": "5단계로 시작하기",
     "setupSubtitle": "순서대로 진행하세요. 결제 전에 모든 설정을 완료할 수 있습니다 — 구독 후 룰렛이 활성화됩니다.",

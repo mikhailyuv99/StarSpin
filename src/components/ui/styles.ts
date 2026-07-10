@@ -9,7 +9,7 @@ export const ui = {
   card: "brutal-card p-6",
   cardFlat: "brutal-card p-5",
   cardGrid:
-    "brutal-card p-6 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#0a0a0a]",
+    "brutal-card p-6 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5",
 
   h1: "font-[family-name:var(--font-display)] text-2xl font-extrabold uppercase tracking-tight text-ink",
   h2: "font-[family-name:var(--font-display)] text-xl font-extrabold uppercase tracking-tight text-ink",

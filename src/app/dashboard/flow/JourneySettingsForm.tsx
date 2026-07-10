@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { JourneyWheelIcon } from "@/components/dashboard/JourneyWheelIcon";
+import { JourneyPreviewRail } from "@/components/dashboard/JourneyPreviewRail";
 import { JourneyThemePicker } from "@/components/dashboard/JourneyThemePicker";
 import { LogoUploadField } from "@/components/dashboard/LogoUploadField";
 import { parseJourneyTheme, type JourneyTemplateId } from "@/lib/journey-theme";
@@ -19,14 +20,6 @@ import {
   type FlowActionStep,
 } from "@/lib/flow-steps";
 import type { Merchant, Prize } from "@/lib/types";
-
-const STEP_ACCENT: Record<FlowActionStep, string> = {
-  google_review: "#9b7fe8",
-  instagram: "#fbbf24",
-  facebook: "#f472b6",
-  tiktok: "#2dd4bf",
-  tripadvisor: "#6ee7b7",
-};
 
 function stepBrand(step: FlowActionStep): SocialBrand {
   return step === "google_review" ? "google" : step;
@@ -319,10 +312,12 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           onAccentChange={setJourneyAccent}
           previewMerchant={previewMerchant}
           previewPrizes={previewPrizes}
+          actions={
+            <button type="submit" disabled={loading} className={ui.btn}>
+              {loading ? t("common.saving") : t("common.save")}
+            </button>
+          }
         />
-        <button type="submit" disabled={loading} className={ui.btn}>
-          {loading ? t("common.saving") : t("common.save")}
-        </button>
       </section>
 
       <section className={`${ui.card} space-y-5`}>
@@ -364,19 +359,20 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
       </section>
 
       <section className={`${ui.card} space-y-5`}>
-        <div>
-          <h2 className={ui.h2}>{t("dashboard.flowTitle")}</h2>
-          <p className="mt-1 text-sm text-muted">{t("dashboard.flowStepsHint")}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className={ui.h2}>{t("dashboard.flowTitle")}</h2>
+            <p className="mt-1 text-sm text-muted">{t("dashboard.flowStepsHint")}</p>
+          </div>
+          <button type="submit" disabled={loading} className={`${ui.btn} !w-auto shrink-0 px-4 py-2 text-sm`}>
+            {loading ? t("common.saving") : t("common.save")}
+          </button>
         </div>
 
-        <div className="journey-preview" aria-label={t("dashboard.flowPreviewTitle")}>
-          {steps.map((step, i) => (
+        <JourneyPreviewRail ariaLabel={t("dashboard.flowPreviewTitle")}>
+          {steps.map((step) => (
             <div key={step} className="journey-preview-flow">
-              <div
-                className="journey-preview-step"
-                style={{ ["--step-accent" as string]: STEP_ACCENT[step] }}
-              >
-                <span className="journey-preview-num">{i + 1}</span>
+              <div className="journey-preview-step">
                 <SocialIcon brand={stepBrand(step)} size={18} />
                 <span className="journey-preview-label">{t(`dashboard.flowStep_${step}`)}</span>
               </div>
@@ -386,21 +382,16 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
             </div>
           ))}
           <div className="journey-preview-step journey-preview-step--wheel">
-            <span className="journey-preview-num">{steps.length + 1}</span>
             <JourneyWheelIcon size={24} />
             <span className="journey-preview-label">{t("public.stepWheel")}</span>
           </div>
-        </div>
+        </JourneyPreviewRail>
 
         <ul className="journey-step-list">
           {steps.map((step, index) => {
             const linkKey = linkKeyForStep(step);
             return (
-              <li
-                key={step}
-                className="journey-step"
-                style={{ ["--step-accent" as string]: STEP_ACCENT[step] }}
-              >
+              <li key={step} className="journey-step">
                 <div className="journey-step-header">
                   <div className="journey-step-leading">
                     <span className="journey-step-num">{index + 1}</span>
@@ -510,10 +501,6 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           </div>
         )}
       </section>
-
-      <button type="submit" disabled={loading} className={ui.btn}>
-        {loading ? t("common.saving") : t("common.save")}
-      </button>
     </form>
   );
 }

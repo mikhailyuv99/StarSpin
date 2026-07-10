@@ -1,10 +1,13 @@
+import { headers } from "next/headers";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans, Fredoka, Baloo_2, Nunito, Rubik, Comfortaa } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
+import { PricingMarketProvider } from "@/components/providers/PricingMarketProvider";
 import { I18nProvider } from "@/i18n/client";
 import { getMessages } from "@/i18n/get-messages";
 import { getLocale, getTranslations } from "@/i18n/server";
 import { OFFICIAL_SITE_URL } from "@/lib/brand";
+import { pricingMarketFromHeaders } from "@/lib/pricing-market";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -128,6 +131,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = getMessages(locale);
+  const pricingMarket = pricingMarketFromHeaders(await headers());
 
   return (
     <html
@@ -135,9 +139,11 @@ export default async function RootLayout({
       className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`}
     >
       <body className="font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
-        <I18nProvider locale={locale} messages={messages}>
-          <SmoothScrollProvider>{children}</SmoothScrollProvider>
-        </I18nProvider>
+        <PricingMarketProvider market={pricingMarket}>
+          <I18nProvider locale={locale} messages={messages}>
+            <SmoothScrollProvider>{children}</SmoothScrollProvider>
+          </I18nProvider>
+        </PricingMarketProvider>
       </body>
     </html>
   );

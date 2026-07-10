@@ -1,7 +1,8 @@
 import type Stripe from "stripe";
 import type { BillingPlan } from "@/lib/billing";
 import { isBillingPlan } from "@/lib/billing";
-import { getAnnualPriceId, getMonthlyPriceId, getQuarterlyPriceId, priceIdForPlan } from "@/lib/stripe";
+import type { PricingMarket } from "@/lib/pricing-market";
+import { priceIdForPlan } from "@/lib/stripe";
 
 export type BillingSummary = {
   hasAccount: boolean;
@@ -18,9 +19,11 @@ export type BillingSummary = {
 };
 
 function planFromPriceId(priceId: string): BillingPlan | null {
-  if (priceId === getMonthlyPriceId()) return "monthly";
-  if (priceId === getQuarterlyPriceId()) return "quarterly";
-  if (priceId === getAnnualPriceId()) return "annual";
+  for (const market of ["vn", "fr"] as const) {
+    if (priceId === priceIdForPlan("monthly", market)) return "monthly";
+    if (priceId === priceIdForPlan("quarterly", market)) return "quarterly";
+    if (priceId === priceIdForPlan("annual", market)) return "annual";
+  }
   return null;
 }
 
@@ -203,6 +206,7 @@ export async function changeSubscriptionPlan(
   stripe: Stripe,
   merchant: { stripe_customer_id: string; stripe_subscription_id: string | null },
   plan: BillingPlan,
+  market: PricingMarket,
 ): Promise<Stripe.Subscription> {
   const subscription = await getMerchantSubscription(stripe, merchant);
   if (subscription.status !== "active" && subscription.status !== "trialing" && subscription.status !== "past_due") {
@@ -217,7 +221,7 @@ export async function changeSubscriptionPlan(
       ? subscription.metadata.plan
       : null) ?? (item.price?.id ? planFromPriceId(item.price.id) : null);
 
-  if (currentPlan === plan || item.price?.id === priceIdForPlan(plan)) {
+  if (currentPlan === plan || item.price?.id === priceIdForPlan(plan, market)) {
     return subscription;
   }
 
@@ -225,7 +229,7 @@ export async function changeSubscriptionPlan(
   const prorationBehavior = subscription.status === "trialing" ? "none" : "create_prorations";
 
   return stripe.subscriptions.update(subscription.id, {
-    items: [{ id: item.id, price: priceIdForPlan(plan) }],
+    items: [{ id: item.id, price: priceIdForPlan(plan, market) }],
     proration_behavior: prorationBehavior,
     cancel_at_period_end: false,
     metadata: {

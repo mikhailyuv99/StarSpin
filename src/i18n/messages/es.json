@@ -166,7 +166,8 @@
     "wheelSlice2": "Bebida gratis",
     "wheelSlice3": "Postre gratis",
     "wheelSlice4": "Inténtalo de nuevo",
-    "wheelSpin": "GIRAR"
+    "wheelSpin": "GIRAR",
+    "journeyVenue": "YOUR VENUE"
   },
   "public": {
     "headerSubtitle": "Sigue los pasos para participar",
@@ -374,7 +375,8 @@
     "activatingBody": "El pago se realizó correctamente. Estamos activando tu ruleta; suele tardar unos segundos."
   },
   "dashboard": {
-    "navHome": "Inicio",
+    "navHome": "Panel",
+    "navMarketing": "Inicio",
     "navSetup": "Configuración",
     "navCustomers": "Clientes",
     "viewSite": "Probar recorrido",
@@ -386,7 +388,7 @@
     "navFlow": "Recorrido",
     "navQr": "Código QR",
     "navBilling": "Facturación",
-    "homeTitle": "Inicio",
+    "homeTitle": "Panel",
     "homeSubtitle": "Sigue la lista — configura primero, suscríbete para activar, luego comparte tu QR.",
     "setupTitle": "Empieza en 5 pasos",
     "setupSubtitle": "En este orden. Puedes configurar todo antes de pagar — la ruleta se activa tras la suscripción.",

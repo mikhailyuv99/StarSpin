@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
 import { isMerchantLive } from "@/lib/merchant-access";
+import { pricingMarketFromRequest } from "@/lib/pricing-market";
 import { getStripe } from "@/lib/stripe";
 import { ensureStripeCustomer, getOrCreateSubscriptionPaymentSecret } from "@/lib/stripe-billing";
 
@@ -36,12 +37,14 @@ export async function POST(request: Request) {
     }
 
     const stripe = getStripe();
+    const market = pricingMarketFromRequest(request);
     const customerId = await ensureStripeCustomer(supabase, stripe, user, merchant);
     const { clientSecret } = await getOrCreateSubscriptionPaymentSecret(
       stripe,
       customerId,
       body.plan,
       merchant.id,
+      market,
     );
 
     return NextResponse.json({ clientSecret, plan: body.plan });

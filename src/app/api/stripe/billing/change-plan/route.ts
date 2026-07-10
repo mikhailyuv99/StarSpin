@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { changeSubscriptionPlan, getBillingSummary } from "@/lib/billing-summary";
 import { isBillingPlan } from "@/lib/billing";
+import { pricingMarketForBilling } from "@/lib/pricing-market";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 
@@ -31,7 +32,18 @@ export async function POST(request: Request) {
     }
 
     const stripe = getStripe();
-    await changeSubscriptionPlan(stripe, merchant, body.plan);
+    let subscriptionPriceId: string | null = null;
+    if (merchant.stripe_subscription_id) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(merchant.stripe_subscription_id);
+        subscriptionPriceId = sub.items.data[0]?.price?.id ?? null;
+      } catch {
+        /* list fallback handled in changeSubscriptionPlan */
+      }
+    }
+
+    const market = pricingMarketForBilling(request.headers, subscriptionPriceId);
+    await changeSubscriptionPlan(stripe, merchant, body.plan, market);
 
     await supabase
       .from("merchants")

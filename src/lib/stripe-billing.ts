@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import type { User } from "@supabase/supabase-js";
 import type { BillingPlan } from "@/lib/billing";
 import { SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
+import type { PricingMarket } from "@/lib/pricing-market";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
 
 export async function ensureStripeCustomer(
@@ -109,6 +110,7 @@ export async function getOrCreateSubscriptionPaymentSecret(
   customerId: string,
   plan: BillingPlan,
   merchantId: string,
+  market: PricingMarket,
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
   const open = await listOpenCheckoutSubscriptions(stripe, customerId);
 
@@ -136,7 +138,7 @@ export async function getOrCreateSubscriptionPaymentSecret(
     }
   }
 
-  return createSubscriptionPaymentSecret(stripe, customerId, plan, merchantId);
+  return createSubscriptionPaymentSecret(stripe, customerId, plan, merchantId, market);
 }
 
 export async function createSubscriptionPaymentSecret(
@@ -144,10 +146,11 @@ export async function createSubscriptionPaymentSecret(
   customerId: string,
   plan: BillingPlan,
   merchantId: string,
+  market: PricingMarket,
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
-    items: [{ price: priceIdForPlan(plan) }],
+    items: [{ price: priceIdForPlan(plan, market) }],
     trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
     payment_behavior: "default_incomplete",
     payment_settings: {
@@ -161,6 +164,7 @@ export async function createSubscriptionPaymentSecret(
       merchant_id: merchantId,
       plan,
       product: "starspin",
+      pricing_market: market,
     },
     description: "STARSPIN Pro subscription",
     expand: ["pending_setup_intent", "latest_invoice.confirmation_secret"],

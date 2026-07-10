@@ -1,10 +1,13 @@
 import type { BillingPlan } from "@/lib/billing";
-import { PLAN_PRICING, formatPlanVnd } from "@/lib/plan-pricing";
+import { formatPlanEur, formatPlanVnd, getPlanPricing } from "@/lib/plan-pricing";
+import type { PricingMarket } from "@/lib/pricing-market";
 
 type Translator = (key: string) => string;
 
-export function marketingPriceForPlan(plan: BillingPlan): string {
-  return formatPlanVnd(PLAN_PRICING[plan].vnd);
+export function marketingPriceForPlan(plan: BillingPlan, market: PricingMarket): string {
+  const pricing = getPlanPricing(plan, market);
+  if (market === "fr") return formatPlanEur(pricing.eur);
+  return formatPlanVnd(pricing.vnd);
 }
 
 export function marketingPeriodForPlan(plan: BillingPlan, t: Translator): string {
@@ -13,24 +16,24 @@ export function marketingPeriodForPlan(plan: BillingPlan, t: Translator): string
   return t("marketing.pricingPeriodAnnual");
 }
 
-export function marketingSubscribeForPlan(plan: BillingPlan, t: Translator): string {
+export function marketingSubscribeForPlan(plan: BillingPlan, market: PricingMarket, t: Translator): string {
   const action =
     plan === "monthly"
       ? t("marketing.subscribeMonthly")
       : plan === "quarterly"
         ? t("marketing.subscribeQuarterly")
         : t("marketing.subscribeAnnual");
-  return `${action} — ${formatPlanVnd(PLAN_PRICING[plan].vnd)}`;
+  return `${action} — ${marketingPriceForPlan(plan, market)}`;
 }
 
-export function checkoutPayForPlan(plan: BillingPlan, t: Translator): string {
+export function checkoutPayForPlan(plan: BillingPlan, market: PricingMarket, t: Translator): string {
   const action =
     plan === "monthly"
       ? t("billing.checkoutPayMonthly")
       : plan === "quarterly"
         ? t("billing.checkoutPayQuarterly")
         : t("billing.checkoutPayAnnual");
-  return `${action} · ${formatPlanVnd(PLAN_PRICING[plan].vnd)}`;
+  return `${action} · ${marketingPriceForPlan(plan, market)}`;
 }
 
 export function managePlanLabelForPlan(plan: BillingPlan | null, t: Translator): string {

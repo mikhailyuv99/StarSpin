@@ -8,6 +8,7 @@ type Variant = "light" | "dark" | "minimal" | "brutal" | "journey";
 
 const localeFlags: Record<Locale, string> = {
   en: "🇬🇧",
+  fr: "🇫🇷",
   ru: "🇷🇺",
   vi: "🇻🇳",
   es: "🇪🇸",

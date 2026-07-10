@@ -9,7 +9,6 @@ import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { PricingPlans } from "@/components/billing/PricingPlans";
 import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
 import { SubscribeCheckoutAlert } from "@/components/billing/SubscribeCheckoutAlert";
-import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import { AdvantageCopy } from "@/components/marketing/AdvantageCopy";
 import { getMarketingAdvantages } from "@/lib/marketing-advantages";
 import { Reveal } from "@/components/motion/Reveal";
@@ -32,7 +31,6 @@ export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
 
   return (
     <div className="cadeo-page cadeo-page--subscribe">
-      <MobileAppBanner />
       <Suspense fallback={null}>
         <DashboardBillingRedirect />
         <SubscribeCheckoutAlert />

@@ -205,6 +205,7 @@ export function JourneyThemePicker({
   onAccentChange,
   previewMerchant,
   previewPrizes,
+  actions,
 }: {
   template: JourneyTemplateId;
   accent: string;
@@ -212,6 +213,7 @@ export function JourneyThemePicker({
   onAccentChange: (hex: string) => void;
   previewMerchant: Merchant;
   previewPrizes: Prize[];
+  actions?: React.ReactNode;
 }) {
   const t = useTranslations();
   useJourneyPreviewFonts();
@@ -292,6 +294,7 @@ export function JourneyThemePicker({
             )}
           </div>
         </div>
+        {actions ? <div className="journey-picker-block">{actions}</div> : null}
       </section>
     </div>
   );

@@ -1042,8 +1042,8 @@ function drawRotatedTextBlock(
 
 function drawBrutalBorder(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.strokeStyle = "#0a0a0a";
-  ctx.lineWidth = 8;
-  ctx.strokeRect(4, 4, width - 8, height - 8);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, width - 2, height - 2);
 }
 
 const GRID_SEGMENTS = 20;

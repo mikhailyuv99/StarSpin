@@ -25,11 +25,19 @@
   --accent-hover: #8b6fd4;
   --accent-subtle: var(--c-lavender);
 
-  --brutal-border: 2.5px solid var(--c-black);
-  --brutal-shadow: 4px 4px 0 0 var(--c-black);
-  --brutal-shadow-lg: 6px 6px 0 0 var(--c-black);
+  --brutal-border: 2px solid var(--c-black);
+  --brutal-shadow: none;
+  --brutal-shadow-lg: none;
   --brutal-radius: 14px;
   --brutal-radius-lg: 20px;
+
+  /* Flat UI — no drop shadows on buttons/cards app-wide */
+  --pj-btn-shadow: none;
+  --pj-btn-hover-shadow: none;
+  --pj-btn-active-shadow: none;
+  --pj-card-shadow: none;
+  --pj-pill-shadow: none;
+  --pj-input-focus-shadow: none;
 
   color-scheme: light;
 }
@@ -56,6 +64,46 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ZERO SHADOWS APP-WIDE — including Tailwind shadow-[...] utilities */
+*,
+*::before,
+*::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Flat UI app-wide — keep borders, kill hard offset shadows on chrome */
+.brutal-btn,
+.brutal-btn:hover,
+.brutal-btn:active,
+.brutal-btn:focus-visible,
+.brutal-card,
+.brutal-nav,
+.brutal-mobile-menu-trigger,
+.brutal-mobile-menu-panel,
+.brutal-input,
+.brutal-input:focus,
+.brutal-select,
+.brutal-textarea,
+.locale-switcher-trigger,
+.locale-switcher-trigger:hover,
+.locale-switcher-menu,
+.site-app-banner,
+.dashboard-shell .brutal-btn,
+.dashboard-shell .brutal-card,
+.public-flow .public-card,
+.public-flow .public-btn,
+.public-flow .public-btn:hover,
+.public-flow .public-btn:active,
+.public-flow .public-pill,
+.public-flow .public-input,
+.public-flow .public-input:focus,
+.public-flow .locale-switcher-trigger--journey,
+.public-flow .locale-switcher-trigger--journey:hover,
+.public-flow .locale-switcher-menu--journey {
+  box-shadow: none !important;
 }
 
 /* ── Neo-brutalist primitives (app-wide) ── */
@@ -431,7 +479,7 @@ body {
   padding: 0;
   border: none;
   background: transparent;
-  box-shadow: 4px 4px 0 0 #0a0a0a;
+  box-shadow: none;
   overflow: visible;
 }
 
@@ -458,7 +506,7 @@ body {
   pointer-events: auto;
   touch-action: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: none;
 }
 .qr-handle::after {
   content: "";
@@ -484,7 +532,7 @@ body {
   color: #fff;
   border: 2px solid #fff;
   border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
   pointer-events: auto;
   touch-action: none;
   cursor: grab;
@@ -518,7 +566,7 @@ body {
   border: 2px solid #0a0a0a;
   background: var(--c-cream);
   padding: 0.375rem;
-  box-shadow: 4px 4px 0 0 #0a0a0a;
+  box-shadow: none;
 }
 
 @media (min-width: 1024px) {
@@ -602,13 +650,12 @@ body {
   text-decoration: none;
   white-space: nowrap;
   padding: 0.35rem 0;
-  border-bottom: 2px solid transparent;
+  border-bottom: none;
 }
 
 .brutal-nav-link:hover,
 .brutal-nav-link[data-active="true"],
 .brutal-nav-link--active {
-  border-bottom-color: var(--c-black);
   font-weight: 800;
 }
 
@@ -733,7 +780,7 @@ body {
 
 .brutal-btn:hover:not(:disabled) {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 .brutal-btn:active:not(:disabled) {
@@ -790,7 +837,7 @@ body {
 
 .brutal-oauth-btn:hover:not(:disabled) {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 .brutal-oauth-btn:disabled {
@@ -896,7 +943,7 @@ html.locale-es .cadeo-hero-accent {
 }
 
 .brutal-input:focus {
-  box-shadow: 3px 3px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 .brutal-input::placeholder {
@@ -966,7 +1013,7 @@ html.locale-es .cadeo-hero-accent {
   font-weight: 700;
   border: var(--brutal-border);
   border-radius: 10px;
-  box-shadow: 2px 2px 0 0 var(--c-black);
+  box-shadow: none;
   background: #fff;
   color: var(--c-black);
   outline: none;
@@ -994,7 +1041,7 @@ html.locale-es .cadeo-hero-accent {
   background: #fff;
   border: var(--brutal-border);
   border-radius: 12px;
-  box-shadow: 3px 3px 0 0 var(--c-black);
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   white-space: nowrap;
@@ -1002,7 +1049,7 @@ html.locale-es .cadeo-hero-accent {
 
 .locale-switcher-trigger:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 .locale-switcher-trigger--dark {
@@ -2234,56 +2281,110 @@ html.locale-es .cadeo-hero-accent {
   background: var(--c-black);
   color: #fff;
   font-size: 0.7rem;
-  box-shadow: 0 2px 6px rgb(10 10 10 / 0.25);
+  box-shadow: none;
 }
 
 /* Journey builder (dashboard) */
+.journey-preview-rail-wrap {
+  position: relative;
+  min-width: 0;
+}
+
 .journey-preview {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem 0.5rem;
-  padding: 1rem;
-  background: rgb(10 10 10 / 0.03);
-  border: 2px dashed rgb(10 10 10 / 0.2);
-  border-radius: var(--brutal-radius);
+  gap: 0.65rem;
+  padding: 0.35rem 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.journey-preview--pad-left {
+  padding-left: 2.15rem;
+}
+
+.journey-preview--pad-right {
+  padding-right: 2.15rem;
+}
+
+.journey-preview::-webkit-scrollbar {
+  display: none;
+}
+
+.journey-preview-rail-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 2px solid var(--c-black);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--c-black);
+  cursor: pointer;
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.journey-preview-rail-arrow--left {
+  left: 0;
+}
+
+.journey-preview-rail-arrow--right {
+  right: 0;
+}
+
+.journey-preview-rail-arrow svg {
+  width: 0.7rem;
+  height: 0.95rem;
+  opacity: 1;
+  filter: none;
+  transition: opacity 0.12s ease;
+}
+
+.journey-preview-rail-arrow:hover svg,
+.journey-preview-rail-arrow:focus-visible svg {
+  opacity: 1;
 }
 
 .journey-preview-flow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .journey-preview-step {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.45rem 0.7rem;
+  padding: 0.5rem 0.75rem;
   background: #fff;
   border: 2px solid var(--c-black);
-  border-radius: 999px;
-  box-shadow: 2px 2px 0 0 var(--c-black);
+  border-radius: 12px;
+  box-shadow: none;
   font-size: 0.72rem;
   font-weight: 800;
-}
-
-.journey-preview-step::before {
-  content: "";
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 999px;
-  background: var(--step-accent, var(--c-purple-deep));
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .journey-preview-step--wheel {
   background: var(--c-lavender);
-  padding-inline: 0.65rem;
-}
-
-.journey-preview-step--wheel::before {
-  display: none;
+  padding-inline: 0.75rem;
 }
 
 .journey-wheel-icon {
@@ -2305,9 +2406,16 @@ html.locale-es .cadeo-hero-accent {
 }
 
 .journey-preview-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
   font-weight: 900;
-  opacity: 0.35;
-  font-size: 0.85rem;
+  opacity: 1;
+  color: var(--c-black);
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .dashboard-home-active {
@@ -2386,7 +2494,7 @@ html.locale-es .cadeo-hero-accent {
 
 .dashboard-home-action:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 @media (min-width: 768px) {
@@ -2411,8 +2519,6 @@ html.locale-es .cadeo-hero-accent {
 
 .journey-step {
   border: 2px solid var(--c-black);
-  border-left-width: 5px;
-  border-left-color: var(--step-accent, var(--c-purple-deep));
   border-radius: var(--brutal-radius);
   background: #fff;
   box-shadow: var(--brutal-shadow);
@@ -2469,7 +2575,7 @@ html.locale-es .cadeo-hero-accent {
   font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 2px 2px 0 0 var(--c-black);
+  box-shadow: none;
 }
 
 .journey-step-action:disabled {

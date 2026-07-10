@@ -5,9 +5,9 @@ import Link from "next/link";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
+import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { StarspinLogo } from "@/components/StarspinLogo";
-import { MobileAppBanner } from "@/components/marketing/MobileAppBanner";
 import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import type { BillingPlan } from "@/lib/billing";
 import { checkoutPayForPlan } from "@/lib/billing-display";
@@ -19,6 +19,7 @@ function isSetupIntentSecret(clientSecret: string) {
 
 function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; clientSecret: string }) {
   const { t } = useI18n();
+  const market = usePricingMarket();
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -68,7 +69,7 @@ function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; client
       />
       {error && <p className="cadeo-subscribe-btn-error">{error}</p>}
       <button type="submit" disabled={!stripe || submitting} className="cadeo-btn cadeo-btn-purple cadeo-btn-lg">
-        {submitting ? t("billing.checkoutProcessing") : checkoutPayForPlan(plan, t)}
+        {submitting ? t("billing.checkoutProcessing") : checkoutPayForPlan(plan, market, t)}
       </button>
       <p className="cadeo-checkout-footnote">{t("billing.checkoutFootnote")}</p>
     </form>
@@ -117,7 +118,6 @@ export function StarspinCheckout({
 
   return (
     <div className="cadeo-page cadeo-page--subscribe cadeo-page--checkout">
-      <MobileAppBanner />
       <div className="cadeo-nav-wrap">
         <nav className="cadeo-nav">
           <StarspinLogo href="/dashboard" variant="light" size="md" />

@@ -20,7 +20,7 @@ export function LogoUploadField({
   return (
     <div>
       {label ? <label className={ui.label}>{label}</label> : null}
-      <div className={`${label ? "mt-2" : ""} flex items-center gap-4`}>
+      <div className={`${label ? "mt-2" : ""} flex items-center gap-3`}>
         {hasLogo ? (
           <img
             src={logoUrl!}
@@ -32,8 +32,8 @@ export function LogoUploadField({
             —
           </div>
         )}
-        <div className="flex min-w-0 flex-col items-start justify-center gap-2">
-          <p className="text-sm font-semibold leading-snug text-ink">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
+          <p className="text-sm font-semibold leading-none text-ink">
             {hasLogo ? t("dashboard.logoActive") : t("dashboard.logoNone")}
           </p>
           <button

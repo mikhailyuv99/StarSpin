@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
 import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import { SubscribeButton } from "@/components/billing/SubscribeButton";
 import type { BillingPlan } from "@/lib/billing";
@@ -11,6 +12,7 @@ const PLANS: BillingPlan[] = ["monthly", "quarterly", "annual"];
 
 export function PricingPlans({ ctaClassName = "cadeo-btn cadeo-btn-purple cadeo-btn-lg" }: { ctaClassName?: string }) {
   const { t } = useI18n();
+  const market = usePricingMarket();
   const [plan, setPlan] = useState<BillingPlan>("monthly");
 
   const planLabel = (value: BillingPlan) => {
@@ -47,7 +49,7 @@ export function PricingPlans({ ctaClassName = "cadeo-btn cadeo-btn-purple cadeo-
       <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
 
       <SubscribeButton plan={plan} className={ctaClassName}>
-        {marketingSubscribeForPlan(plan, t)}
+        {marketingSubscribeForPlan(plan, market, t)}
       </SubscribeButton>
     </div>
   );

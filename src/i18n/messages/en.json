@@ -76,6 +76,7 @@
     "heroBadgeTiktok": "TikTok",
     "heroBadgeInstagram": "Instagram",
     "heroDemo": "Set up your wheel",
+    "journeyVenue": "YOUR VENUE",
     "magicRecipe": "The magic recipe",
     "mobileAppBanner": "Mobile app coming soon",
     "pillarsTitle": "How we capture, engage, and retain your customers",
@@ -374,7 +375,8 @@
     "activatingBody": "Your payment succeeded. We're turning on your wheel — this usually takes a few seconds."
   },
   "dashboard": {
-    "navHome": "Home",
+    "navHome": "Dashboard",
+    "navMarketing": "Home",
     "navSetup": "Game setup",
     "navCustomers": "Customers",
     "viewSite": "Test journey",
@@ -386,7 +388,7 @@
     "navFlow": "Journey",
     "navQr": "QR code",
     "navBilling": "Billing",
-    "homeTitle": "Home",
+    "homeTitle": "Dashboard",
     "homeSubtitle": "Follow the checklist below — configure first, subscribe to go live, then share your QR.",
     "setupTitle": "Get started in 5 steps",
     "setupSubtitle": "Do these in order. You can set everything up before paying — your wheel goes live after subscription.",

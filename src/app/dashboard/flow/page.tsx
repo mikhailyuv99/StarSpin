@@ -10,8 +10,8 @@ export default async function FlowPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
           <h1 className={ui.h1}>{t("dashboard.flowTitle")}</h1>
           <p className={ui.muted}>{t("dashboard.flowSubtitleCombined")}</p>
         </div>
@@ -19,7 +19,7 @@ export default async function FlowPage() {
           href={publicMerchantPath(merchant.slug)}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${ui.btnYellow} shrink-0 text-sm !w-auto px-5 py-2.5`}
+          className={`${ui.btnYellow} shrink-0 text-sm !w-auto px-4 py-2`}
         >
           {t("dashboard.testJourney")} ↗
         </a>

@@ -24,9 +24,11 @@ function DashboardNavLinks({ items }: { items: NavItem[] }) {
     <nav className="brutal-nav-links" aria-label="Dashboard">
       {items.map((item) => {
         const active =
-          item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+          item.href === "/"
+            ? pathname === "/"
+            : item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <Link

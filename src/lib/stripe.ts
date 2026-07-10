@@ -1,12 +1,17 @@
 import Stripe from "stripe";
 import type { BillingPlan } from "./billing";
+import type { PricingMarket } from "./pricing-market";
 
 export type { BillingPlan } from "./billing";
 export { isBillingPlan } from "./billing";
 
-const DEFAULT_MONTHLY = "price_1ToRrQLdigJa0nWpx8uevojZ";
-const DEFAULT_QUARTERLY = "price_1TqBMoLdigJa0nWpclYOWf5X";
-const DEFAULT_ANNUAL = "price_1ToRssLdigJa0nWpw83MJwLW";
+const DEFAULT_MONTHLY_VN = "price_1ToRrQLdigJa0nWpx8uevojZ";
+const DEFAULT_QUARTERLY_VN = "price_1TqBMoLdigJa0nWpclYOWf5X";
+const DEFAULT_ANNUAL_VN = "price_1ToRssLdigJa0nWpw83MJwLW";
+
+const DEFAULT_MONTHLY_FR = "price_1TrHSELdigJa0nWp25cuwWlp";
+const DEFAULT_QUARTERLY_FR = "price_1TrHSuLdigJa0nWpqjHiovM3";
+const DEFAULT_ANNUAL_FR = "price_1TrHU3LdigJa0nWpxVanWFWt";
 
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -19,22 +24,43 @@ export function getStripe(): Stripe {
   });
 }
 
-export function getMonthlyPriceId(): string {
-  return process.env.STRIPE_PRICE_MONTHLY ?? DEFAULT_MONTHLY;
+export function getMonthlyPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_MONTHLY ?? DEFAULT_MONTHLY_FR;
+  return process.env.STRIPE_PRICE_MONTHLY ?? DEFAULT_MONTHLY_VN;
 }
 
-export function getQuarterlyPriceId(): string {
-  return process.env.STRIPE_PRICE_QUARTERLY ?? DEFAULT_QUARTERLY;
+export function getQuarterlyPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_QUARTERLY ?? DEFAULT_QUARTERLY_FR;
+  return process.env.STRIPE_PRICE_QUARTERLY ?? DEFAULT_QUARTERLY_VN;
 }
 
-export function getAnnualPriceId(): string {
-  return process.env.STRIPE_PRICE_ANNUAL ?? DEFAULT_ANNUAL;
+export function getAnnualPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_ANNUAL ?? DEFAULT_ANNUAL_FR;
+  return process.env.STRIPE_PRICE_ANNUAL ?? DEFAULT_ANNUAL_VN;
 }
 
-export function priceIdForPlan(plan: BillingPlan): string {
-  if (plan === "annual") return getAnnualPriceId();
-  if (plan === "quarterly") return getQuarterlyPriceId();
-  return getMonthlyPriceId();
+export function priceIdForPlan(plan: BillingPlan, market: PricingMarket): string {
+  if (plan === "annual") return getAnnualPriceId(market);
+  if (plan === "quarterly") return getQuarterlyPriceId(market);
+  return getMonthlyPriceId(market);
+}
+
+export function marketFromPriceId(priceId: string): PricingMarket | null {
+  if (
+    priceId === getMonthlyPriceId("vn") ||
+    priceId === getQuarterlyPriceId("vn") ||
+    priceId === getAnnualPriceId("vn")
+  ) {
+    return "vn";
+  }
+  if (
+    priceId === getMonthlyPriceId("fr") ||
+    priceId === getQuarterlyPriceId("fr") ||
+    priceId === getAnnualPriceId("fr")
+  ) {
+    return "fr";
+  }
+  return null;
 }
 
 export function subscriptionStatusFromStripe(

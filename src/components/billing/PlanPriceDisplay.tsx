@@ -1,15 +1,17 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
+import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
 import type { BillingPlan } from "@/lib/billing";
 import { marketingPeriodForPlan } from "@/lib/billing-display";
-import { PLAN_PRICING, formatPlanEur, formatPlanVnd } from "@/lib/plan-pricing";
+import { formatPlanEur, formatPlanVnd, getPlanPricing } from "@/lib/plan-pricing";
 
 type PlanPriceDisplayProps = {
   plan: BillingPlan;
   className?: string;
   priceClassName?: string;
   periodClassName?: string;
+  /** Kept for call-site compatibility; dual-currency display is intentionally disabled. */
   eurClassName?: string;
 };
 
@@ -18,19 +20,19 @@ export function PlanPriceDisplay({
   className = "cadeo-pricing-amount",
   priceClassName = "cadeo-pricing-price",
   periodClassName = "cadeo-pricing-period",
-  eurClassName = "cadeo-pricing-eur",
 }: PlanPriceDisplayProps) {
   const { t } = useI18n();
-  const pricing = PLAN_PRICING[plan];
+  const market = usePricingMarket();
+  const pricing = getPlanPricing(plan, market);
   const periodLabel = marketingPeriodForPlan(plan, t);
+  const amount = market === "fr" ? formatPlanEur(pricing.eur) : formatPlanVnd(pricing.vnd);
 
   return (
     <div className={className}>
       <div className="cadeo-pricing-vnd-line">
-        <span className={priceClassName}>{formatPlanVnd(pricing.vnd)}</span>
+        <span className={priceClassName}>{amount}</span>
         <span className={periodClassName}> {periodLabel}</span>
       </div>
-      <p className={eurClassName}>{formatPlanEur(pricing.eur)}</p>
     </div>
   );
 }

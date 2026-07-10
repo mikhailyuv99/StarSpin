@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
+import { pricingMarketFromRequest } from "@/lib/pricing-market";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
 import { isBillingPlan, SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
 
@@ -49,21 +50,24 @@ export async function POST(request: Request) {
     }
 
     const appUrl = getAppUrl();
+    const market = pricingMarketFromRequest(request);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
-      line_items: [{ price: priceIdForPlan(body.plan), quantity: 1 }],
+      line_items: [{ price: priceIdForPlan(body.plan, market), quantity: 1 }],
       success_url: `${appUrl}/dashboard?billing=success`,
       cancel_url: `${appUrl}/subscribe`,
       metadata: {
         merchant_id: merchant.id,
         plan: body.plan,
+        pricing_market: market,
       },
       subscription_data: {
         trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
         metadata: {
           merchant_id: merchant.id,
           plan: body.plan,
+          pricing_market: market,
         },
       },
       allow_promotion_codes: true,

@@ -166,7 +166,8 @@
     "wheelSlice2": "Đồ uống miễn phí",
     "wheelSlice3": "Tráng miệng miễn phí",
     "wheelSlice4": "Thử lại",
-    "wheelSpin": "QUAY"
+    "wheelSpin": "QUAY",
+    "journeyVenue": "YOUR VENUE"
   },
   "public": {
     "headerSubtitle": "Làm theo các bước để tham gia",
@@ -374,7 +375,8 @@
     "activatingBody": "Thanh toán thành công. Chúng tôi đang bật vòng quay — thường chỉ mất vài giây."
   },
   "dashboard": {
-    "navHome": "Trang chủ",
+    "navHome": "Bảng điều khiển",
+    "navMarketing": "Trang chủ",
     "navSetup": "Thiết lập game",
     "navCustomers": "Khách hàng",
     "viewSite": "Thử hành trình",
@@ -386,7 +388,7 @@
     "navFlow": "Hành trình",
     "navQr": "Mã QR",
     "navBilling": "Thanh toán",
-    "homeTitle": "Trang chủ",
+    "homeTitle": "Bảng điều khiển",
     "homeSubtitle": "Làm theo danh sách — cấu hình trước, đăng ký để kích hoạt, rồi chia sẻ QR.",
     "setupTitle": "Bắt đầu trong 5 bước",
     "setupSubtitle": "Theo thứ tự. Bạn có thể cấu hình trước khi trả — vòng quay hoạt động sau khi đăng ký.",
