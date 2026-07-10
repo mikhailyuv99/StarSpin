@@ -375,6 +375,7 @@
     "manageTitle": "Оплата",
     "manageSubtitle": "Подписка, способ оплаты и дата продления.",
     "managePlanTitle": "Подписка",
+    "manageAccountTierLabel": "Account type",
     "managePlanLabel": "План",
     "managePlanUnknown": "STARSPIN Pro",
     "manageStatusLabel": "Статус",

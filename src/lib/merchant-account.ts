@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { MerchantAccount } from "@/lib/types";
+import type { MerchantAccount, SubscriptionProduct } from "@/lib/types";
 import { cache } from "react";
 import { isMerchantLive } from "@/lib/merchant-access";
 
@@ -15,7 +15,7 @@ export const getMerchantAccount = cache(async (): Promise<MerchantAccount | null
     const { data } = await supabase
       .from("merchant_accounts")
       .select(
-        "id, owner_id, subscription_status, stripe_customer_id, stripe_subscription_id, billing_plan, subscription_product, created_at",
+        "id, owner_id, subscription_status, stripe_customer_id, stripe_subscription_id, billing_plan, subscription_product, multi_business_status, created_at",
       )
       .eq("owner_id", user.id)
       .maybeSingle();
@@ -31,7 +31,14 @@ export function isAccountLive(account: MerchantAccount | null): boolean {
 }
 
 export function isMultiBusinessAccount(account: MerchantAccount | null): boolean {
-  return account?.subscription_product === "starspin_multi_business";
+  if (!account) return false;
+  if (account.subscription_product === "starspin_multi_business") return true;
+  // Supabase manual edits often set multi_business_status without subscription_product.
+  return account.multi_business_status === "active";
+}
+
+export function accountSubscriptionProduct(account: MerchantAccount | null): SubscriptionProduct {
+  return isMultiBusinessAccount(account) ? "starspin_multi_business" : "starspin";
 }
 
 /** Second+ establishments require an active multi-business plan (one subscription covers all). */

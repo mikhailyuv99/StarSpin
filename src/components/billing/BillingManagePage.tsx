@@ -103,11 +103,13 @@ export function BillingManagePage({
  summary,
  publishableKey,
  isSubscribed,
+ isMultiBusiness,
 }: {
  merchantName: string;
  summary: BillingSummary;
  publishableKey: string;
  isSubscribed: boolean;
+ isMultiBusiness: boolean;
 }) {
  const { t, locale } = useI18n();
  const market = usePricingMarket();
@@ -132,6 +134,7 @@ export function BillingManagePage({
  const refresh = () => router.refresh();
 
  const planLabel = managePlanLabelForPlan(live.plan, t);
+ const tierLabel = isMultiBusiness ? t("marketing.pricingTierMulti") : t("marketing.pricingTierSolo");
 
  const periodLabel =
  live.interval === "year"
@@ -290,6 +293,10 @@ export function BillingManagePage({
  <h2 className={ui.h2}>{t("billing.managePlanTitle")}</h2>
 
  <div className="space-y-2 text-sm">
+ <p>
+ <span className="font-extrabold text-ink">{t("billing.manageAccountTierLabel")}</span>{" "}
+ <span className="text-muted">{tierLabel}</span>
+ </p>
  <p>
  <span className="font-extrabold text-ink">{t("billing.managePlanLabel")}</span>{" "}
  <span className="text-muted">{priceLabel}</span>

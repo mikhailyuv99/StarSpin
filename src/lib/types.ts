@@ -10,6 +10,8 @@ export interface MerchantAccount {
   stripe_subscription_id?: string | null;
   billing_plan?: "monthly" | "quarterly" | "annual" | null;
   subscription_product: SubscriptionProduct;
+  /** Legacy column — kept for rows updated before subscription_product existed. */
+  multi_business_status?: SubscriptionStatus;
   created_at: string;
 }
 

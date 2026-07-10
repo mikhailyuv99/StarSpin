@@ -58,6 +58,15 @@ async function updateAccountFromSubscription(
     updates.billing_plan = plan;
   }
 
+  if (product === "starspin_multi_business") {
+    updates.multi_business_status = status;
+    updates.multi_business_stripe_subscription_id =
+      subscription.status === "canceled" ? null : subscription.id;
+    if (plan && isBillingPlan(plan)) {
+      updates.multi_business_billing_plan = plan;
+    }
+  }
+
   await admin.from("merchant_accounts").update(updates).eq("id", accountId);
   await syncMerchantsSubscriptionStatus(admin, accountId, status);
 }

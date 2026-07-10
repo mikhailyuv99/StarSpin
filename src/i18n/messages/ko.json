@@ -375,6 +375,7 @@
     "manageTitle": "결제 관리",
     "manageSubtitle": "구독, 결제 수단, 갱신일을 확인하세요.",
     "managePlanTitle": "구독",
+    "manageAccountTierLabel": "Account type",
     "managePlanLabel": "플랜",
     "managePlanUnknown": "STARSPIN Pro",
     "manageStatusLabel": "상태",

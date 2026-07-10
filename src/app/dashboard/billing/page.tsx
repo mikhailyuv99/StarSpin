@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { BillingManagePage } from "@/components/billing/BillingManagePage";
 import { getBillingSummary } from "@/lib/billing-summary";
-import { accountBillingAccount, getMerchantAccount, isAccountLive } from "@/lib/merchant-account";
+import { accountBillingAccount, getMerchantAccount, isAccountLive, isMultiBusinessAccount } from "@/lib/merchant-account";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { getStripe } from "@/lib/stripe";
 import { getStripePublishableKey } from "@/lib/stripe-client";
@@ -34,6 +34,7 @@ export default async function DashboardBillingPage() {
       summary={summary}
       publishableKey={publishableKey}
       isSubscribed={isAccountLive(account)}
+      isMultiBusiness={isMultiBusinessAccount(account)}
     />
   );
 }

@@ -375,6 +375,7 @@
     "manageTitle": "Facturación",
     "manageSubtitle": "Tu suscripción, método de pago y fecha de renovación.",
     "managePlanTitle": "Suscripción",
+    "manageAccountTierLabel": "Account type",
     "managePlanLabel": "Plan",
     "managePlanUnknown": "STARSPIN Pro",
     "manageStatusLabel": "Estado",
