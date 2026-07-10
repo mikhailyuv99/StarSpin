@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 
 type ActiveMerchantContextValue = {
   activeMerchantId: string;
+  isRefreshingMerchant: boolean;
   switchMerchant: (merchantId: string) => Promise<boolean>;
 };
 
@@ -26,10 +27,12 @@ export function ActiveMerchantProvider({
 }) {
   const router = useRouter();
   const [activeMerchantId, setActiveMerchantId] = useState(initialMerchantId);
+  const [isRefreshingMerchant, setIsRefreshingMerchant] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
     setActiveMerchantId(initialMerchantId);
+    setIsRefreshingMerchant(false);
   }, [initialMerchantId]);
 
   const switchMerchant = async (merchantId: string) => {
@@ -37,6 +40,7 @@ export function ActiveMerchantProvider({
 
     const previous = activeMerchantId;
     setActiveMerchantId(merchantId);
+    setIsRefreshingMerchant(true);
 
     const res = await fetch("/api/merchants/switch", {
       method: "POST",
@@ -46,6 +50,7 @@ export function ActiveMerchantProvider({
 
     if (!res.ok) {
       setActiveMerchantId(previous);
+      setIsRefreshingMerchant(false);
       return false;
     }
 
@@ -56,7 +61,9 @@ export function ActiveMerchantProvider({
   };
 
   return (
-    <ActiveMerchantContext.Provider value={{ activeMerchantId, switchMerchant }}>
+    <ActiveMerchantContext.Provider
+      value={{ activeMerchantId, isRefreshingMerchant, switchMerchant }}
+    >
       {children}
     </ActiveMerchantContext.Provider>
   );

@@ -2,12 +2,28 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ActiveMerchantProvider } from "@/components/dashboard/ActiveMerchantContext";
+import {
+  ActiveMerchantProvider,
+  useActiveMerchant,
+} from "@/components/dashboard/ActiveMerchantContext";
+import { DashboardContentSkeleton } from "@/components/dashboard/DashboardContentSkeleton";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { EstablishmentSwitcher } from "@/components/dashboard/EstablishmentSwitcher";
 
 type NavItem = { href: string; label: string };
 type EstablishmentOption = { id: string; name: string };
+
+function DashboardMain({ children }: { children: React.ReactNode }) {
+  const { isRefreshingMerchant } = useActiveMerchant();
+
+  return (
+    <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
+      <main className="min-w-0">
+        {isRefreshingMerchant ? <DashboardContentSkeleton /> : children}
+      </main>
+    </div>
+  );
+}
 
 export function DashboardShell({
   nav,
@@ -43,9 +59,7 @@ export function DashboardShell({
           />
         </div>
 
-        <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
-          <main className="min-w-0">{children}</main>
-        </div>
+        <DashboardMain>{children}</DashboardMain>
       </div>
     </ActiveMerchantProvider>
   );
