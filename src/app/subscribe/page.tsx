@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isMerchantLive } from "@/lib/merchant-access";
+import { isAccountLive, getMerchantAccount } from "@/lib/merchant-account";
 import { SubscribeSalesPage } from "@/components/billing/SubscribeSalesPage";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +19,8 @@ export default async function SubscribePage() {
     redirect("/setup");
   }
 
-  if (isMerchantLive(merchant.subscription_status)) {
+  const account = await getMerchantAccount();
+  if (account && isAccountLive(account)) {
     redirect("/dashboard");
   }
 

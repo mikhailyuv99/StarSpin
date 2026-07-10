@@ -345,7 +345,8 @@
     "defaultPrize1": "10% off",
     "defaultPrize2": "Free drink",
     "defaultPrize3": "Free dessert",
-    "defaultPrize4": "No luck - try again!"
+    "defaultPrize4": "No luck - try again!",
+    "accountCreateFailed": "Could not create your account. Please try again."
   },
   "billing": {
     "pageKicker": "STARSPIN Pro",
@@ -407,6 +408,29 @@
     "activatingTitle": "Activating your subscription…",
     "activatingBody": "Your payment succeeded. We're turning on your wheel — this usually takes a few seconds."
   },
+  "establishments": {
+    "title": "Establishments",
+    "subtitle": "Manage all your venues from one account. One subscription covers every establishment — each with its own journey and QR code.",
+    "addTitle": "Add an establishment",
+    "addSubtitle": "Create a new business with its own public page, wheel, and QR code.",
+    "addNamePlaceholder": "e.g. Café du Centre — Branch 2",
+    "addCta": "Add establishment",
+    "activeBadge": "Active",
+    "statusLive": "Live",
+    "statusInactive": "Inactive",
+    "current": "Current",
+    "switching": "Switching…",
+    "switch": "Switch to",
+    "switcherLabel": "Active establishment",
+    "multiBusinessTitle": "Upgrade to multi-business",
+    "multiBusinessBody": "One subscription covers all your establishments. Upgrade to add more venues — no extra charge per location.",
+    "multiBusinessHint": "7-day free trial · billed in EUR · all establishments included",
+    "multiBusinessRequired": "Upgrade to the multi-business plan to add another establishment.",
+    "subscribeCta": "Subscribe to multi-business",
+    "checkoutTitle": "Multi-business add-on",
+    "checkoutSubtitle": "Manage multiple establishments from one dashboard.",
+    "backToList": "Back to establishments"
+  },
   "dashboard": {
     "navHome": "Dashboard",
     "navMarketing": "Home",
@@ -422,6 +446,7 @@
     "navQr": "QR code",
     "navBilling": "Billing",
     "navAccount": "Account",
+    "navEstablishments": "Establishments",
     "homeTitle": "Dashboard",
     "homeSubtitle": "Follow the checklist below — configure first, subscribe to go live, then share your QR.",
     "setupTitle": "Get started in 5 steps",

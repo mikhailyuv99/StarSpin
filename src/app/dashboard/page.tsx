@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { isMerchantLive, needsSubscription } from "@/lib/merchant-access";
+import { needsSubscription } from "@/lib/merchant-access";
+import { getMerchantAccount, isAccountLive } from "@/lib/merchant-account";
 import { Suspense } from "react";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
@@ -15,6 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
   if (!merchant) redirect("/setup");
+  const account = await getMerchantAccount();
   const t = await getTranslations();
   const supabase = await createClient();
 
@@ -34,8 +36,8 @@ export default async function DashboardPage() {
     { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmDesc") },
   ];
 
-  const needsSubscribe = needsSubscription(merchant.subscription_status);
-  const isActive = isMerchantLive(merchant.subscription_status);
+  const needsSubscribe = needsSubscription(account?.subscription_status ?? "cancelled");
+  const isActive = isAccountLive(account);
 
   let totalSpins = 0;
   if (isActive) {
@@ -96,7 +98,7 @@ export default async function DashboardPage() {
           slug={merchant.slug}
           publicUrl={publicMerchantUrl(merchant.slug)}
           totalSpins={totalSpins}
-          showBilling={Boolean(merchant.stripe_customer_id)}
+          showBilling={Boolean(account?.stripe_customer_id)}
           quickLinks={quickLinks.map(({ href, title }) => ({ href, title }))}
           labels={{
             title: t("dashboard.homeLiveTitle"),

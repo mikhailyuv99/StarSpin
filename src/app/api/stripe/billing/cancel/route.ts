@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cancelSubscriptionAtPeriodEnd } from "@/lib/billing-summary";
+import { accountBillingAccount, getMerchantAccount } from "@/lib/merchant-account";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 
@@ -14,18 +15,15 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: merchant } = await supabase
-      .from("merchants")
-      .select("stripe_customer_id, stripe_subscription_id")
-      .eq("owner_id", user.id)
-      .maybeSingle();
+    const account = await getMerchantAccount();
+    const billing = account ? accountBillingAccount(account) : null;
 
-    if (!merchant?.stripe_customer_id) {
+    if (!billing) {
       return NextResponse.json({ error: "No billing account" }, { status: 400 });
     }
 
     const stripe = getStripe();
-    await cancelSubscriptionAtPeriodEnd(stripe, merchant);
+    await cancelSubscriptionAtPeriodEnd(stripe, billing);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[stripe/billing/cancel]", err);

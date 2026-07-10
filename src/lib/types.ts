@@ -1,5 +1,17 @@
 export type SubscriptionStatus = "active" | "trial" | "past_due" | "cancelled";
 export type ReviewScreenshotStatus = "pending" | "verified" | "rejected";
+export type SubscriptionProduct = "starspin" | "starspin_multi_business";
+
+export interface MerchantAccount {
+  id: string;
+  owner_id: string;
+  subscription_status: SubscriptionStatus;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  billing_plan?: "monthly" | "quarterly" | "annual" | null;
+  subscription_product: SubscriptionProduct;
+  created_at: string;
+}
 
 export interface SocialLinks {
   instagram?: string;
@@ -12,6 +24,7 @@ export interface Merchant {
   id: string;
   slug: string;
   owner_id: string;
+  account_id: string;
   name: string;
   logo_url: string | null;
   primary_color: string;

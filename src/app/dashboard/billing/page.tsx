@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { BillingManagePage } from "@/components/billing/BillingManagePage";
 import { getBillingSummary } from "@/lib/billing-summary";
-import { isMerchantLive } from "@/lib/merchant-access";
+import { accountBillingAccount, getMerchantAccount, isAccountLive } from "@/lib/merchant-account";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { getStripe } from "@/lib/stripe";
 import { getStripePublishableKey } from "@/lib/stripe-client";
@@ -10,7 +10,11 @@ export default async function DashboardBillingPage() {
   const merchant = await getCurrentMerchant();
   if (!merchant) redirect("/setup");
 
-  if (!merchant.stripe_customer_id) {
+  const account = await getMerchantAccount();
+  if (!account) redirect("/setup");
+
+  const billing = accountBillingAccount(account);
+  if (!billing) {
     redirect("/subscribe");
   }
 
@@ -22,14 +26,14 @@ export default async function DashboardBillingPage() {
   }
 
   const stripe = getStripe();
-  const summary = await getBillingSummary(stripe, merchant);
+  const summary = await getBillingSummary(stripe, { ...account, ...billing });
 
   return (
     <BillingManagePage
       merchantName={merchant.name}
       summary={summary}
       publishableKey={publishableKey}
-      isSubscribed={isMerchantLive(merchant.subscription_status)}
+      isSubscribed={isAccountLive(account)}
     />
   );
 }

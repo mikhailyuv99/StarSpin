@@ -4,45 +4,55 @@ import type { User } from "@supabase/supabase-js";
 import type { BillingPlan } from "@/lib/billing";
 import { SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
 import type { PricingMarket } from "@/lib/pricing-market";
-import { getStripe, priceIdForPlan } from "@/lib/stripe";
+import type { SubscriptionProduct } from "@/lib/types";
+import { priceIdForPlan } from "@/lib/stripe";
 
-export async function ensureStripeCustomer(
+export async function ensureAccountStripeCustomer(
   supabase: SupabaseClient,
   stripe: Stripe,
   user: User,
-  merchant: { id: string; stripe_customer_id: string | null },
+  account: { id: string; stripe_customer_id: string | null },
 ): Promise<string> {
-  if (merchant.stripe_customer_id) {
-    return merchant.stripe_customer_id;
+  if (account.stripe_customer_id) {
+    return account.stripe_customer_id;
   }
 
   const customer = await stripe.customers.create({
     email: user.email ?? undefined,
     name: "STARSPIN merchant",
     metadata: {
-      merchant_id: merchant.id,
+      account_id: account.id,
       owner_id: user.id,
       product: "starspin",
     },
   });
 
   await supabase
-    .from("merchants")
+    .from("merchant_accounts")
     .update({ stripe_customer_id: customer.id })
-    .eq("id", merchant.id);
+    .eq("id", account.id);
 
   return customer.id;
 }
 
-function subscriptionHasDefaultPaymentMethod(subscription: Stripe.Subscription): boolean {
+/** @deprecated Use ensureAccountStripeCustomer */
+export async function ensureStripeCustomer(
+  supabase: SupabaseClient,
+  stripe: Stripe,
+  user: User,
+  merchant: { id: string; stripe_customer_id: string | null },
+): Promise<string> {
+  return ensureAccountStripeCustomer(supabase, stripe, user, merchant);
+}
+
+export function subscriptionHasDefaultPaymentMethod(subscription: Stripe.Subscription): boolean {
   return Boolean(subscription.default_payment_method || subscription.default_source);
 }
 
-async function clientSecretFromSubscription(
+export async function clientSecretFromSubscription(
   stripe: Stripe,
   subscription: Stripe.Subscription,
 ): Promise<string | null> {
-  // Trials create a SetupIntent (seti_…), not an invoice PaymentIntent.
   const pending = subscription.pending_setup_intent;
   if (pending) {
     if (typeof pending === "string") {
@@ -82,7 +92,7 @@ async function clientSecretFromSubscription(
   return null;
 }
 
-async function listOpenCheckoutSubscriptions(
+export async function listOpenCheckoutSubscriptions(
   stripe: Stripe,
   customerId: string,
 ): Promise<Stripe.Subscription[]> {
@@ -109,14 +119,16 @@ export async function getOrCreateSubscriptionPaymentSecret(
   stripe: Stripe,
   customerId: string,
   plan: BillingPlan,
-  merchantId: string,
+  accountId: string,
   market: PricingMarket,
+  product: SubscriptionProduct = "starspin",
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
   const open = await listOpenCheckoutSubscriptions(stripe, customerId);
 
   const reusable = open.find(
     (sub) =>
-      sub.metadata?.merchant_id === merchantId &&
+      sub.metadata?.account_id === accountId &&
+      sub.metadata?.product === product &&
       sub.metadata?.plan === plan &&
       !subscriptionHasDefaultPaymentMethod(sub),
   );
@@ -129,8 +141,8 @@ export async function getOrCreateSubscriptionPaymentSecret(
   }
 
   for (const sub of open) {
-    // Wipe unfinished checkouts with no card (including a reusable stub with no secret).
     if (subscriptionHasDefaultPaymentMethod(sub)) continue;
+    if (sub.metadata?.account_id !== accountId) continue;
     try {
       await stripe.subscriptions.cancel(sub.id);
     } catch {
@@ -138,15 +150,16 @@ export async function getOrCreateSubscriptionPaymentSecret(
     }
   }
 
-  return createSubscriptionPaymentSecret(stripe, customerId, plan, merchantId, market);
+  return createSubscriptionPaymentSecret(stripe, customerId, plan, accountId, market, product);
 }
 
 export async function createSubscriptionPaymentSecret(
   stripe: Stripe,
   customerId: string,
   plan: BillingPlan,
-  merchantId: string,
+  accountId: string,
   market: PricingMarket,
+  product: SubscriptionProduct = "starspin",
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
@@ -161,12 +174,15 @@ export async function createSubscriptionPaymentSecret(
       end_behavior: { missing_payment_method: "cancel" },
     },
     metadata: {
-      merchant_id: merchantId,
+      account_id: accountId,
       plan,
-      product: "starspin",
+      product,
       pricing_market: market,
     },
-    description: "STARSPIN Pro subscription",
+    description:
+      product === "starspin_multi_business"
+        ? "STARSPIN Multi-business subscription"
+        : "STARSPIN Pro subscription",
     expand: ["pending_setup_intent", "latest_invoice.confirmation_secret"],
   });
 

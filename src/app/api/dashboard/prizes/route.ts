@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentMerchant } from "@/lib/merchant";
 import { parseMinSpendInput } from "@/lib/redemption-rules";
 import {
   deleteMerchantPrize,
@@ -168,11 +169,7 @@ async function getOwnedMerchant() {
 
   if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
 
-  const { data: merchant } = await supabase
-    .from("merchants")
-    .select("id, slug, social_links")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  const merchant = await getCurrentMerchant();
 
   if (!merchant) {
     return { error: NextResponse.json({ error: "No merchant" }, { status: 400 }) };

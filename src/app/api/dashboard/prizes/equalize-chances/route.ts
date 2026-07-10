@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentMerchant } from "@/lib/merchant";
 import { equalWinChances } from "@/lib/prize-chances";
 import type { Prize } from "@/lib/types";
 
@@ -13,11 +14,7 @@ async function getOwnedMerchant() {
 
   if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
 
-  const { data: merchant } = await supabase
-    .from("merchants")
-    .select("id, slug")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  const merchant = await getCurrentMerchant();
 
   if (!merchant) {
     return { error: NextResponse.json({ error: "No merchant" }, { status: 400 }) };

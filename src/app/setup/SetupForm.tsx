@@ -131,10 +131,23 @@ export function SetupForm() {
     if (googleReviewLink) flow_steps.push("google_review");
     if (instagramUrl) flow_steps.push("instagram");
 
+    const { data: account, error: accountError } = await supabase
+      .from("merchant_accounts")
+      .insert({ owner_id: user.id })
+      .select("id")
+      .single();
+
+    if (accountError || !account) {
+      setError(accountError?.message ?? t("setup.accountCreateFailed"));
+      setLoading(false);
+      return;
+    }
+
     const { error: insertError } = await supabase.from("merchants").insert({
       name: businessName,
       slug: cleanSlug,
       owner_id: user.id,
+      account_id: account.id,
       google_review_link: googleReviewLink || null,
       google_place_id: resolvedPlaceId,
       social_links,
@@ -158,6 +171,8 @@ export function SetupForm() {
       .from("merchants")
       .select("id")
       .eq("owner_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
       .single();
 
     if (merchant) {

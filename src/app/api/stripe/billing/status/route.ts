@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isMerchantLive } from "@/lib/merchant-access";
+import { isAccountLive, getMerchantAccount } from "@/lib/merchant-account";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -12,18 +12,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: merchant } = await supabase
-    .from("merchants")
-    .select("subscription_status")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  const account = await getMerchantAccount();
 
-  if (!merchant) {
+  if (!account) {
     return NextResponse.json({ live: false, status: null });
   }
 
   return NextResponse.json({
-    live: isMerchantLive(merchant.subscription_status),
-    status: merchant.subscription_status,
+    live: isAccountLive(account),
+    status: account.subscription_status,
   });
 }

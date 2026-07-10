@@ -13,6 +13,14 @@ const DEFAULT_MONTHLY_FR = "price_1TrHSELdigJa0nWp25cuwWlp";
 const DEFAULT_QUARTERLY_FR = "price_1TrHSuLdigJa0nWpqjHiovM3";
 const DEFAULT_ANNUAL_FR = "price_1TrHU3LdigJa0nWpxVanWFWt";
 
+/** Placeholder Stripe price IDs for multi-business add-on (replace via env when products are created). */
+const DEFAULT_MULTI_MONTHLY_VN = "price_multi_business_monthly_vn";
+const DEFAULT_MULTI_QUARTERLY_VN = "price_multi_business_quarterly_vn";
+const DEFAULT_MULTI_ANNUAL_VN = "price_multi_business_annual_vn";
+const DEFAULT_MULTI_MONTHLY_FR = "price_multi_business_monthly_fr";
+const DEFAULT_MULTI_QUARTERLY_FR = "price_multi_business_quarterly_fr";
+const DEFAULT_MULTI_ANNUAL_FR = "price_multi_business_annual_fr";
+
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
@@ -61,6 +69,38 @@ export function marketFromPriceId(priceId: string): PricingMarket | null {
     return "fr";
   }
   return null;
+}
+
+export function getMultiBusinessMonthlyPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_MULTI_MONTHLY ?? DEFAULT_MULTI_MONTHLY_FR;
+  return process.env.STRIPE_PRICE_MULTI_MONTHLY ?? DEFAULT_MULTI_MONTHLY_VN;
+}
+
+export function getMultiBusinessQuarterlyPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_MULTI_QUARTERLY ?? DEFAULT_MULTI_QUARTERLY_FR;
+  return process.env.STRIPE_PRICE_MULTI_QUARTERLY ?? DEFAULT_MULTI_QUARTERLY_VN;
+}
+
+export function getMultiBusinessAnnualPriceId(market: PricingMarket = "vn"): string {
+  if (market === "fr") return process.env.STRIPE_PRICE_FR_MULTI_ANNUAL ?? DEFAULT_MULTI_ANNUAL_FR;
+  return process.env.STRIPE_PRICE_MULTI_ANNUAL ?? DEFAULT_MULTI_ANNUAL_VN;
+}
+
+export function multiBusinessPriceIdForPlan(plan: BillingPlan, market: PricingMarket): string {
+  if (plan === "annual") return getMultiBusinessAnnualPriceId(market);
+  if (plan === "quarterly") return getMultiBusinessQuarterlyPriceId(market);
+  return getMultiBusinessMonthlyPriceId(market);
+}
+
+export function isMultiBusinessPriceId(priceId: string): boolean {
+  return (
+    priceId === getMultiBusinessMonthlyPriceId("vn") ||
+    priceId === getMultiBusinessQuarterlyPriceId("vn") ||
+    priceId === getMultiBusinessAnnualPriceId("vn") ||
+    priceId === getMultiBusinessMonthlyPriceId("fr") ||
+    priceId === getMultiBusinessQuarterlyPriceId("fr") ||
+    priceId === getMultiBusinessAnnualPriceId("fr")
+  );
 }
 
 export function subscriptionStatusFromStripe(

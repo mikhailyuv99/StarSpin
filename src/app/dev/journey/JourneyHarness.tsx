@@ -29,6 +29,7 @@ export function JourneyHarness() {
  id: "dev-merchant",
  slug: "dev-preview",
  owner_id: "dev",
+ account_id: "dev-account",
  name: "Bella Pizza",
  logo_url: LOGO,
  primary_color: "#9b7fe8",

@@ -3,14 +3,20 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { EstablishmentSwitcher } from "@/components/dashboard/EstablishmentSwitcher";
 
 type NavItem = { href: string; label: string };
+type EstablishmentOption = { id: string; name: string };
 
 export function DashboardShell({
   nav,
+  establishments,
+  activeMerchantId,
   children,
 }: {
   nav: NavItem[];
+  establishments: EstablishmentOption[];
+  activeMerchantId: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -29,7 +35,15 @@ export function DashboardShell({
   return (
     <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
       <div className="brutal-nav-wrap">
-        <DashboardHeader nav={nav} />
+        <DashboardHeader
+          nav={nav}
+          establishmentSwitcher={
+            <EstablishmentSwitcher
+              establishments={establishments}
+              activeMerchantId={activeMerchantId}
+            />
+          }
+        />
       </div>
 
       <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">

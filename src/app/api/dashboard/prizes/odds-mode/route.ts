@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import {
   applyTierWinChances,
@@ -16,11 +17,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: merchant } = await supabase
-    .from("merchants")
-    .select("id, slug")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  const merchant = await getCurrentMerchant();
   if (!merchant) return NextResponse.json({ error: "No merchant" }, { status: 400 });
 
   let mode: PrizeOddsMode = "simple";

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAppUrl } from "@/lib/app-url";
+import { getCurrentMerchant } from "@/lib/merchant";
+import { getMerchantAccount } from "@/lib/merchant-account";
 import { createClient } from "@/lib/supabase/server";
 import { pricingMarketFromRequest } from "@/lib/pricing-market";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
 import { isBillingPlan, SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
+import { ensureAccountStripeCustomer } from "@/lib/stripe-billing";
 
 export async function POST(request: Request) {
   try {
@@ -21,33 +24,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    const { data: merchant } = await supabase
-      .from("merchants")
-      .select("id, stripe_customer_id")
-      .eq("owner_id", user.id)
-      .maybeSingle();
+    const merchant = await getCurrentMerchant();
+    const account = await getMerchantAccount();
 
-    if (!merchant) {
+    if (!merchant || !account) {
       return NextResponse.json({ error: "Create your business first" }, { status: 400 });
     }
 
     const stripe = getStripe();
-    let customerId = merchant.stripe_customer_id as string | null;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email ?? undefined,
-        metadata: {
-          merchant_id: merchant.id,
-          owner_id: user.id,
-        },
-      });
-      customerId = customer.id;
-      await supabase
-        .from("merchants")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", merchant.id);
-    }
+    const customerId = await ensureAccountStripeCustomer(supabase, stripe, user, {
+      id: account.id,
+      stripe_customer_id: account.stripe_customer_id ?? null,
+    });
 
     const appUrl = getAppUrl();
     const market = pricingMarketFromRequest(request);
@@ -58,15 +46,17 @@ export async function POST(request: Request) {
       success_url: `${appUrl}/dashboard?billing=success`,
       cancel_url: `${appUrl}/subscribe`,
       metadata: {
-        merchant_id: merchant.id,
+        account_id: account.id,
         plan: body.plan,
+        product: "starspin",
         pricing_market: market,
       },
       subscription_data: {
         trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
         metadata: {
-          merchant_id: merchant.id,
+          account_id: account.id,
           plan: body.plan,
+          product: "starspin",
           pricing_market: market,
         },
       },

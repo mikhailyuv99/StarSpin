@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentMerchant } from "@/lib/merchant";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,11 +18,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: merchant } = await supabase
-    .from("merchants")
-    .select("id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  const merchant = await getCurrentMerchant();
 
   if (!merchant || !path.startsWith(`${merchant.id}/`)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

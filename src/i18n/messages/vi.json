@@ -345,7 +345,8 @@
     "defaultPrize1": "Giảm 10%",
     "defaultPrize2": "Đồ uống miễn phí",
     "defaultPrize3": "Tráng miệng miễn phí",
-    "defaultPrize4": "Không may - thử lại!"
+    "defaultPrize4": "Không may - thử lại!",
+    "accountCreateFailed": "Không thể tạo tài khoản. Vui lòng thử lại."
   },
   "billing": {
     "pageKicker": "STARSPIN Pro",
@@ -407,6 +408,29 @@
     "activatingTitle": "Đang kích hoạt gói đăng ký…",
     "activatingBody": "Thanh toán thành công. Chúng tôi đang bật vòng quay — thường chỉ mất vài giây."
   },
+  "establishments": {
+    "title": "Cơ sở kinh doanh",
+    "subtitle": "Quản lý mọi cơ sở từ một tài khoản. Một gói đăng ký bao gồm tất cả — mỗi cơ sở có hành trình và mã QR riêng.",
+    "addTitle": "Thêm cơ sở",
+    "addSubtitle": "Tạo cửa hàng mới với trang công khai, vòng quay và mã QR riêng.",
+    "addNamePlaceholder": "vd. Café du Centre — Chi nhánh 2",
+    "addCta": "Thêm cơ sở",
+    "activeBadge": "Đang dùng",
+    "statusLive": "Đang hoạt động",
+    "statusInactive": "Chưa kích hoạt",
+    "current": "Hiện tại",
+    "switching": "Đang chuyển…",
+    "switch": "Chuyển sang",
+    "switcherLabel": "Cơ sở đang quản lý",
+    "multiBusinessTitle": "Nâng cấp gói đa cơ sở",
+    "multiBusinessBody": "Một gói đăng ký bao gồm mọi cơ sở. Nâng cấp để thêm địa điểm — không tính phí theo từng cơ sở.",
+    "multiBusinessHint": "Dùng thử 7 ngày · thanh toán bằng EUR · bao gồm mọi cơ sở",
+    "multiBusinessRequired": "Nâng cấp gói đa cơ sở để thêm cơ sở mới.",
+    "subscribeCta": "Đăng ký gói đa cơ sở",
+    "checkoutTitle": "Gói bổ sung đa cơ sở",
+    "checkoutSubtitle": "Quản lý nhiều cơ sở từ một bảng điều khiển.",
+    "backToList": "Quay lại danh sách cơ sở"
+  },
   "dashboard": {
     "navHome": "Bảng điều khiển",
     "navMarketing": "Trang chủ",
@@ -422,6 +446,7 @@
     "navQr": "Mã QR",
     "navBilling": "Thanh toán",
     "navAccount": "Tài khoản",
+    "navEstablishments": "Cơ sở",
     "homeTitle": "Bảng điều khiển",
     "homeSubtitle": "Làm theo danh sách — cấu hình trước, đăng ký để kích hoạt, rồi chia sẻ QR.",
     "setupTitle": "Bắt đầu trong 5 bước",

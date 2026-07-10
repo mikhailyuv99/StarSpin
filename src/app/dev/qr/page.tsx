@@ -14,6 +14,7 @@ const mockMerchant: Merchant = {
   id: "dev-merchant",
   slug: "dev-preview",
   owner_id: "dev",
+  account_id: "dev-account",
   name: "Dev Studio",
   logo_url: null,
   primary_color: "#8b5cf6",

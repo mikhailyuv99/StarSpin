@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { changeSubscriptionPlan, getBillingSummary } from "@/lib/billing-summary";
 import { isBillingPlan } from "@/lib/billing";
 import { pricingMarketForBilling } from "@/lib/pricing-market";
+import { accountBillingAccount, getMerchantAccount } from "@/lib/merchant-account";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 
@@ -21,21 +22,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    const { data: merchant } = await supabase
-      .from("merchants")
-      .select("id, stripe_customer_id, stripe_subscription_id, billing_plan")
-      .eq("owner_id", user.id)
-      .maybeSingle();
+    const account = await getMerchantAccount();
+    const billing = account ? accountBillingAccount(account) : null;
 
-    if (!merchant?.stripe_customer_id) {
+    if (!billing || !account) {
       return NextResponse.json({ error: "No billing account" }, { status: 400 });
     }
 
     const stripe = getStripe();
     let subscriptionPriceId: string | null = null;
-    if (merchant.stripe_subscription_id) {
+    if (billing.stripe_subscription_id) {
       try {
-        const sub = await stripe.subscriptions.retrieve(merchant.stripe_subscription_id);
+        const sub = await stripe.subscriptions.retrieve(billing.stripe_subscription_id);
         subscriptionPriceId = sub.items.data[0]?.price?.id ?? null;
       } catch {
         /* list fallback handled in changeSubscriptionPlan */
@@ -43,15 +41,16 @@ export async function POST(request: Request) {
     }
 
     const market = pricingMarketForBilling(request.headers, subscriptionPriceId);
-    await changeSubscriptionPlan(stripe, merchant, body.plan, market);
+    await changeSubscriptionPlan(stripe, billing, body.plan, market);
 
     await supabase
-      .from("merchants")
+      .from("merchant_accounts")
       .update({ billing_plan: body.plan })
-      .eq("id", merchant.id);
+      .eq("id", account.id);
 
     const summary = await getBillingSummary(stripe, {
-      ...merchant,
+      ...account,
+      ...billing,
       billing_plan: body.plan,
     });
 

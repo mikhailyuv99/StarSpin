@@ -345,7 +345,8 @@
     "defaultPrize1": "10% 할인",
     "defaultPrize2": "음료 무료",
     "defaultPrize3": "디저트 무료",
-    "defaultPrize4": "아쉽네요 — 다시 도전!"
+    "defaultPrize4": "아쉽네요 — 다시 도전!",
+    "accountCreateFailed": "계정을 만들 수 없습니다. 다시 시도해 주세요."
   },
   "billing": {
     "pageKicker": "STARSPIN Pro",
@@ -407,6 +408,29 @@
     "activatingTitle": "구독 활성화 중…",
     "activatingBody": "결제가 완료되었습니다. 룰렛을 켜는 중입니다 — 보통 몇 초면 됩니다."
   },
+  "establishments": {
+    "title": "Establishments",
+    "subtitle": "Manage multiple businesses from one account. Each establishment has its own journey, QR code, and subscription.",
+    "addTitle": "Add an establishment",
+    "addSubtitle": "Create a new business with its own public page, wheel, and QR code.",
+    "addNamePlaceholder": "e.g. Café du Centre — Branch 2",
+    "addCta": "Add establishment",
+    "activeBadge": "Active",
+    "statusLive": "Live",
+    "statusInactive": "Inactive",
+    "current": "Current",
+    "switching": "Switching…",
+    "switch": "Switch to",
+    "switcherLabel": "Active establishment",
+    "multiBusinessTitle": "Multi-business subscription required",
+    "multiBusinessBody": "To manage more than one establishment, subscribe to the multi-business add-on. Each establishment still needs its own STARSPIN Pro subscription to go live.",
+    "multiBusinessHint": "7-day free trial · billed in EUR · French market pricing coming soon",
+    "multiBusinessRequired": "Subscribe to the multi-business add-on before adding another establishment.",
+    "subscribeCta": "Subscribe to multi-business",
+    "checkoutTitle": "Multi-business add-on",
+    "checkoutSubtitle": "Manage multiple establishments from one dashboard.",
+    "backToList": "Back to establishments"
+  },
   "dashboard": {
     "navHome": "대시보드",
     "navMarketing": "홈",
@@ -422,6 +446,7 @@
     "navQr": "QR 코드",
     "navBilling": "결제",
     "navAccount": "계정",
+    "navEstablishments": "매장",
     "homeTitle": "대시보드",
     "homeSubtitle": "아래 체크리스트를 따라주세요 — 먼저 설정하고, 구독하여 활성화한 뒤 QR을 공유하세요.",
     "setupTitle": "5단계로 시작하기",

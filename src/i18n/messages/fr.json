@@ -393,7 +393,8 @@
     "defaultPrize1": "−10 %",
     "defaultPrize2": "Boisson offerte",
     "defaultPrize3": "Dessert offert",
-    "defaultPrize4": "Pas de chance — réessayez !"
+    "defaultPrize4": "Pas de chance — réessayez !",
+    "accountCreateFailed": "Impossible de créer votre compte. Veuillez réessayer."
   },
   "billing": {
     "pageKicker": "STARSPIN Pro",
@@ -455,6 +456,29 @@
     "activatingTitle": "Activation de votre abonnement…",
     "activatingBody": "Votre paiement a réussi. Nous activons votre roue — cela prend généralement quelques secondes."
   },
+  "establishments": {
+    "title": "Établissements",
+    "subtitle": "Gérez tous vos établissements depuis un seul compte. Un abonnement couvre chaque établissement — parcours et QR code inclus.",
+    "addTitle": "Ajouter un établissement",
+    "addSubtitle": "Créez un nouveau commerce avec sa page publique, sa roue et son QR code.",
+    "addNamePlaceholder": "ex. Café du Centre — Succursale 2",
+    "addCta": "Ajouter l'établissement",
+    "activeBadge": "Actif",
+    "statusLive": "En ligne",
+    "statusInactive": "Inactif",
+    "current": "Actuel",
+    "switching": "Changement…",
+    "switch": "Basculer vers",
+    "switcherLabel": "Établissement actif",
+    "multiBusinessTitle": "Passer au multi-établissements",
+    "multiBusinessBody": "Un seul abonnement couvre tous vos établissements. Passez à l'offre multi pour en ajouter — sans frais par lieu.",
+    "multiBusinessHint": "Essai gratuit 7 jours · facturation en EUR · tous les établissements inclus",
+    "multiBusinessRequired": "Passez à l'offre multi-établissements pour en ajouter un autre.",
+    "subscribeCta": "S'abonner au multi-établissements",
+    "checkoutTitle": "Option multi-établissements",
+    "checkoutSubtitle": "Gérez plusieurs établissements depuis un seul tableau de bord.",
+    "backToList": "Retour aux établissements"
+  },
   "dashboard": {
     "navHome": "Tableau de bord",
     "navMarketing": "Accueil",
@@ -470,6 +494,7 @@
     "navQr": "Code QR",
     "navBilling": "Facturation",
     "navAccount": "Compte",
+    "navEstablishments": "Établissements",
     "homeTitle": "Tableau de bord",
     "homeSubtitle": "Suivez la checklist ci-dessous — configurez d'abord, abonnez-vous pour mettre en ligne, puis partagez votre QR.",
     "setupTitle": "Démarrez en 5 étapes",

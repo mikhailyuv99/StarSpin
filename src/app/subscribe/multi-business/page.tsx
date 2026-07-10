@@ -1,12 +1,16 @@
 import { redirect } from "next/navigation";
-import { isAccountLive, getMerchantAccount } from "@/lib/merchant-account";
-import { StarspinCheckout } from "@/components/billing/StarspinCheckout";
+import {
+  getMerchantAccount,
+  isAccountLive,
+  isMultiBusinessAccount,
+} from "@/lib/merchant-account";
+import { MultiBusinessCheckout } from "@/components/billing/MultiBusinessCheckout";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan, type BillingPlan } from "@/lib/billing";
 import { getStripePublishableKey } from "@/lib/stripe-client";
 
-export default async function SubscribeCheckoutPage({
+export default async function MultiBusinessCheckoutPage({
   searchParams,
 }: {
   searchParams: Promise<{ plan?: string }>;
@@ -20,7 +24,7 @@ export default async function SubscribeCheckoutPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent(`/subscribe/checkout?plan=${plan}`)}`);
+    redirect(`/login?redirect=${encodeURIComponent(`/subscribe/multi-business?plan=${plan}`)}`);
   }
 
   const merchant = await getCurrentMerchant();
@@ -29,16 +33,16 @@ export default async function SubscribeCheckoutPage({
   }
 
   const account = await getMerchantAccount();
-  if (account && isAccountLive(account)) {
-    redirect("/dashboard");
+  if (account && isAccountLive(account) && isMultiBusinessAccount(account)) {
+    redirect("/dashboard/establishments");
   }
 
   let publishableKey: string;
   try {
     publishableKey = getStripePublishableKey();
   } catch {
-    redirect("/subscribe?checkout=error");
+    redirect("/dashboard/establishments?checkout=error");
   }
 
-  return <StarspinCheckout merchantName={merchant.name} plan={plan} publishableKey={publishableKey} />;
+  return <MultiBusinessCheckout plan={plan} publishableKey={publishableKey} />;
 }

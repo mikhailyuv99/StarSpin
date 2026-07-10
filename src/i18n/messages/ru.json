@@ -345,7 +345,8 @@
     "defaultPrize1": "Скидка 10%",
     "defaultPrize2": "Бесплатный напиток",
     "defaultPrize3": "Бесплатный десерт",
-    "defaultPrize4": "Не повезло - попробуйте снова!"
+    "defaultPrize4": "Не повезло - попробуйте снова!",
+    "accountCreateFailed": "Не удалось создать аккаунт. Попробуйте снова."
   },
   "billing": {
     "pageKicker": "STARSPIN Pro",
@@ -407,6 +408,29 @@
     "activatingTitle": "Активируем подписку…",
     "activatingBody": "Оплата прошла успешно. Включаем колесо — обычно это занимает несколько секунд."
   },
+  "establishments": {
+    "title": "Establishments",
+    "subtitle": "Manage multiple businesses from one account. Each establishment has its own journey, QR code, and subscription.",
+    "addTitle": "Add an establishment",
+    "addSubtitle": "Create a new business with its own public page, wheel, and QR code.",
+    "addNamePlaceholder": "e.g. Café du Centre — Branch 2",
+    "addCta": "Add establishment",
+    "activeBadge": "Active",
+    "statusLive": "Live",
+    "statusInactive": "Inactive",
+    "current": "Current",
+    "switching": "Switching…",
+    "switch": "Switch to",
+    "switcherLabel": "Active establishment",
+    "multiBusinessTitle": "Multi-business subscription required",
+    "multiBusinessBody": "To manage more than one establishment, subscribe to the multi-business add-on. Each establishment still needs its own STARSPIN Pro subscription to go live.",
+    "multiBusinessHint": "7-day free trial · billed in EUR · French market pricing coming soon",
+    "multiBusinessRequired": "Subscribe to the multi-business add-on before adding another establishment.",
+    "subscribeCta": "Subscribe to multi-business",
+    "checkoutTitle": "Multi-business add-on",
+    "checkoutSubtitle": "Manage multiple establishments from one dashboard.",
+    "backToList": "Back to establishments"
+  },
   "dashboard": {
     "navHome": "Панель",
     "navMarketing": "Главная",
@@ -422,6 +446,7 @@
     "navQr": "QR-код",
     "navBilling": "Оплата",
     "navAccount": "Аккаунт",
+    "navEstablishments": "Заведения",
     "homeTitle": "Панель",
     "homeSubtitle": "Следуйте списку — настройте, оформите подписку, затем поделитесь QR.",
     "setupTitle": "5 шагов для старта",

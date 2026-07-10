@@ -46,7 +46,13 @@ function DashboardNavLinks({ items }: { items: NavItem[] }) {
   );
 }
 
-export function DashboardHeader({ nav }: { nav: NavItem[] }) {
+export function DashboardHeader({
+  nav,
+  establishmentSwitcher,
+}: {
+  nav: NavItem[];
+  establishmentSwitcher?: React.ReactNode;
+}) {
   const t = useTranslations();
   const router = useRouter();
 
@@ -74,6 +80,7 @@ export function DashboardHeader({ nav }: { nav: NavItem[] }) {
       <StarspinLogo href="/dashboard" variant="light" size="md" wordmark="DASHBOARD" />
       <DashboardNavLinks items={nav} />
       <div className="flex shrink-0 items-center gap-2">
+        {establishmentSwitcher}
         <LocaleSwitcher variant="brutal" />
         <BrutalMobileMenu items={menuItems} />
       </div>

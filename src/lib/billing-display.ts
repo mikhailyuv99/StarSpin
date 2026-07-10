@@ -1,5 +1,6 @@
 import type { BillingPlan } from "@/lib/billing";
 import { formatPlanEur, formatPlanVnd, getPlanPricing } from "@/lib/plan-pricing";
+import { getMultiBusinessPricing } from "@/lib/multi-business-pricing";
 import type { PricingMarket } from "@/lib/pricing-market";
 
 type Translator = (key: string) => string;
@@ -41,4 +42,10 @@ export function managePlanLabelForPlan(plan: BillingPlan | null, t: Translator):
   if (plan === "quarterly") return t("marketing.pricingQuarterly");
   if (plan === "annual") return t("marketing.pricingAnnual");
   return t("billing.managePlanUnknown");
+}
+
+export function multiBusinessPriceForPlan(plan: BillingPlan, market: PricingMarket): string {
+  const pricing = getMultiBusinessPricing(plan, market);
+  if (market === "fr") return formatPlanEur(pricing.eur);
+  return formatPlanVnd(pricing.vnd);
 }
