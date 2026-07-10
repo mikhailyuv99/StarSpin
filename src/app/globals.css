@@ -136,26 +136,20 @@ body {
   color: var(--c-black);
 }
 
-.starspin-logo--light .starspin-logo__word {
-  color: #fff;
-  text-shadow:
-    2px 2px 0 var(--c-black),
-    -1px -1px 0 var(--c-black),
-    1px -1px 0 var(--c-black),
-    -1px 1px 0 var(--c-black);
-}
-
+.starspin-logo--light .starspin-logo__word,
 .starspin-logo--dark .starspin-logo__word {
   color: var(--c-black);
   text-shadow: none;
 }
 
 .starspin-logo__word {
+  color: var(--c-black);
   font-family: var(--font-wordmark), var(--font-display), system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
+  text-shadow: none;
 }
 
 .starspin-logo--sm .starspin-logo__word {
