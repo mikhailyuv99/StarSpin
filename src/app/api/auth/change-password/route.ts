@@ -1,6 +1,9 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { isValidPassword } from "@/lib/auth-password";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
@@ -29,7 +32,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "oauth_only" }, { status: 400 });
     }
 
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
+    const verifyClient = createSupabaseClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { error: verifyError } = await verifyClient.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,
     });
@@ -38,7 +45,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "wrong_password" }, { status: 400 });
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    const admin = createAdminClient();
+    const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
+      password: newPassword,
+    });
+
     if (updateError) {
       console.error("[auth/change-password]", updateError.message);
       return NextResponse.json({ error: "update_failed" }, { status: 400 });

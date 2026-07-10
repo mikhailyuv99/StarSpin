@@ -63,31 +63,35 @@ export function AccountPasswordForm({
 
     setLoading(true);
 
-    const res = await fetch("/api/auth/change-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
 
-    const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string };
 
-    if (!res.ok) {
-      if (data.error === "wrong_password") {
-        setError(t("auth.wrongCurrentPassword"));
-      } else if (data.error === "oauth_only") {
-        setError(t("auth.oauthOnlyPassword"));
-      } else {
-        setError(t("auth.changeError"));
+      if (!res.ok) {
+        if (data.error === "wrong_password") {
+          setError(t("auth.wrongCurrentPassword"));
+        } else if (data.error === "oauth_only") {
+          setError(t("auth.oauthOnlyPassword"));
+        } else {
+          setError(t("auth.changeError"));
+        }
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setMessage(t("auth.passwordChanged"));
-    setLoading(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setMessage(t("auth.passwordChanged"));
+    } catch {
+      setError(t("auth.changeError"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
