@@ -630,7 +630,26 @@ body {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  width: 100%;
   min-width: 0;
+}
+
+.brutal-nav--dashboard .brutal-nav-controls .establishment-switcher {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.brutal-nav--dashboard .brutal-nav-controls .establishment-switcher-trigger {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 2.5rem;
+  justify-content: space-between;
+}
+
+.brutal-nav--dashboard .brutal-nav-controls .locale-switcher,
+.brutal-nav--dashboard .brutal-nav-controls .brutal-mobile-menu {
+  flex-shrink: 0;
 }
 
 .brutal-nav--dashboard .starspin-logo__word {
@@ -663,6 +682,23 @@ body {
 
   .brutal-nav--dashboard .brutal-nav-controls {
     display: contents;
+  }
+
+  .brutal-nav--dashboard .brutal-nav-controls .establishment-switcher {
+    flex: 0 1 auto;
+    min-width: auto;
+  }
+
+  .brutal-nav--dashboard .brutal-nav-controls .establishment-switcher-trigger {
+    width: auto;
+    height: auto;
+    justify-content: flex-start;
+  }
+
+  .brutal-nav--dashboard .establishment-switcher-label {
+    overflow: visible;
+    text-overflow: clip;
+    flex: 0 1 auto;
   }
 
   .brutal-nav--dashboard .establishment-switcher {
@@ -1083,7 +1119,7 @@ html.locale-es .cadeo-hero-accent {
 .establishment-switcher {
   position: relative;
   z-index: 110;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .establishment-switcher--open {
@@ -1094,9 +1130,8 @@ html.locale-es .cadeo-hero-accent {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  width: 9rem;
-  min-width: 9rem;
-  max-width: 9rem;
+  width: auto;
+  max-width: none;
   padding: 0.45rem 0.7rem;
   font-size: 0.75rem;
   font-weight: 800;
