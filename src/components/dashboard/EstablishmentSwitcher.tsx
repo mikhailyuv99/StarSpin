@@ -36,7 +36,18 @@ export function EstablishmentSwitcher({
     };
   }, []);
 
-  if (establishments.length <= 1) return null;
+  if (establishments.length <= 1) {
+    const only = establishments[0];
+    if (!only) return null;
+
+    return (
+      <div className="establishment-switcher establishment-switcher--single">
+        <span className="establishment-switcher-trigger establishment-switcher-trigger--static">
+          <span className="establishment-switcher-label">{only.name}</span>
+        </span>
+      </div>
+    );
+  }
 
   const handlePick = async (merchantId: string) => {
     if (merchantId === activeMerchantId) {

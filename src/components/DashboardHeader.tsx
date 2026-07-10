@@ -50,9 +50,11 @@ export function DashboardHeader({
         <StarspinLogo href="/dashboard" variant="light" size="sm" wordmark="DASHBOARD" />
       </div>
       <div className="brutal-nav-controls">
-        {establishmentSwitcher}
-        <LocaleSwitcher variant="brutal" />
-        <BrutalMobileMenu items={menuItems} />
+        <div className="brutal-nav-controls-start">{establishmentSwitcher}</div>
+        <div className="brutal-nav-controls-end">
+          <LocaleSwitcher variant="brutal" />
+          <BrutalMobileMenu items={menuItems} />
+        </div>
       </div>
     </header>
   );

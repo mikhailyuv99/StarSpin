@@ -22,8 +22,10 @@ export function SubscribeNav({
             <span className="cadeo-subscribe-back-short">{backLabelShort}</span>
             <span className="cadeo-subscribe-back-full">{backLabel}</span>
           </Link>
-          <div className="cadeo-nav-locale cadeo-subscribe-nav-locale">
-            <LocaleSwitcher variant="brutal" />
+          <div className="cadeo-subscribe-nav-tools">
+            <div className="cadeo-nav-locale cadeo-subscribe-nav-locale">
+              <LocaleSwitcher variant="brutal" />
+            </div>
           </div>
         </div>
       </nav>
