@@ -874,9 +874,9 @@
 .cadeo-pillar--yellow { background: var(--c-yellow); }
 
 .cadeo-page .starspin-logo__word {
-  font-family: var(--font-game), system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: var(--font-wordmark), var(--font-game), system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
 .cadeo-pillar-num {

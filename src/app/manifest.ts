@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Google reviews and prize wheel for restaurants and shops.",
     start_url: "/",
     display: "standalone",
-    background_color: "#9b7fe8",
-    theme_color: "#9b7fe8",
+    background_color: "#ff9dc4",
+    theme_color: "#ff9dc4",
     icons: [
       {
         src: "/icon-192.png",

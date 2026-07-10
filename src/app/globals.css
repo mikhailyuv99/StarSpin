@@ -151,9 +151,9 @@ body {
 }
 
 .starspin-logo__word {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.06em;
+  font-family: var(--font-wordmark), var(--font-display), system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
 }
@@ -173,35 +173,6 @@ body {
 .starspin-mark {
   flex-shrink: 0;
   display: block;
-}
-
-.starspin-mark__orbit {
-  transform-origin: 20px 20px;
-  animation: starspin-orbit 2.8s linear infinite;
-}
-
-.starspin-mark__star {
-  transform-origin: 20px 20px;
-  animation: starspin-star 1.6s linear infinite;
-}
-
-@keyframes starspin-orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes starspin-star {
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .starspin-mark__orbit,
-  .starspin-mark__star {
-    animation: none;
-  }
 }
 
 /* Scroll reveal (progressive enhancement — content is visible by default) */

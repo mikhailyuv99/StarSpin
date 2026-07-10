@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  STARSPIN_MARK_PATHS,
+  STARSPIN_MARK_TRANSFORM,
+  STARSPIN_MARK_VIEWBOX,
+} from "@/lib/starspin-mark";
 
 type LogoVariant = "light" | "dark";
 type LogoSize = "sm" | "md" | "lg";
@@ -21,31 +26,14 @@ export function StarspinMark({
       className={`starspin-mark ${className}`.trim()}
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox={`0 0 ${STARSPIN_MARK_VIEWBOX} ${STARSPIN_MARK_VIEWBOX}`}
       fill="none"
       aria-hidden
     >
-      <g className="starspin-mark__orbit">
-        <circle
-          cx="20"
-          cy="20"
-          r="15"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeDasharray="7 5"
-          strokeLinecap="round"
-          opacity="0.4"
-        />
-        <circle cx="35" cy="20" r="2.25" fill="var(--starspin-accent, #f5e08e)" stroke="currentColor" strokeWidth="1.75" />
-      </g>
-      <g className="starspin-mark__star">
-        <path
-          d="M20 7.5 22.4 14.8 30 14.8 23.8 19.2 26.2 26.5 20 22.2 13.8 26.5 16.2 19.2 10 14.8 17.6 14.8Z"
-          fill="var(--starspin-accent, #f5e08e)"
-          stroke="currentColor"
-          strokeWidth="2.25"
-          strokeLinejoin="round"
-        />
+      <g transform={STARSPIN_MARK_TRANSFORM}>
+        {STARSPIN_MARK_PATHS.map((d) => (
+          <path key={d.slice(0, 24)} d={d} fill="currentColor" />
+        ))}
       </g>
     </svg>
   );

@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, DM_Sans, Fredoka, Baloo_2, Nunito, Rubik, Comfortaa } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Bricolage_Grotesque, Bruno_Ace, DM_Sans, Fredoka, Baloo_2, Nunito, Rubik, Comfortaa } from "next/font/google";
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { PricingMarketProvider } from "@/components/providers/PricingMarketProvider";
@@ -27,6 +27,12 @@ const display = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-display",
+});
+
+const wordmarkFont = Bruno_Ace({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-wordmark",
 });
 
 const bodyFont = DM_Sans({
@@ -136,7 +142,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`}
+      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${wordmarkFont.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`}
     >
       <body className="font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
         <PricingMarketProvider market={pricingMarket}>
