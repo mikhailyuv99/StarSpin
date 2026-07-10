@@ -1,22 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "@/i18n/client";
+import { useActiveMerchant } from "@/components/dashboard/ActiveMerchantContext";
 
 type EstablishmentOption = { id: string; name: string };
 
 export function EstablishmentSwitcher({
   establishments,
-  activeMerchantId,
 }: {
   establishments: EstablishmentOption[];
-  activeMerchantId: string;
 }) {
   const t = useTranslations();
-  const router = useRouter();
+  const { activeMerchantId, switchMerchant } = useActiveMerchant();
   const [open, setOpen] = useState(false);
-  const [switching, setSwitching] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const activeEstablishment =
@@ -42,20 +39,13 @@ export function EstablishmentSwitcher({
   if (establishments.length <= 1) return null;
 
   const handlePick = async (merchantId: string) => {
-    if (merchantId === activeMerchantId || switching) return;
+    if (merchantId === activeMerchantId) {
+      setOpen(false);
+      return;
+    }
 
     setOpen(false);
-    setSwitching(true);
-    const res = await fetch("/api/merchants/switch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ merchantId }),
-    });
-
-    if (res.ok) {
-      router.refresh();
-    }
-    setSwitching(false);
+    await switchMerchant(merchantId);
   };
 
   return (
@@ -67,14 +57,11 @@ export function EstablishmentSwitcher({
         type="button"
         className="establishment-switcher-trigger"
         onClick={() => setOpen((value) => !value)}
-        disabled={switching}
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={t("establishments.switcherLabel")}
       >
-        <span className="establishment-switcher-label">
-          {switching ? t("common.loading") : activeEstablishment?.name}
-        </span>
+        <span className="establishment-switcher-label">{activeEstablishment?.name}</span>
         <span className="establishment-switcher-chevron" aria-hidden>
           {open ? "▴" : "▾"}
         </span>

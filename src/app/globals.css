@@ -621,6 +621,19 @@ body {
   padding: 0.6rem 0.85rem;
 }
 
+@media (max-width: 639px) {
+  .brutal-nav--dashboard {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .brutal-nav--dashboard .brutal-nav-brand {
+    display: none;
+  }
+}
+
 .brutal-nav--dashboard .brutal-nav-brand {
   flex-shrink: 0;
   min-width: 0;

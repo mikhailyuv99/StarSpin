@@ -1,40 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { Merchant } from "@/lib/types";
+import { useActiveMerchant } from "@/components/dashboard/ActiveMerchantContext";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
 
 export function EstablishmentList({
   establishments,
-  activeMerchantId,
   accountLive,
 }: {
   establishments: Merchant[];
-  activeMerchantId: string;
   accountLive: boolean;
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const [switchingId, setSwitchingId] = useState<string | null>(null);
+  const { activeMerchantId, switchMerchant } = useActiveMerchant();
 
   const handleSwitch = async (merchantId: string) => {
     if (merchantId === activeMerchantId) return;
-    setSwitchingId(merchantId);
 
-    const res = await fetch("/api/merchants/switch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ merchantId }),
-    });
-
-    if (res.ok) {
-      router.refresh();
+    const ok = await switchMerchant(merchantId);
+    if (ok) {
       router.push("/dashboard");
     }
-
-    setSwitchingId(null);
   };
 
   return (
@@ -70,15 +59,11 @@ export function EstablishmentList({
             </div>
             <button
               type="button"
-              onClick={() => handleSwitch(establishment.id)}
-              disabled={isActive || switchingId === establishment.id}
+              onClick={() => void handleSwitch(establishment.id)}
+              disabled={isActive}
               className={`${ui.btnOutline} !w-auto shrink-0 px-4 py-2`}
             >
-              {isActive
-                ? t("establishments.current")
-                : switchingId === establishment.id
-                  ? t("establishments.switching")
-                  : t("establishments.switch")}
+              {isActive ? t("establishments.current") : t("establishments.switch")}
             </button>
           </div>
         );

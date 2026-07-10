@@ -31,11 +31,7 @@ export default async function EstablishmentsPage() {
         <p className={ui.muted}>{t("establishments.subtitle")}</p>
       </div>
 
-      <EstablishmentList
-        establishments={establishments}
-        activeMerchantId={merchant.id}
-        accountLive={isAccountLive(account)}
-      />
+      <EstablishmentList establishments={establishments} accountLive={isAccountLive(account)} />
 
       {needsMultiBusiness && <MultiBusinessSubscribeCard />}
 

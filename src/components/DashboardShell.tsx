@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { ActiveMerchantProvider } from "@/components/dashboard/ActiveMerchantContext";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { EstablishmentSwitcher } from "@/components/dashboard/EstablishmentSwitcher";
 
@@ -33,22 +34,19 @@ export function DashboardShell({
   }, [qrStudio]);
 
   return (
-    <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
-      <div className="brutal-nav-wrap">
-        <DashboardHeader
-          nav={nav}
-          establishmentSwitcher={
-            <EstablishmentSwitcher
-              establishments={establishments}
-              activeMerchantId={activeMerchantId}
-            />
-          }
-        />
-      </div>
+    <ActiveMerchantProvider initialMerchantId={activeMerchantId}>
+      <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
+        <div className="brutal-nav-wrap">
+          <DashboardHeader
+            nav={nav}
+            establishmentSwitcher={<EstablishmentSwitcher establishments={establishments} />}
+          />
+        </div>
 
-      <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
-        <main className="min-w-0">{children}</main>
+        <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
+          <main className="min-w-0">{children}</main>
+        </div>
       </div>
-    </div>
+    </ActiveMerchantProvider>
   );
 }
