@@ -6,8 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
 import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { StarspinLogo } from "@/components/StarspinLogo";
+import { SubscribeNav } from "@/components/billing/SubscribeNav";
 import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import type { BillingPlan } from "@/lib/billing";
 import { checkoutPayForPlan } from "@/lib/billing-display";
@@ -118,17 +117,11 @@ export function StarspinCheckout({
 
   return (
     <div className="cadeo-page cadeo-page--subscribe cadeo-page--checkout">
-      <div className="cadeo-nav-wrap">
-        <nav className="cadeo-nav">
-          <StarspinLogo href="/dashboard" variant="light" size="md" />
-          <div className="cadeo-nav-actions cadeo-subscribe-nav-actions">
-            <Link href="/subscribe" className="cadeo-btn cadeo-btn-outline">
-              {t("billing.checkoutBack")}
-            </Link>
-            <LocaleSwitcher variant="brutal" />
-          </div>
-        </nav>
-      </div>
+      <SubscribeNav
+        backHref="/subscribe"
+        backLabel={t("billing.checkoutBack")}
+        backLabelShort={t("billing.checkoutBackShort")}
+      />
 
       <main className="cadeo-checkout-main">
         <div className="cadeo-checkout-card">

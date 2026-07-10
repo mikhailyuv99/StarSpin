@@ -1,14 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense } from "react";
 import { useI18n } from "@/i18n/client";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { StarspinLogo } from "@/components/StarspinLogo";
-import { SocialIconRow } from "@/components/icons/SocialIconRow";
-import { PricingPlans } from "@/components/billing/PricingPlans";
 import { DashboardBillingRedirect } from "@/components/billing/DashboardBillingRedirect";
+import { PricingPlans } from "@/components/billing/PricingPlans";
 import { SubscribeCheckoutAlert } from "@/components/billing/SubscribeCheckoutAlert";
+import { SubscribeNav } from "@/components/billing/SubscribeNav";
+import { SocialIconRow } from "@/components/icons/SocialIconRow";
 import { AdvantageCopy } from "@/components/marketing/AdvantageCopy";
 import { getMarketingAdvantages } from "@/lib/marketing-advantages";
 import { Reveal } from "@/components/motion/Reveal";
@@ -36,17 +34,11 @@ export function SubscribeSalesPage({ merchantName }: { merchantName: string }) {
         <SubscribeCheckoutAlert />
       </Suspense>
 
-      <div className="cadeo-nav-wrap">
-        <nav className="cadeo-nav">
-          <StarspinLogo href="/dashboard" variant="light" size="md" />
-          <div className="cadeo-nav-actions cadeo-subscribe-nav-actions">
-            <Link href="/dashboard" className="cadeo-btn cadeo-btn-outline">
-              {t("billing.backDashboard")}
-            </Link>
-            <LocaleSwitcher variant="brutal" />
-          </div>
-        </nav>
-      </div>
+      <SubscribeNav
+        backHref="/dashboard"
+        backLabel={t("billing.backDashboard")}
+        backLabelShort={t("billing.backDashboardShort")}
+      />
 
       <main>
         <section className="cadeo-section cadeo-subscribe-section">

@@ -3615,8 +3615,67 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  min-width: 0;
+}
+
+.cadeo-nav--subscribe-flow {
+  overflow: visible;
+  min-width: 0;
+}
+
+.cadeo-subscribe-back-full {
+  display: none;
+}
+
+.cadeo-subscribe-back-short {
+  display: inline;
+}
+
+@media (min-width: 640px) {
+  .cadeo-subscribe-back-full {
+    display: inline;
+  }
+
+  .cadeo-subscribe-back-short {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .cadeo-page--subscribe .cadeo-nav--subscribe-flow > .starspin-logo-link,
+  .cadeo-page--checkout .cadeo-nav--subscribe-flow > .starspin-logo-link {
+    display: none;
+  }
+
+  .cadeo-subscribe-nav-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .cadeo-subscribe-nav-actions .cadeo-subscribe-back {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cadeo-subscribe-nav-actions .locale-switcher-trigger {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .cadeo-subscribe-nav-actions .locale-switcher-label,
+  .cadeo-subscribe-nav-actions .locale-switcher-chevron {
+    display: none;
+  }
 }
 
 .cadeo-subscribe-title {
@@ -3686,8 +3745,8 @@
 
 @media (max-width: 640px) {
   .cadeo-subscribe-nav-actions .cadeo-btn {
-    font-size: 0.78rem;
-    padding: 0.45rem 0.7rem;
+    font-size: 0.75rem;
+    padding: 0 0.75rem;
   }
 
   .cadeo-subscribe-hero {
