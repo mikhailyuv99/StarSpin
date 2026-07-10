@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "@/i18n/client";
@@ -210,13 +211,21 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className={ui.label}>{t("common.password")}</label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className={ui.label}>{t("common.password")}</label>
+                  {!isSignup && (
+                    <Link href="/login/forgot-password" className="text-xs font-bold text-ink underline">
+                      {t("auth.forgotLink")}
+                    </Link>
+                  )}
+                </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
+                  autoComplete={isSignup ? "new-password" : "current-password"}
                   className={ui.input}
                 />
               </div>

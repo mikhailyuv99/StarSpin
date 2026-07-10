@@ -47,9 +47,19 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (user && path === "/login") {
+    const isLoginEntry = path === "/login" || path === "/login/forgot-password";
+    const isPasswordReset = path === "/auth/reset-password";
+
+    if (user && isLoginEntry) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    if (!user && isPasswordReset) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login/forgot-password";
+      url.searchParams.set("error", "link_expired");
       return NextResponse.redirect(url);
     }
 
