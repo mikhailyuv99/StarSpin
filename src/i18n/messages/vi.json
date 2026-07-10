@@ -439,7 +439,8 @@
     "subscribeCta": "Đăng ký gói đa cơ sở",
     "checkoutTitle": "Gói bổ sung đa cơ sở",
     "checkoutSubtitle": "Quản lý nhiều cơ sở từ một bảng điều khiển.",
-    "backToList": "Quay lại danh sách cơ sở"
+    "backToList": "Quay lại danh sách cơ sở",
+    "backToListShort": "Cơ sở",
   },
   "dashboard": {
     "navHome": "Bảng điều khiển",

@@ -487,7 +487,8 @@
     "subscribeCta": "S'abonner au multi-établissements",
     "checkoutTitle": "Option multi-établissements",
     "checkoutSubtitle": "Gérez plusieurs établissements depuis un seul tableau de bord.",
-    "backToList": "Retour aux établissements"
+    "backToList": "Retour aux établissements",
+    "backToListShort": "Établissements",
   },
   "dashboard": {
     "navHome": "Tableau de bord",

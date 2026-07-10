@@ -3600,6 +3600,32 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
+}
+
+.cadeo-checkout-form .cadeo-btn-lg {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .cadeo-checkout-form .cadeo-btn-lg {
+    font-size: 0.82rem;
+    padding: 0.85rem 0.9rem;
+  }
+
+  .cadeo-checkout-card {
+    padding: 1.15rem;
+  }
+
+  .cadeo-page--checkout .cadeo-checkout-main {
+    padding: 1rem 0.75rem 2.5rem;
+  }
 }
 
 .cadeo-checkout-footnote {
@@ -3623,59 +3649,6 @@
 .cadeo-nav--subscribe-flow {
   overflow: visible;
   min-width: 0;
-}
-
-.cadeo-subscribe-back-full {
-  display: none;
-}
-
-.cadeo-subscribe-back-short {
-  display: inline;
-}
-
-@media (min-width: 640px) {
-  .cadeo-subscribe-back-full {
-    display: inline;
-  }
-
-  .cadeo-subscribe-back-short {
-    display: none;
-  }
-}
-
-@media (max-width: 639px) {
-  .cadeo-page--subscribe .cadeo-nav--subscribe-flow > .starspin-logo-link,
-  .cadeo-page--checkout .cadeo-nav--subscribe-flow > .starspin-logo-link {
-    display: none;
-  }
-
-  .cadeo-subscribe-nav-actions {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .cadeo-subscribe-nav-actions .cadeo-subscribe-back {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 2.5rem;
-    padding: 0 0.75rem;
-    font-size: 0.75rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .cadeo-subscribe-nav-actions .locale-switcher-trigger {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .cadeo-subscribe-nav-actions .locale-switcher-label,
-  .cadeo-subscribe-nav-actions .locale-switcher-chevron {
-    display: none;
-  }
 }
 
 .cadeo-subscribe-title {

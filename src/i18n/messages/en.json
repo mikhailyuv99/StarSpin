@@ -439,7 +439,8 @@
     "subscribeCta": "Subscribe to multi-business",
     "checkoutTitle": "Multi-business add-on",
     "checkoutSubtitle": "Manage multiple establishments from one dashboard.",
-    "backToList": "Back to establishments"
+    "backToList": "Back to establishments",
+    "backToListShort": "Establishments",
   },
   "dashboard": {
     "navHome": "Dashboard",

@@ -12,15 +12,17 @@ export function SubscribeNav({
   backLabelShort: string;
 }) {
   return (
-    <div className="cadeo-nav-wrap">
+    <div className="cadeo-nav-wrap cadeo-nav-wrap--subscribe">
       <nav className="cadeo-nav cadeo-nav--subscribe-flow">
-        <StarspinLogo href="/dashboard" variant="light" size="sm" />
+        <div className="cadeo-subscribe-nav-brand">
+          <StarspinLogo href="/dashboard" variant="light" size="sm" />
+        </div>
         <div className="cadeo-nav-actions cadeo-subscribe-nav-actions">
           <Link href={backHref} className="cadeo-btn cadeo-btn-outline cadeo-subscribe-back">
             <span className="cadeo-subscribe-back-short">{backLabelShort}</span>
             <span className="cadeo-subscribe-back-full">{backLabel}</span>
           </Link>
-          <div className="cadeo-nav-locale">
+          <div className="cadeo-nav-locale cadeo-subscribe-nav-locale">
             <LocaleSwitcher variant="brutal" />
           </div>
         </div>

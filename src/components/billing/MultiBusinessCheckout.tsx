@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
@@ -115,7 +114,7 @@ export function MultiBusinessCheckout({
       <SubscribeNav
         backHref="/dashboard/establishments"
         backLabel={t("establishments.backToList")}
-        backLabelShort={t("billing.backDashboardShort")}
+        backLabelShort={t("establishments.backToListShort")}
       />
       <main className="cadeo-checkout-main">
         <div className="cadeo-checkout-card">
@@ -128,9 +127,6 @@ export function MultiBusinessCheckout({
             </Elements>
           )}
           {!clientSecret && !error && <p className="cadeo-checkout-loading">{t("billing.checkoutLoading")}</p>}
-          <Link href="/dashboard/establishments" className="cadeo-checkout-back">
-            {t("establishments.backToList")}
-          </Link>
         </div>
       </main>
     </div>
