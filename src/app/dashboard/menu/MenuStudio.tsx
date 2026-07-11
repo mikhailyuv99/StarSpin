@@ -79,7 +79,9 @@ export function MenuStudio({
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [tab, setTab] = useState<StudioTab>("menu");
   const [sheetHeightPx, setSheetHeightPx] = useState(280);
-  const sheetHandleRef = useRef<HTMLDivElement>(null);
+  const sheetPanelRef = useRef<HTMLDivElement>(null);
+  const sheetScrollRef = useRef<HTMLDivElement>(null);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -647,144 +649,90 @@ export function MenuStudio({
   const sheetCollapseAt = 130;
   const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
 
-  // Native touch listeners (non-passive) so mobile browsers don't steal the
-  // gesture for page scroll. Mouse uses pointer events on the same handle.
-  useEffect(() => {
-    if (mode !== "edit" || !tab) return;
-    const el = sheetHandleRef.current;
-    if (!el) return;
+  /** Resize deck — same gesture on mouse and touch (document capture + scroll lock). */
+  const onSheetHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
 
-    type Drag = { startY: number; startH: number; moved: boolean; id: number };
-    let drag: Drag | null = null;
+    const handle = e.currentTarget;
+    const pointerId = e.pointerId;
+    try {
+      handle.setPointerCapture(pointerId);
+    } catch {
+      /* some WebViews reject capture — document listeners still work */
+    }
 
-    const moveTo = (clientY: number) => {
-      if (!drag) return;
-      const dy = drag.startY - clientY;
-      if (Math.abs(dy) > 8) drag.moved = true;
+    const drag = {
+      startY: e.clientY,
+      startH: sheetHeightRef.current,
+      moved: false,
+    };
+
+    const panel = sheetPanelRef.current;
+    const preview = previewScrollRef.current;
+    const sheetScroll = sheetScrollRef.current;
+    const prevPreviewOverflow = preview?.style.overflow ?? "";
+    const prevSheetOverflow = sheetScroll?.style.overflow ?? "";
+    if (preview) preview.style.overflow = "hidden";
+    if (sheetScroll) sheetScroll.style.overflow = "hidden";
+    handle.style.cursor = "grabbing";
+
+    const blockTouchScroll = (ev: TouchEvent) => {
+      ev.preventDefault();
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      ev.preventDefault();
+      const dy = drag.startY - ev.clientY;
+      if (Math.abs(dy) > 6) drag.moved = true;
       const next = Math.max(72, Math.min(sheetMax(), drag.startH + dy));
       sheetHeightRef.current = next;
+      if (panel) panel.style.height = `${next}px`;
       setSheetHeightPx(next);
     };
 
-    const finish = () => {
-      if (!drag) return;
-      const finished = drag;
-      drag = null;
-      el.style.cursor = "grab";
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
-      if (!finished.moved) {
+    const onUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      document.removeEventListener("pointermove", onMove, true);
+      document.removeEventListener("pointerup", onUp, true);
+      document.removeEventListener("pointercancel", onUp, true);
+      document.removeEventListener("touchmove", blockTouchScroll, true);
+      if (preview) preview.style.overflow = prevPreviewOverflow;
+      if (sheetScroll) sheetScroll.style.overflow = prevSheetOverflow;
+      handle.style.cursor = "grab";
+      try {
+        handle.releasePointerCapture(pointerId);
+      } catch {
+        /* ignore */
+      }
+
+      if (!drag.moved) {
         setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
         return;
       }
       const h = sheetHeightRef.current;
-      const pulledDown = finished.startH - h;
+      const pulledDown = drag.startH - h;
       if (h <= sheetCollapseAt || pulledDown >= 100) {
         setTab(null);
         return;
       }
-      setSheetHeightPx(() => {
-        const mid = (sheetMin + sheetMax()) / 2;
-        return h >= mid ? sheetMax() : 260;
-      });
+      const snapped = h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260;
+      sheetHeightRef.current = snapped;
+      if (panel) panel.style.height = `${snapped}px`;
+      setSheetHeightPx(snapped);
     };
 
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      const tch = e.touches[0]!;
-      drag = {
-        startY: tch.clientY,
-        startH: sheetHeightRef.current,
-        moved: false,
-        id: tch.identifier,
-      };
-      document.body.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
-    };
+    document.addEventListener("pointermove", onMove, true);
+    document.addEventListener("pointerup", onUp, true);
+    document.addEventListener("pointercancel", onUp, true);
+    document.addEventListener("touchmove", blockTouchScroll, {
+      passive: false,
+      capture: true,
+    });
+  };
 
-    const onTouchMove = (e: TouchEvent) => {
-      if (!drag) return;
-      let touch: Touch | undefined;
-      for (let i = 0; i < e.touches.length; i++) {
-        if (e.touches[i]!.identifier === drag.id) {
-          touch = e.touches[i];
-          break;
-        }
-      }
-      if (!touch) return;
-      e.preventDefault();
-      moveTo(touch.clientY);
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      if (!drag) return;
-      let ended = false;
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i]!.identifier === drag.id) ended = true;
-      }
-      if (!ended) return;
-      finish();
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      // Touch path uses touch* so we can preventDefault on move.
-      if (e.pointerType !== "mouse") return;
-      if (e.button !== 0) return;
-      e.preventDefault();
-      try {
-        el.setPointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
-      el.style.cursor = "grabbing";
-      drag = {
-        startY: e.clientY,
-        startH: sheetHeightRef.current,
-        moved: false,
-        id: e.pointerId,
-      };
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      if (!drag || e.pointerType !== "mouse" || drag.id !== e.pointerId) return;
-      e.preventDefault();
-      moveTo(e.clientY);
-    };
-
-    const onPointerUp = (e: PointerEvent) => {
-      if (!drag || e.pointerType !== "mouse" || drag.id !== e.pointerId) return;
-      try {
-        el.releasePointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
-      finish();
-    };
-
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
-    el.addEventListener("touchcancel", onTouchEnd);
-    el.addEventListener("pointerdown", onPointerDown);
-    el.addEventListener("pointermove", onPointerMove);
-    el.addEventListener("pointerup", onPointerUp);
-    el.addEventListener("pointercancel", onPointerUp);
-
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-      el.removeEventListener("touchcancel", onTouchEnd);
-      el.removeEventListener("pointerdown", onPointerDown);
-      el.removeEventListener("pointermove", onPointerMove);
-      el.removeEventListener("pointerup", onPointerUp);
-      el.removeEventListener("pointercancel", onPointerUp);
-    };
-  }, [mode, tab]);
-
-  const previewScrollRef = useRef<HTMLDivElement>(null);
   const prevNodeCountRef = useRef(nodes.length);
 
   useEffect(() => {
@@ -893,26 +841,30 @@ export function MenuStudio({
 
       {mode === "edit" && tab ? (
         <div
+          ref={sheetPanelRef}
           className="relative z-40 mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white"
           style={{ height: sheetHeightPx }}
         >
           <div
-            ref={sheetHandleRef}
             role="slider"
             aria-valuenow={sheetHeightPx}
             aria-valuemin={200}
             aria-valuemax={560}
             aria-label={t("menuStudio.resizeSheet")}
             title={t("menuStudio.resizeSheet")}
-            className="relative z-10 flex h-16 w-full shrink-0 touch-none select-none items-center justify-center border-b border-black/5 bg-white hover:bg-black/[0.03] active:bg-black/[0.06]"
+            className="relative z-10 flex h-[3.75rem] w-full shrink-0 select-none items-center justify-center border-b border-black/5 bg-white active:bg-black/[0.06]"
             style={{ cursor: "grab", touchAction: "none", WebkitUserSelect: "none" }}
+            onPointerDown={onSheetHandlePointerDown}
           >
             <span
               aria-hidden
               className="pointer-events-none h-1.5 w-14 rounded-full bg-zinc-400"
             />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
+          <div
+            ref={sheetScrollRef}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3"
+          >
             {tab === "menu" ? (
               <MenuSheet
                 roots={roots}
@@ -1842,6 +1794,18 @@ function StyleSheet({
         value={s.accent || DEFAULT_MENU_STYLE.accent}
         fallback={DEFAULT_MENU_STYLE.accent}
         onChange={(accent) => setStyle({ ...s, accent })}
+      />
+      <MenuColorField
+        label={t("menuStudio.nameColor")}
+        value={s.nameColor || DEFAULT_MENU_STYLE.nameColor}
+        fallback={DEFAULT_MENU_STYLE.nameColor}
+        onChange={(nameColor) => setStyle({ ...s, nameColor })}
+      />
+      <MenuColorField
+        label={t("menuStudio.textColor")}
+        value={s.textColor || DEFAULT_MENU_STYLE.textColor}
+        fallback={DEFAULT_MENU_STYLE.textColor}
+        onChange={(textColor) => setStyle({ ...s, textColor })}
       />
       <MenuSelect
         label={t("menuStudio.density")}

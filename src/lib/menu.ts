@@ -19,6 +19,10 @@ export type LocaleMap = Partial<Record<Locale, string>> & { en?: string };
 
 export type MenuStyle = {
   accent?: string;
+  /** Merchant / business name in the menu header */
+  nameColor?: string;
+  /** Body text (dishes, descriptions, info) */
+  textColor?: string;
   density?: "comfortable" | "compact";
   priceAlign?: "right" | "inline";
   corners?: "sharp" | "rounded";
@@ -111,6 +115,8 @@ export function currencySymbol(idOrSymbol: string | undefined | null): string {
 
 export const DEFAULT_MENU_STYLE: Required<MenuStyle> = {
   accent: "#E85D04",
+  nameColor: "#1a1a1a",
+  textColor: "#1a1a1a",
   density: "comfortable",
   priceAlign: "right",
   corners: "rounded",
@@ -211,6 +217,8 @@ export function parseMenuStyle(value: unknown, primaryColor?: string): MenuStyle
     accent: primaryColor || DEFAULT_MENU_STYLE.accent,
     ...raw,
     font: legacyFont || DEFAULT_MENU_STYLE.font,
+    nameColor: raw.nameColor || DEFAULT_MENU_STYLE.nameColor,
+    textColor: raw.textColor || DEFAULT_MENU_STYLE.textColor,
   };
 }
 

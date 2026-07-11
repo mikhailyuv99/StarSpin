@@ -1024,6 +1024,8 @@
     "videoDuration": "La vidéo doit durer 15 secondes ou moins.",
     "videoAspect": "La vidéo doit être en 16:9 ou 9:16.",
     "accent": "Couleur d’accent",
+    "nameColor": "Couleur du nom",
+    "textColor": "Couleur du texte",
     "density": "Densité",
     "densityComfortable": "Confortable",
     "densityCompact": "Compact",

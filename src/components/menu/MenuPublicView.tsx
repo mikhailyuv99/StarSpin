@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Locale } from "@/i18n/config";
 import { useTranslations } from "@/i18n/client";
 import {
+  DEFAULT_MENU_STYLE,
   groupMenuNodes,
   parseMenuBackground,
   parseMenuStyle,
@@ -64,6 +65,8 @@ export function MenuPublicView({
   const bgColor = menuBg.color || "#FFF8F1";
   const bannerUrl = menuBg.bannerUrl ?? menuBg.imageUrl ?? null;
   const pageImageUrl = menuBg.pageImageUrl ?? null;
+  const nameColor = menuStyle.nameColor || DEFAULT_MENU_STYLE.nameColor;
+  const textColor = menuStyle.textColor || DEFAULT_MENU_STYLE.textColor;
 
   return (
     <div
@@ -71,12 +74,14 @@ export function MenuPublicView({
       style={
         {
           "--menu-accent": menuStyle.accent,
+          "--menu-name": nameColor,
+          "--menu-text": textColor,
           "--menu-radius": radius,
           "--menu-pad": pad,
           "--menu-bg": bgColor,
           fontFamily: `"${font.googleFamily}", system-ui, sans-serif`,
           backgroundColor: bgColor,
-          color: "#1a1a1a",
+          color: textColor,
         } as React.CSSProperties
       }
     >
@@ -132,7 +137,12 @@ export function MenuPublicView({
                   style={{ boxShadow: `0 0 0 4px ${bgColor}` }}
                 />
               ) : null}
-              <h1 className="text-2xl font-bold tracking-tight">{merchantName}</h1>
+              <h1
+                className="text-2xl font-bold tracking-tight"
+                style={{ color: "var(--menu-name)" }}
+              >
+                {merchantName}
+              </h1>
               {info?.note && resolveLocaleMap(info.note, locale) ? (
                 <p className="mt-2 text-sm opacity-80">{resolveLocaleMap(info.note, locale)}</p>
               ) : null}

@@ -976,6 +976,8 @@
     "videoDuration": "Video must be 15 seconds or less.",
     "videoAspect": "Video must be 16:9 or 9:16.",
     "accent": "Accent color",
+    "nameColor": "Business name color",
+    "textColor": "Text color",
     "density": "Density",
     "densityComfortable": "Comfortable",
     "densityCompact": "Compact",
