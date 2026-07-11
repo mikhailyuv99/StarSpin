@@ -999,6 +999,7 @@
     "importScan": "Photos ou PDF",
     "importScanHint": "Chaque page devient une image pleine largeur — sans tout retaper.",
     "untitledSection": "Section",
+    "sectionEmpty": "Aucun plat dans cette section pour l’instant",
     "visibility": "Afficher / masquer",
     "fieldTitle": "Titre",
     "fieldDescription": "Description",

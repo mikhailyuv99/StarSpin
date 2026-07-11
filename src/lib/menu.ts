@@ -131,7 +131,12 @@ export const MAX_VIDEO_SECONDS = 15;
 export const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
 export function emptyLocaleMap(value = "", locale: Locale = defaultLocale): LocaleMap {
-  return { [locale]: value };
+  const map: LocaleMap = { [locale]: value };
+  // Always keep an English fallback so public/preview resolve works across UI locales.
+  if (locale !== defaultLocale && value) {
+    map[defaultLocale] = value;
+  }
+  return map;
 }
 
 export function resolveLocaleMap(
@@ -308,7 +313,11 @@ export function newClientId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
-  return `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  // UUID-shaped fallback — menu_nodes.id is a UUID column.
+  const hex = Array.from({ length: 32 }, () =>
+    Math.floor(Math.random() * 16).toString(16),
+  ).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20)}`;
 }
 
 export function aspectNear(ratio: number, target: number, tolerance = 0.18): boolean {

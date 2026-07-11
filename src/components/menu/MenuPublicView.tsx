@@ -44,7 +44,7 @@ export function MenuPublicView({
   const menuBg = parseMenuBackground(background);
   const font = getQRFont(menuStyle.font);
   const { roots, itemsBySection } = useMemo(
-    () => groupMenuNodes(nodes.filter((n) => n.visible)),
+    () => groupMenuNodes(nodes.filter((n) => n.visible !== false)),
     [nodes],
   );
   const [lightbox, setLightbox] = useState<{
@@ -158,6 +158,14 @@ export function MenuPublicView({
           {roots.map((node) => {
             if (node.type === "section") {
               const items = itemsBySection[node.id] ?? [];
+              const visibleItems = items.filter(
+                (i) => i.visible !== false && i.payload.available !== false,
+              );
+              const title = resolveLocaleMap(
+                node.payload.title,
+                locale,
+                t("menuStudio.untitledSection"),
+              );
               return (
                 <section key={node.id} className="space-y-3">
                   <div>
@@ -165,7 +173,7 @@ export function MenuPublicView({
                       className="text-lg font-semibold uppercase tracking-[0.08em]"
                       style={{ color: "var(--menu-accent)" }}
                     >
-                      {resolveLocaleMap(node.payload.title, locale, t("menuStudio.untitledSection"))}
+                      {title || t("menuStudio.untitledSection")}
                     </h2>
                     {resolveLocaleMap(node.payload.description, locale) ? (
                       <p className="mt-1 text-sm opacity-70">
@@ -173,10 +181,9 @@ export function MenuPublicView({
                       </p>
                     ) : null}
                   </div>
-                  <ul className="space-y-2">
-                    {items
-                      .filter((i) => i.visible && i.payload.available !== false)
-                      .map((item) => (
+                  {visibleItems.length ? (
+                    <ul className="space-y-2">
+                      {visibleItems.map((item) => (
                         <DishRow
                           key={item.id}
                           node={item}
@@ -193,7 +200,15 @@ export function MenuPublicView({
                           }
                         />
                       ))}
-                  </ul>
+                    </ul>
+                  ) : (
+                    <p
+                      className="rounded-[var(--menu-radius)] border border-dashed border-black/15 px-3 py-4 text-center text-sm opacity-60"
+                      style={{ backgroundColor: "color-mix(in srgb, white 45%, transparent)" }}
+                    >
+                      {t("menuStudio.sectionEmpty")}
+                    </p>
+                  )}
                 </section>
               );
             }

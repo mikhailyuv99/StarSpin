@@ -645,6 +645,21 @@ export function MenuStudio({
     window.addEventListener("pointercancel", onUp);
   };
 
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+  const prevNodeCountRef = useRef(nodes.length);
+
+  useEffect(() => {
+    if (nodes.length > prevNodeCountRef.current) {
+      const el = previewScrollRef.current;
+      if (el) {
+        requestAnimationFrame(() => {
+          el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+        });
+      }
+    }
+    prevNodeCountRef.current = nodes.length;
+  }, [nodes.length]);
+
   useEffect(() => {
     if (style.font) void ensureQRFontLoaded(style.font, "name");
   }, [style.font]);
@@ -716,7 +731,10 @@ export function MenuStudio({
         </div>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 justify-center overflow-y-auto px-3 py-4">
+      <div
+        ref={previewScrollRef}
+        className="relative flex min-h-0 flex-1 justify-center overflow-y-auto px-3 py-4"
+      >
         <div
           className="w-full max-w-[430px] overflow-hidden rounded-[1.25rem] border border-black/10 shadow-sm"
           style={{ backgroundColor: background.color || DEFAULT_MENU_BACKGROUND.color }}

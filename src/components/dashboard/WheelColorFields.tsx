@@ -1,6 +1,6 @@
 "use client";
 
-import { ui } from "@/components/ui/styles";
+import { ColorField } from "@/components/ui/ColorField";
 import { useTranslations } from "@/i18n/client";
 
 export function WheelColorFields({
@@ -18,24 +18,20 @@ export function WheelColorFields({
 
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-      <div className="space-y-2">
-        <label className={ui.label}>{t("dashboard.primaryColor")}</label>
-        <input
-          type="color"
-          value={primaryColor}
-          onChange={(e) => onPrimaryChange(e.target.value)}
-          className="h-12 w-full min-w-0 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-        />
-      </div>
-      <div className="space-y-2">
-        <label className={ui.label}>{t("dashboard.secondaryColor")}</label>
-        <input
-          type="color"
-          value={secondaryColor}
-          onChange={(e) => onSecondaryChange(e.target.value)}
-          className="h-12 w-full min-w-0 cursor-pointer rounded-[14px] border-2 border-black bg-white p-1"
-        />
-      </div>
+      <ColorField
+        label={t("dashboard.primaryColor")}
+        value={primaryColor}
+        fallback="#E85D04"
+        onChange={onPrimaryChange}
+        variant="field"
+      />
+      <ColorField
+        label={t("dashboard.secondaryColor")}
+        value={secondaryColor}
+        fallback="#F5E08E"
+        onChange={onSecondaryChange}
+        variant="field"
+      />
     </div>
   );
 }

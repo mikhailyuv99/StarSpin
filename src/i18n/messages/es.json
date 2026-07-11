@@ -953,6 +953,7 @@
     "importScan": "Upload photos or PDF",
     "importScanHint": "We'll add each page as a full-bleed scan — no need to retype.",
     "untitledSection": "Section",
+    "sectionEmpty": "No dishes in this section yet",
     "visibility": "Show / hide",
     "fieldTitle": "Title",
     "fieldDescription": "Description",
