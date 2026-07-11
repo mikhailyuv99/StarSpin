@@ -1620,7 +1620,6 @@ function MediaEditors({
               src={videoUrl}
               className="h-full w-full object-cover"
               muted
-              defaultMuted
               playsInline
               onLoadedMetadata={(e) => {
                 e.currentTarget.muted = true;

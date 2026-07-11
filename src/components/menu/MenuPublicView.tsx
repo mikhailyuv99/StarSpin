@@ -316,7 +316,6 @@ export function MenuPublicView({
                 }`}
                 autoPlay
                 muted
-                defaultMuted
                 loop
                 playsInline
                 controls
@@ -402,7 +401,6 @@ function DishRow({
             src={node.payload.video_url!}
             className="h-full w-full object-cover"
             muted
-            defaultMuted
             playsInline
             onLoadedMetadata={(e) => {
               e.currentTarget.muted = true;
