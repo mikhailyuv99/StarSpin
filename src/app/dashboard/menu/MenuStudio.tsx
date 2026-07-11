@@ -744,29 +744,29 @@ export function MenuStudio({
         ref={headerRef}
         className="z-30 flex w-full shrink-0 justify-center border-b border-black/10 bg-[#f3eee6] px-3 py-2"
       >
-        <div className="flex w-full max-w-lg items-center gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
-              <button
-                type="button"
-                className={`menu-press rounded-xl px-3 py-1.5 ${mode === "edit" ? "bg-white" : ""}`}
-                onClick={() => setMode("edit")}
-              >
-                {t("menuStudio.edit")}
-              </button>
-              <button
-                type="button"
-                className={`menu-press rounded-xl px-3 py-1.5 ${mode === "preview" ? "bg-white" : ""}`}
-                onClick={() => {
-                  setMode("preview");
-                  setTab(null);
-                  setCatalogOpen(false);
-                }}
-              >
-                {t("menuStudio.preview")}
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5">
+        <div className="relative flex w-full max-w-lg items-center">
+          <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
+            <button
+              type="button"
+              className={`menu-press rounded-xl px-3 py-1.5 ${mode === "edit" ? "bg-white" : ""}`}
+              onClick={() => setMode("edit")}
+            >
+              {t("menuStudio.edit")}
+            </button>
+            <button
+              type="button"
+              className={`menu-press rounded-xl px-3 py-1.5 ${mode === "preview" ? "bg-white" : ""}`}
+              onClick={() => {
+                setMode("preview");
+                setTab(null);
+                setCatalogOpen(false);
+              }}
+            >
+              {t("menuStudio.preview")}
+            </button>
+          </div>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="pointer-events-auto flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={historyRef.current.length === 0}
