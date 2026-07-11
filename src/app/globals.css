@@ -3116,3 +3116,29 @@ html.locale-es .cadeo-hero-accent {
     }
   }
 }
+
+/* Menu Studio ? stronger press feedback (iOS needs cursor:pointer for :active) */
+.menu-studio button,
+.menu-studio [role="button"],
+.menu-studio .menu-press {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease,
+    background-color 0.12s ease;
+}
+.menu-studio button:active,
+.menu-studio [role="button"]:active,
+.menu-studio .menu-press:active {
+  transform: scale(0.93);
+  opacity: 0.78;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-studio button:active,
+  .menu-studio [role="button"]:active,
+  .menu-studio .menu-press:active {
+    transform: none;
+    opacity: 0.85;
+  }
+}

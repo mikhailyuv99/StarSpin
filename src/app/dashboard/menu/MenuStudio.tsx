@@ -503,6 +503,7 @@ export function MenuStudio({
           .map((n) => (n.section_id === id ? { ...n, section_id: null } : n)),
       ),
     );
+    showToast(t("menuStudio.deleted"));
   };
 
   const moveNode = (id: string, dir: -1 | 1) => {
@@ -647,13 +648,36 @@ export function MenuStudio({
 
   const sheetMin = 200;
   const sheetCollapseAt = 130;
-  const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
+  const studioRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  /** Never taller than space above the bottom tab bar — otherwise iOS clips the editor. */
+  const sheetMax = useCallback(() => {
+    const studioH = studioRef.current?.clientHeight ?? Math.round(window.innerHeight * 0.88);
+    const headerH = headerRef.current?.offsetHeight ?? 52;
+    const navH = navRef.current?.offsetHeight ?? 72;
+    const available = studioH - headerH - navH;
+    return Math.max(sheetMin, Math.min(Math.round(window.innerHeight * 0.7), 520, available));
+  }, []);
+
+  const clampSheetHeight = useCallback((h: number) => Math.max(72, Math.min(sheetMax(), h)), [sheetMax]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setSheetHeightPx((h) => clampSheetHeight(h));
+    };
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
+  }, [clampSheetHeight, tab, mode]);
+
   const sheetHandleRef = useRef<HTMLDivElement | null>(null);
   const sheetHandleCleanupRef = useRef<(() => void) | null>(null);
 
   const snapSheetHeight = useCallback((h: number, startH: number, moved: boolean) => {
     if (!moved) {
-      const next = h > 340 ? 260 : sheetMax();
+      const next = clampSheetHeight(h > 340 ? 260 : sheetMax());
       sheetHeightRef.current = next;
       if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
       setSheetHeightPx(next);
@@ -664,11 +688,11 @@ export function MenuStudio({
       setTab(null);
       return;
     }
-    const snapped = h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260;
+    const snapped = clampSheetHeight(h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260);
     sheetHeightRef.current = snapped;
     if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${snapped}px`;
     setSheetHeightPx(snapped);
-  }, []);
+  }, [clampSheetHeight, sheetMax]);
 
   /**
    * iOS Safari only respects preventDefault on touchmove if that listener was
@@ -712,7 +736,7 @@ export function MenuStudio({
       if (!drag) return;
       const dy = drag.startY - clientY;
       if (Math.abs(dy) > 4) drag.moved = true;
-      const next = Math.max(72, Math.min(sheetMax(), drag.startH + dy));
+      const next = clampSheetHeight(drag.startH + dy);
       sheetHeightRef.current = next;
       if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
       setSheetHeightPx(next);
@@ -729,7 +753,6 @@ export function MenuStudio({
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
-      // Claim the gesture immediately (requires passive:false on this listener).
       e.preventDefault();
       const tch = e.touches[0]!;
       drag = {
@@ -806,7 +829,6 @@ export function MenuStudio({
       document.addEventListener("pointercancel", onUp, true);
     };
 
-    // Bind BEFORE any gesture — passive:false is mandatory for iOS.
     el.addEventListener("touchstart", onTouchStart, { passive: false });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     el.addEventListener("touchend", onTouchEnd);
@@ -821,7 +843,7 @@ export function MenuStudio({
       el.removeEventListener("touchcancel", onTouchEnd);
       el.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [snapSheetHeight]);
+  }, [clampSheetHeight, snapSheetHeight]);
 
   useEffect(() => {
     return () => {
@@ -849,8 +871,14 @@ export function MenuStudio({
   }, [style.font]);
 
   return (
-    <div className="menu-studio relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[#f3eee6]">
-      <header className="z-30 flex shrink-0 items-center gap-2 border-b border-black/10 bg-[#f3eee6] px-3 py-2">
+    <div
+      ref={studioRef}
+      className="menu-studio relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[#f3eee6]"
+    >
+      <header
+        ref={headerRef}
+        className="z-30 flex shrink-0 items-center gap-2 border-b border-black/10 bg-[#f3eee6] px-3 py-2"
+      >
         <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
           <button
             type="button"
@@ -940,18 +968,19 @@ export function MenuStudio({
         <div
           ref={sheetPanelRef}
           className="relative z-[60] mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)]"
-          style={{ height: sheetHeightPx }}
+          style={{ height: clampSheetHeight(sheetHeightPx) }}
         >
           <div className="relative flex h-14 w-full shrink-0 items-center justify-between gap-1 border-b border-black/5 bg-white px-1">
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600 active:bg-black/5"
+              className="menu-press flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600"
               aria-label={t("menuStudio.sheetCollapse")}
               onClick={() => {
                 if (sheetHeightPx <= 280) setTab(null);
                 else {
-                  sheetHeightRef.current = 260;
-                  setSheetHeightPx(260);
+                  const next = clampSheetHeight(260);
+                  sheetHeightRef.current = next;
+                  setSheetHeightPx(next);
                 }
               }}
             >
@@ -979,7 +1008,7 @@ export function MenuStudio({
             </div>
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600 active:bg-black/5"
+              className="menu-press flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600"
               aria-label={t("menuStudio.sheetExpand")}
               onClick={() => {
                 const next = sheetMax();
@@ -992,7 +1021,8 @@ export function MenuStudio({
           </div>
           <div
             ref={sheetScrollRef}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3"
+            className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-3 [-webkit-overflow-scrolling:touch]"
+            style={{ paddingBottom: "max(3rem, calc(1.25rem + env(safe-area-inset-bottom)))" }}
           >
             {tab === "menu" ? (
               <MenuSheet
@@ -1056,7 +1086,10 @@ export function MenuStudio({
       ) : null}
 
       {mode === "edit" ? (
-        <nav className="z-50 shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+        <nav
+          ref={navRef}
+          className="z-50 shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
+        >
           <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
             {(
               [
@@ -1071,8 +1104,8 @@ export function MenuStudio({
                 key={id}
                 type="button"
                 onClick={() => toggleTab(id)}
-                className={`rounded-xl px-1 py-2 text-center text-[10px] font-bold uppercase tracking-wide ${
-                  tab === id ? "bg-black text-white" : "text-zinc-700 hover:bg-black/5"
+                className={`menu-press rounded-xl px-1 py-2 text-center text-[10px] font-bold uppercase tracking-wide ${
+                  tab === id ? "bg-black text-white" : "text-zinc-700"
                 }`}
               >
                 {t(label)}
@@ -1110,7 +1143,7 @@ export function MenuStudio({
                       <button
                         key={c.id}
                         type="button"
-                        className="rounded-2xl border border-black/10 px-3 py-3 text-left text-sm font-medium transition hover:bg-[var(--c-cream)]"
+                        className="menu-press rounded-2xl border border-black/10 px-3 py-3 text-left text-sm font-medium transition"
                         onClick={() => {
                           if (c.type === "scan_page" || c.type === "image") {
                             pickImageWithCrop(async (file) => {
@@ -1306,7 +1339,7 @@ function MenuSheet(props: {
         <p className="text-sm text-zinc-600">{t("menuStudio.empty")}</p>
         <button
           type="button"
-          className="rounded-2xl bg-black px-4 py-2.5 text-sm font-semibold text-white"
+          className="menu-press rounded-2xl bg-black px-4 py-2.5 text-sm font-semibold text-white"
           onClick={onAdd}
         >
           {t("menuStudio.add")}
@@ -1321,7 +1354,7 @@ function MenuSheet(props: {
         <h2 className="text-sm font-bold uppercase tracking-wide">{t("menuStudio.tabMenu")}</h2>
         <button
           type="button"
-          className="shrink-0 rounded-2xl bg-black px-4 py-2.5 text-sm font-semibold leading-none text-white"
+          className="menu-press shrink-0 rounded-2xl bg-black px-4 py-2.5 text-sm font-semibold leading-none text-white"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1425,7 +1458,7 @@ function NodeRow({
       <div className="flex items-center gap-1 px-2 py-2">
         <button
           type="button"
-          className="min-w-0 flex-1 truncate px-1 text-left text-sm font-medium"
+          className="menu-press min-w-0 flex-1 truncate rounded-xl px-1 py-2 text-left text-sm font-medium"
           onClick={onToggleExpand}
         >
           <span className="mr-2 text-[10px] font-bold uppercase tracking-wide text-zinc-400">
@@ -1435,7 +1468,7 @@ function NodeRow({
         </button>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-base hover:bg-[var(--c-cream)]"
+          className="menu-press flex h-10 w-10 items-center justify-center rounded-xl text-base"
           onClick={() => onMove(node.id, -1)}
           aria-label={t("menuStudio.moveUp")}
         >
@@ -1443,7 +1476,7 @@ function NodeRow({
         </button>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-base hover:bg-[var(--c-cream)]"
+          className="menu-press flex h-10 w-10 items-center justify-center rounded-xl text-base"
           onClick={() => onMove(node.id, 1)}
           aria-label={t("menuStudio.moveDown")}
         >
@@ -1451,7 +1484,7 @@ function NodeRow({
         </button>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-base hover:bg-[var(--c-cream)]"
+          className="menu-press flex h-10 w-10 items-center justify-center rounded-xl text-base"
           onClick={() => onToggleVisible(node.id, !node.visible)}
           title={t("menuStudio.visibility")}
           aria-label={t("menuStudio.visibility")}
@@ -1460,7 +1493,7 @@ function NodeRow({
         </button>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-lg text-red-600 hover:bg-red-50"
+          className="menu-press flex h-10 w-10 items-center justify-center rounded-xl text-lg text-red-600"
           onClick={() => onRemove(node.id)}
           aria-label={t("menuStudio.delete")}
         >
