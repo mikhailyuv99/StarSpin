@@ -20,14 +20,11 @@ export default async function DashboardMenuPage() {
   }
 
   return (
-    <div className="qr-design-studio-page menu-design-studio-page -mx-4 sm:-mx-6">
-      <div className="mb-2 px-4 sm:px-6">
-        <h1 className="text-lg font-bold tracking-tight">{t("dashboard.menuTitle")}</h1>
-        <p className="text-sm text-zinc-600">{t("dashboard.menuSubtitle")}</p>
-      </div>
+    <div className="menu-design-studio-page -mx-4 flex min-h-0 flex-1 flex-col overflow-hidden sm:-mx-6">
       <MenuStudio
         merchant={merchant}
         initialNodes={error ? [] : ((data as MenuNode[]) ?? [])}
+        pageTitle={t("dashboard.menuTitle")}
       />
     </div>
   );

@@ -31,7 +31,7 @@
   --brutal-radius: 14px;
   --brutal-radius-lg: 20px;
 
-  /* Flat UI — no drop shadows on buttons/cards app-wide */
+  /* Flat UI ? no drop shadows on buttons/cards app-wide */
   --pj-btn-shadow: none;
   --pj-btn-hover-shadow: none;
   --pj-btn-active-shadow: none;
@@ -66,7 +66,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ZERO SHADOWS APP-WIDE — including Tailwind shadow-[...] utilities */
+/* ZERO SHADOWS APP-WIDE ? including Tailwind shadow-[...] utilities */
 *,
 *::before,
 *::after {
@@ -74,7 +74,7 @@ body {
   text-shadow: none !important;
 }
 
-/* Flat UI app-wide — keep borders, kill hard offset shadows on chrome */
+/* Flat UI app-wide ? keep borders, kill hard offset shadows on chrome */
 .brutal-btn,
 .brutal-btn:hover,
 .brutal-btn:active,
@@ -106,7 +106,7 @@ body {
   box-shadow: none !important;
 }
 
-/* ── Neo-brutalist primitives (app-wide) ── */
+/* ?? Neo-brutalist primitives (app-wide) ?? */
 .brutal-page {
   min-height: auto;
   background: var(--c-gray);
@@ -169,7 +169,7 @@ body {
   display: block;
 }
 
-/* Scroll reveal (progressive enhancement — content is visible by default) */
+/* Scroll reveal (progressive enhancement ? content is visible by default) */
 .reveal {
   will-change: opacity, transform;
 }
@@ -197,7 +197,7 @@ body {
   }
 }
 
-/* Scroll reveal (progressive enhancement — content is visible by default) */
+/* Scroll reveal (progressive enhancement ? content is visible by default) */
 .reveal {
   will-change: opacity, transform;
 }
@@ -288,6 +288,52 @@ body {
 
 .qr-studio-preview-inner {
   width: 100%;
+}
+
+/* Menu Studio: lock to viewport ? no page scroll, bottom tab nav always visible */
+html.menu-studio-active,
+body.menu-studio-active,
+body.menu-studio-active #__next {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.menu-studio-active .brutal-page--qr-studio {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body.menu-studio-active .brutal-nav-wrap {
+  flex-shrink: 0 !important;
+}
+
+body.menu-studio-active .brutal-page--qr-studio > .mx-auto,
+body.menu-studio-active .brutal-page--qr-studio main,
+body.menu-studio-active .menu-design-studio-page {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  margin-bottom: 0 !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0 !important;
+}
+
+body.menu-studio-active .menu-studio {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
 }
 
 @media (max-width: 1023px) {
@@ -444,7 +490,7 @@ body {
   margin-inline: auto;
 }
 
-/* Print templates: canvas edge-to-edge — matches the downloaded PNG.
+/* Print templates: canvas edge-to-edge ? matches the downloaded PNG.
    overflow visible so selection handles/rotation grip can sit past the edge. */
 .qr-preview-aspect--print {
   border-radius: 0;
@@ -1125,7 +1171,7 @@ html.locale-vi .cadeo-page .cadeo-nav-links a {
   font-family: var(--font-display);
 }
 
-/* Vietnamese hero accent — Baloo 2 is wide; keep text inside the lavender frame */
+/* Vietnamese hero accent ? Baloo 2 is wide; keep text inside the lavender frame */
 html.locale-vi .cadeo-hero-accent {
   font-size: 0.84em;
   padding: 0.12rem 0.65rem;
@@ -1549,7 +1595,7 @@ html.locale-es .cadeo-hero-accent {
   font-weight: 900;
 }
 
-/* Client QR flow — themeable via --pj-* custom properties (see src/lib/journey-theme.ts) */
+/* Client QR flow ? themeable via --pj-* custom properties (see src/lib/journey-theme.ts) */
 .public-flow {
   position: relative;
   min-height: 100dvh;
@@ -1565,7 +1611,7 @@ html.locale-es .cadeo-hero-accent {
   isolation: isolate;
 }
 
-/* Soft ambient glow behind the card — subtle "gamey" depth on every theme. */
+/* Soft ambient glow behind the card ? subtle "gamey" depth on every theme. */
 .public-flow::before {
   content: "";
   position: absolute;
@@ -1581,7 +1627,7 @@ html.locale-es .cadeo-hero-accent {
   z-index: 1;
 }
 
-/* Locale switcher — inherits each journey template's tokens */
+/* Locale switcher ? inherits each journey template's tokens */
 .public-flow .locale-switcher-trigger--journey {
   color: var(--pj-ink, var(--c-black));
   background: var(--pj-outline-bg, var(--pj-input-bg, #fff));
@@ -1621,7 +1667,7 @@ html.locale-es .cadeo-hero-accent {
   color: var(--pj-ink, var(--c-black));
 }
 
-/* Preview mode: exact mobile viewport — same 390×svh canvas as live journey. */
+/* Preview mode: exact mobile viewport ? same 390�svh canvas as live journey. */
 .public-flow.public-flow--preview {
   position: relative;
   width: 390px;
@@ -1677,7 +1723,7 @@ html.locale-es .cadeo-hero-accent {
   overflow: hidden;
 }
 
-/* Prize wheel — shared by public journey and marketing (not only cadeo-styles.css) */
+/* Prize wheel ? shared by public journey and marketing (not only cadeo-styles.css) */
 .marketing-wheel-wrap {
   position: relative;
   display: inline-flex;
@@ -1970,7 +2016,7 @@ html.locale-es .cadeo-hero-accent {
   font-weight: 700;
 }
 
-/* Themed heading — swaps font + casing per template. */
+/* Themed heading ? swaps font + casing per template. */
 .public-heading {
   font-family: var(--pj-font-display, var(--font-display), system-ui, sans-serif);
   text-transform: var(--pj-heading-transform, uppercase);
@@ -2117,7 +2163,7 @@ html.locale-es .cadeo-hero-accent {
   50% { transform: translate3d(-8%, 5%, 0) scale(1.08); }
 }
 
-/* Sparkles — only visible when a theme defines a non-transparent --pj-spark. */
+/* Sparkles ? only visible when a theme defines a non-transparent --pj-spark. */
 .pj-spark {
   position: absolute;
   width: 8px;
@@ -2425,7 +2471,7 @@ html.locale-es .cadeo-hero-accent {
   overflow: visible;
 }
 
-/* ---- Phone mockup — bezel matches 390×742 (iPhone 14 svh) ratio ---- */
+/* ---- Phone mockup ? bezel matches 390�742 (iPhone 14 svh) ratio ---- */
 .pj-phone {
   position: relative;
   box-sizing: border-box;

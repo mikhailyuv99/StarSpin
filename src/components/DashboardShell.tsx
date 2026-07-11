@@ -13,12 +13,18 @@ import { EstablishmentSwitcher } from "@/components/dashboard/EstablishmentSwitc
 type NavItem = { href: string; label: string };
 type EstablishmentOption = { id: string; name: string };
 
-function DashboardMain({ children }: { children: React.ReactNode }) {
+function DashboardMain({
+  children,
+  fullHeight = false,
+}: {
+  children: React.ReactNode;
+  fullHeight?: boolean;
+}) {
   const { isRefreshingMerchant } = useActiveMerchant();
 
   return (
-    <div className="mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6">
-      <main className="min-w-0">
+    <div className={`mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6 ${fullHeight ? "flex min-h-0 flex-1 flex-col !pt-2" : ""}`}>
+      <main className={`min-w-0 ${fullHeight ? "flex min-h-0 flex-1 flex-col" : ""}`}>
         {isRefreshingMerchant ? <DashboardContentSkeleton /> : children}
       </main>
     </div>
@@ -43,22 +49,22 @@ export function DashboardShell({
 
   useEffect(() => {
     if (!fullBleedStudio) return;
-    const cls = qrStudio ? "qr-studio-active" : "menu-studio-active";
+    const cls = menuStudio ? "menu-studio-active" : "qr-studio-active";
     document.documentElement.classList.add(cls);
     document.body.classList.add(cls);
-    if (menuStudio) {
-      document.documentElement.classList.add("qr-studio-active");
-      document.body.classList.add("qr-studio-active");
-    }
     return () => {
       document.documentElement.classList.remove("qr-studio-active", "menu-studio-active");
       document.body.classList.remove("qr-studio-active", "menu-studio-active");
     };
-  }, [fullBleedStudio, qrStudio, menuStudio]);
+  }, [fullBleedStudio, menuStudio]);
 
   return (
     <ActiveMerchantProvider initialMerchantId={activeMerchantId}>
-      <div className={`brutal-page ${fullBleedStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
+      <div
+        className={`brutal-page ${fullBleedStudio ? "brutal-page--qr-studio" : "pb-10"} ${
+          menuStudio ? "flex min-h-0 flex-col" : ""
+        }`}
+      >
         <div className="brutal-nav-wrap">
           <DashboardHeader
             nav={nav}
@@ -66,7 +72,7 @@ export function DashboardShell({
           />
         </div>
 
-        <DashboardMain>{children}</DashboardMain>
+        <DashboardMain fullHeight={menuStudio}>{children}</DashboardMain>
       </div>
     </ActiveMerchantProvider>
   );
