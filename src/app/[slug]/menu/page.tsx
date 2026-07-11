@@ -59,7 +59,7 @@ export default async function PublicMerchantMenuPage({
     .order("position", { ascending: true });
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh overflow-x-hidden overflow-y-auto [-webkit-overflow-scrolling:touch]">
       <div className="mx-auto flex max-w-[430px] justify-end px-4 pt-3">
         <LocaleSwitcher variant="journey" />
       </div>

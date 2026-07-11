@@ -67,7 +67,7 @@ export function MenuPublicView({
 
   return (
     <div
-      className="menu-public-view relative mx-auto min-h-full w-full max-w-[430px]"
+      className="menu-public-view relative mx-auto w-full max-w-[430px]"
       style={
         {
           "--menu-accent": menuStyle.accent,

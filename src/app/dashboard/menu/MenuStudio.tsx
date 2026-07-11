@@ -872,10 +872,10 @@ export function MenuStudio({
 
       <div
         ref={previewScrollRef}
-        className="relative flex min-h-0 flex-1 justify-center overflow-y-auto px-3 py-4"
+        className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-4 [-webkit-overflow-scrolling:touch]"
       >
         <div
-          className="w-full max-w-[430px] overflow-hidden rounded-[1.25rem] border border-black/10 shadow-sm"
+          className="mx-auto w-full max-w-[430px] overflow-x-hidden rounded-[1.25rem] border border-black/10 shadow-sm"
           style={{ backgroundColor: background.color || DEFAULT_MENU_BACKGROUND.color }}
         >
           <MenuPublicView
