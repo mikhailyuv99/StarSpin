@@ -43,6 +43,7 @@ import { MenuSelect } from "@/components/menu/MenuSelect";
 import { MenuColorField } from "@/components/menu/MenuColorField";
 import { MenuMediaCropper } from "@/components/menu/MenuMediaCropper";
 import { DockSheet } from "@/components/menu/DockSheet";
+import { ui } from "@/components/ui/styles";
 import { QRFontPicker } from "@/app/dashboard/qr/QRFontPicker";
 import { ensureQRFontLoaded } from "@/lib/qr-fonts";
 import {
@@ -64,6 +65,24 @@ type HistorySnap = {
 
 function cloneSnap(s: HistorySnap): HistorySnap {
   return JSON.parse(JSON.stringify(s)) as HistorySnap;
+}
+
+function UndoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M9 15 3 9l6-6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 9h12a6 6 0 0 1 0 12h-3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RedoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M15 9l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 15H9a6 6 0 0 1 0-12h3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export function MenuStudio({
@@ -725,48 +744,53 @@ export function MenuStudio({
         ref={headerRef}
         className="z-30 flex w-full shrink-0 justify-center border-b border-black/10 bg-[#f3eee6] px-3 py-2"
       >
-        <div className="flex w-full max-w-lg items-center gap-2">
-        <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
-          <button
-            type="button"
-            className={`menu-press rounded-xl px-3 py-1.5 ${mode === "edit" ? "bg-white" : ""}`}
-            onClick={() => setMode("edit")}
-          >
-            {t("menuStudio.edit")}
-          </button>
-          <button
-            type="button"
-            className={`menu-press rounded-xl px-3 py-1.5 ${mode === "preview" ? "bg-white" : ""}`}
-            onClick={() => {
-              setMode("preview");
-              setTab(null);
-              setCatalogOpen(false);
-            }}
-          >
-            {t("menuStudio.preview")}
-          </button>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            type="button"
-            aria-label={t("menuStudio.undo")}
-            title={t("menuStudio.undo")}
-            className="menu-press flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white text-lg"
-            onClick={undo}
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            aria-label={t("menuStudio.redo")}
-            title={t("menuStudio.redo")}
-            className="menu-press flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white text-lg"
-            onClick={redo}
-          >
-            →
-          </button>
+        <div className="flex w-full max-w-lg items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
+              <button
+                type="button"
+                className={`menu-press rounded-xl px-3 py-1.5 ${mode === "edit" ? "bg-white" : ""}`}
+                onClick={() => setMode("edit")}
+              >
+                {t("menuStudio.edit")}
+              </button>
+              <button
+                type="button"
+                className={`menu-press rounded-xl px-3 py-1.5 ${mode === "preview" ? "bg-white" : ""}`}
+                onClick={() => {
+                  setMode("preview");
+                  setTab(null);
+                  setCatalogOpen(false);
+                }}
+              >
+                {t("menuStudio.preview")}
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={historyRef.current.length === 0}
+                aria-label={t("menuStudio.undo")}
+                title={t("menuStudio.undo")}
+                className={`${ui.btnOutline} menu-press flex h-9 w-9 items-center justify-center !p-0 disabled:opacity-40`}
+                onClick={undo}
+              >
+                <UndoIcon />
+              </button>
+              <button
+                type="button"
+                disabled={futureRef.current.length === 0}
+                aria-label={t("menuStudio.redo")}
+                title={t("menuStudio.redo")}
+                className={`${ui.btnOutline} menu-press flex h-9 w-9 items-center justify-center !p-0 disabled:opacity-40`}
+                onClick={redo}
+              >
+                <RedoIcon />
+              </button>
+            </div>
+          </div>
           <span
-            className={`ml-2 inline-flex min-w-[4.5rem] items-center gap-1 text-xs font-semibold ${
+            className={`ml-auto inline-flex min-w-[4.5rem] shrink-0 items-center justify-end gap-1 text-xs font-semibold ${
               saveStatus === "saved"
                 ? "text-emerald-600"
                 : saveStatus === "error"
@@ -787,7 +811,6 @@ export function MenuStudio({
                   ? t("menuStudio.saveError")
                   : null}
           </span>
-        </div>
         </div>
       </header>
 
