@@ -68,7 +68,13 @@ export function DashboardHomeActive({
 
       <nav className="dashboard-home-actions" aria-label={labels.quickNav}>
         {quickLinks.map((link) => (
-          <Link key={link.href} href={link.href} className="dashboard-home-action">
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`dashboard-home-action${
+              link.href === "/dashboard/crm" ? " dashboard-home-action--wide" : ""
+            }`}
+          >
             {link.title}
           </Link>
         ))}

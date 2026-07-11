@@ -23,6 +23,7 @@ import {
   pickLocaleMapSource,
   reindexPositions,
   resolveLocaleMap,
+  sortMenuNodes,
   type LocaleMap,
   type MenuEntryMode,
   type MenuInfo,
@@ -74,7 +75,12 @@ export function MenuStudio({
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [tab, setTab] = useState<StudioTab>("menu");
   const [sheetHeightPx, setSheetHeightPx] = useState(280);
-  const sheetDragRef = useRef<{ startY: number; startH: number; moved: boolean } | null>(null);
+  const sheetDragRef = useRef<{
+    startY: number;
+    startH: number;
+    moved: boolean;
+    pointerId: number;
+  } | null>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,7 +90,6 @@ export function MenuStudio({
     file: File;
     onDone: (file: File) => void;
   } | null>(null);
-  const [mediaBusy, setMediaBusy] = useState(false);
 
   const [nodes, setNodes] = useState<MenuNode[]>(initialNodes);
   const [style, setStyle] = useState<MenuStyle>(
@@ -100,28 +105,37 @@ export function MenuStudio({
   const [enabled, setEnabled] = useState(Boolean(merchant.menu_enabled));
 
   const draftKey = `menu-studio-draft:${merchant.id}`;
+  const draftReadyRef = useRef(false);
 
   // Restore local draft when DB is empty / migration missing (survives refresh).
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(draftKey);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as Partial<HistorySnap> & { savedAt?: number };
-      if (!draft?.nodes?.length) return;
-      if (initialNodes.length > 0) return;
-      setNodes(draft.nodes);
-      if (draft.style) setStyle(draft.style);
-      if (draft.background) setBackground(draft.background);
-      if (draft.info) setInfo(draft.info);
-      if (draft.entryMode) setEntryMode(draft.entryMode);
-      if (typeof draft.enabled === "boolean") setEnabled(draft.enabled);
+      if (raw) {
+        const draft = JSON.parse(raw) as Partial<HistorySnap> & { savedAt?: number };
+        if (draft?.nodes?.length && initialNodes.length === 0) {
+          setNodes(draft.nodes);
+          if (draft.style) setStyle(draft.style);
+          if (draft.background) setBackground(draft.background);
+          if (draft.info) setInfo(draft.info);
+          if (draft.entryMode) setEntryMode(draft.entryMode);
+          if (typeof draft.enabled === "boolean") setEnabled(draft.enabled);
+        }
+      }
     } catch {
       /* ignore corrupt draft */
+    } finally {
+      draftReadyRef.current = true;
+      // Baseline so hydrate/restore doesn't count as a dirty save.
+      queueMicrotask(() => {
+        lastSavedJsonRef.current = menuStateJson();
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftKey]);
 
   useEffect(() => {
+    if (!draftReadyRef.current) return;
     try {
       sessionStorage.setItem(
         draftKey,
@@ -144,6 +158,33 @@ export function MenuStudio({
   const futureRef = useRef<HistorySnap[]>([]);
   const skipHistory = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedJsonRef = useRef<string | null>(null);
+  const sheetHeightRef = useRef(sheetHeightPx);
+  sheetHeightRef.current = sheetHeightPx;
+
+  const translatingRef = useRef(false);
+  const nodesRef = useRef(nodes);
+  const infoRef = useRef(info);
+  const styleRef = useRef(style);
+  const backgroundRef = useRef(background);
+  const entryModeRef = useRef(entryMode);
+  const enabledRef = useRef(enabled);
+  nodesRef.current = nodes;
+  infoRef.current = info;
+  styleRef.current = style;
+  backgroundRef.current = background;
+  entryModeRef.current = entryMode;
+  enabledRef.current = enabled;
+
+  const menuStateJson = () =>
+    JSON.stringify({
+      nodes: nodesRef.current,
+      style: styleRef.current,
+      background: backgroundRef.current,
+      info: infoRef.current,
+      entryMode: entryModeRef.current,
+      enabled: enabledRef.current,
+    });
 
   const snap = useCallback(
     (): HistorySnap => ({ nodes, style, background, info, entryMode, enabled }),
@@ -188,12 +229,6 @@ export function MenuStudio({
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
   };
-
-  const translatingRef = useRef(false);
-  const nodesRef = useRef(nodes);
-  const infoRef = useRef(info);
-  nodesRef.current = nodes;
-  infoRef.current = info;
 
   /** Fill missing dish/info copy for the active UI locale when the language toggle changes. */
   useEffect(() => {
@@ -298,16 +333,30 @@ export function MenuStudio({
   }, [locale]);
 
   const persist = useCallback(async () => {
+    const pending = menuStateJson();
+    if (lastSavedJsonRef.current !== null && pending === lastSavedJsonRef.current) {
+      return;
+    }
+
     setSaveStatus("saving");
-    const ordered = reindexPositions(nodes);
+    const styleNow = styleRef.current;
+    const backgroundNow = backgroundRef.current;
+    const infoNow = infoRef.current;
+    const entryModeNow = entryModeRef.current;
+    const enabledNow = enabledRef.current;
+
     const { error: mErr } = await supabase
       .from("merchants")
       .update({
-        menu_enabled: enabled,
-        menu_entry_mode: enabled ? (entryMode === "off" ? "hub" : entryMode) : "off",
-        menu_style: style,
-        menu_background: background,
-        menu_info: info,
+        menu_enabled: enabledNow,
+        menu_entry_mode: enabledNow
+          ? entryModeNow === "off"
+            ? "hub"
+            : entryModeNow
+          : "off",
+        menu_style: styleNow,
+        menu_background: backgroundNow,
+        menu_info: infoNow,
         menu_updated_at: new Date().toISOString(),
       })
       .eq("id", merchant.id);
@@ -318,19 +367,18 @@ export function MenuStudio({
       return;
     }
 
-    // Replace nodes: delete missing, upsert current
     const { data: existing, error: listErr } = await supabase
       .from("menu_nodes")
       .select("id")
       .eq("merchant_id", merchant.id);
 
     if (listErr) {
-      // Table missing (migration 023 not applied) — keep local edits, surface error.
       console.warn("menu_nodes save skipped:", listErr.message);
       setSaveStatus("error");
       return;
     }
 
+    const ordered = reindexPositions(nodesRef.current);
     const existingIds = new Set((existing ?? []).map((r) => r.id as string));
     const currentIds = new Set(ordered.map((n) => n.id));
     const toDelete = [...existingIds].filter((id) => !currentIds.has(id));
@@ -357,19 +405,27 @@ export function MenuStudio({
       }
     }
 
-    setNodes(ordered);
+    lastSavedJsonRef.current = menuStateJson();
     setSaveStatus("saved");
-  }, [background, enabled, entryMode, info, merchant.id, nodes, style, supabase]);
+  }, [merchant.id, supabase]);
 
   useEffect(() => {
+    const pending = menuStateJson();
+    if (lastSavedJsonRef.current === null) {
+      lastSavedJsonRef.current = pending;
+      return;
+    }
+    if (pending === lastSavedJsonRef.current) return;
+
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       void persist();
-    }, 900);
+    }, 1000);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [persist]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, style, background, info, entryMode, enabled, persist]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -394,26 +450,28 @@ export function MenuStudio({
     pushHistory();
     const id = newClientId();
     const sectionId = type === "item" ? (opts?.sectionId ?? null) : null;
-    const node: MenuNode = {
-      id,
-      merchant_id: merchant.id,
-      position: nodes.length,
-      type,
-      visible: true,
-      section_id: sectionId,
-      payload: defaultPayloadForType(type, {
-        withPhoto: opts?.withPhoto,
-        locale,
-        labels: {
-          section: t("menuStudio.defaultSection"),
-          item: t("menuStudio.defaultItem"),
-          heading: t("menuStudio.defaultHeading"),
-          text: t("menuStudio.defaultText"),
-          scan_page: t("menuStudio.catalogScanPage"),
-        },
-      }),
-    };
-    setNodes((prev) => [...prev, node]);
+    setNodes((prev) => {
+      const node: MenuNode = {
+        id,
+        merchant_id: merchant.id,
+        position: prev.length,
+        type,
+        visible: true,
+        section_id: sectionId,
+        payload: defaultPayloadForType(type, {
+          withPhoto: opts?.withPhoto,
+          locale,
+          labels: {
+            section: t("menuStudio.defaultSection"),
+            item: t("menuStudio.defaultItem"),
+            heading: t("menuStudio.defaultHeading"),
+            text: t("menuStudio.defaultText"),
+            scan_page: t("menuStudio.catalogScanPage"),
+          },
+        }),
+      };
+      return reindexPositions([...prev, node]);
+    });
     setExpandedId(id);
     setCatalogOpen(false);
     setTab("menu");
@@ -449,13 +507,29 @@ export function MenuStudio({
   const moveNode = (id: string, dir: -1 | 1) => {
     pushHistory();
     setNodes((prev) => {
-      const sorted = reindexPositions(prev);
-      const idx = sorted.findIndex((n) => n.id === id);
+      const node = prev.find((n) => n.id === id);
+      if (!node) return prev;
+      const inSection = node.type === "item" && Boolean(node.section_id);
+      const sorted = sortMenuNodes(prev);
+      const siblings = sorted.filter((n) =>
+        inSection
+          ? n.type === "item" && n.section_id === node.section_id
+          : !(n.type === "item" && n.section_id),
+      );
+      const idx = siblings.findIndex((n) => n.id === id);
       const j = idx + dir;
-      if (idx < 0 || j < 0 || j >= sorted.length) return prev;
-      const copy = [...sorted];
-      [copy[idx], copy[j]] = [copy[j], copy[idx]];
-      return reindexPositions(copy);
+      if (idx < 0 || j < 0 || j >= siblings.length) return prev;
+
+      const reordered = [...siblings];
+      [reordered[idx], reordered[j]] = [reordered[j], reordered[idx]];
+      const queue = [...reordered];
+      const next = sorted.map((n) => {
+        const isSibling = inSection
+          ? n.type === "item" && n.section_id === node.section_id
+          : !(n.type === "item" && n.section_id);
+        return isSibling ? queue.shift()! : n;
+      });
+      return reindexPositions(next);
     });
   };
 
@@ -464,27 +538,22 @@ export function MenuStudio({
     kind: "image" | "video" = "image",
     quality: "default" | "high" = "default",
   ) => {
-    setMediaBusy(true);
-    try {
-      const body = new FormData();
-      const prepared =
-        kind === "image"
-          ? await compressImageForUpload(
-              file,
-              quality === "high" ? MENU_BG_IMAGE_COMPRESS : undefined,
-            ).catch(() => file)
-          : file;
-      body.append("file", prepared);
-      body.append("kind", kind);
-      const res = await fetch("/api/menu/upload", { method: "POST", body });
-      const data = (await res.json()) as { url?: string; error?: string; detail?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.detail || data.error || "upload");
-      }
-      return data.url;
-    } finally {
-      setMediaBusy(false);
+    const body = new FormData();
+    const prepared =
+      kind === "image"
+        ? await compressImageForUpload(
+            file,
+            quality === "high" ? MENU_BG_IMAGE_COMPRESS : undefined,
+          ).catch(() => file)
+        : file;
+    body.append("file", prepared);
+    body.append("kind", kind);
+    const res = await fetch("/api/menu/upload", { method: "POST", body });
+    const data = (await res.json()) as { url?: string; error?: string; detail?: string };
+    if (!res.ok || !data.url) {
+      throw new Error(data.detail || data.error || "upload");
     }
+    return data.url;
   };
 
   const pickImageWithCrop = (onDone: (file: File) => void) => {
@@ -521,39 +590,59 @@ export function MenuStudio({
   const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
 
   const onSheetPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    e.currentTarget.style.cursor = "grabbing";
-    sheetDragRef.current = { startY: e.clientY, startH: sheetHeightPx, moved: false };
-  };
-
-  const onSheetPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = sheetDragRef.current;
-    if (!drag) return;
-    const dy = drag.startY - e.clientY;
-    if (Math.abs(dy) > 4) drag.moved = true;
-    const next = Math.max(sheetMin, Math.min(sheetMax(), drag.startH + dy));
-    setSheetHeightPx(next);
-  };
-
-  const onSheetPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = sheetDragRef.current;
-    sheetDragRef.current = null;
-    e.currentTarget.style.cursor = "grab";
+    // Don't preventDefault — that breaks touch drag on mobile.
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    const el = e.currentTarget;
     try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+      el.setPointerCapture(e.pointerId);
     } catch {
-      /* already released */
+      /* some mobile browsers reject capture */
     }
-    if (!drag) return;
-    if (!drag.moved) {
-      setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
-      return;
-    }
-    setSheetHeightPx((h) => {
-      const mid = (sheetMin + sheetMax()) / 2;
-      return h >= mid ? sheetMax() : 260;
-    });
+    el.style.cursor = "grabbing";
+    sheetDragRef.current = {
+      startY: e.clientY,
+      startH: sheetHeightRef.current,
+      moved: false,
+      pointerId: e.pointerId,
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      const drag = sheetDragRef.current;
+      if (!drag || drag.pointerId !== ev.pointerId) return;
+      const dy = drag.startY - ev.clientY;
+      if (Math.abs(dy) > 6) drag.moved = true;
+      const next = Math.max(sheetMin, Math.min(sheetMax(), drag.startH + dy));
+      sheetHeightRef.current = next;
+      setSheetHeightPx(next);
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      if (sheetDragRef.current?.pointerId !== ev.pointerId) return;
+      const drag = sheetDragRef.current;
+      sheetDragRef.current = null;
+      el.style.cursor = "grab";
+      try {
+        el.releasePointerCapture(ev.pointerId);
+      } catch {
+        /* already released */
+      }
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      if (!drag) return;
+      if (!drag.moved) {
+        setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
+        return;
+      }
+      setSheetHeightPx((h) => {
+        const mid = (sheetMin + sheetMax()) / 2;
+        return h >= mid ? sheetMax() : 260;
+      });
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   };
 
   useEffect(() => {
@@ -602,14 +691,27 @@ export function MenuStudio({
           >
             →
           </button>
-          <span className="ml-2 min-w-[4.5rem] text-xs text-zinc-500">
+          <span
+            className={`ml-2 inline-flex min-w-[4.5rem] items-center gap-1 text-xs font-semibold ${
+              saveStatus === "saved"
+                ? "text-emerald-600"
+                : saveStatus === "error"
+                  ? "text-red-600"
+                  : "text-zinc-500"
+            }`}
+          >
             {saveStatus === "saving"
               ? t("menuStudio.saving")
               : saveStatus === "saved"
-                ? t("menuStudio.saved")
+                ? (
+                  <>
+                    <span aria-hidden>✓</span>
+                    {t("menuStudio.saved")}
+                  </>
+                )
                 : saveStatus === "error"
                   ? t("menuStudio.saveError")
-                  : ""}
+                  : null}
           </span>
         </div>
       </header>
@@ -644,19 +746,16 @@ export function MenuStudio({
             aria-valuemax={560}
             aria-label={t("menuStudio.resizeSheet")}
             title={t("menuStudio.resizeSheet")}
-            className="relative z-[60] flex h-12 w-full shrink-0 touch-none select-none items-center justify-center border-b border-black/5 bg-white hover:bg-black/[0.03] active:bg-black/[0.06]"
-            style={{ cursor: "grab" }}
+            className="relative z-10 flex h-14 w-full shrink-0 touch-none select-none items-center justify-center border-b border-black/5 bg-white hover:bg-black/[0.03] active:bg-black/[0.06]"
+            style={{ cursor: "grab", touchAction: "none" }}
             onPointerDown={onSheetPointerDown}
-            onPointerMove={onSheetPointerMove}
-            onPointerUp={onSheetPointerUp}
-            onPointerCancel={onSheetPointerUp}
           >
             <span
               aria-hidden
               className="pointer-events-none h-1.5 w-14 rounded-full bg-zinc-400"
             />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
             {tab === "menu" ? (
               <MenuSheet
                 roots={roots}
@@ -744,8 +843,8 @@ export function MenuStudio({
       ) : null}
 
       {catalogOpen ? (
-        <div className="absolute inset-x-0 bottom-0 z-[60] mx-auto max-h-[85vh] w-full max-w-lg overflow-hidden rounded-t-2xl border border-black/10 bg-white shadow-lg">
-          <div className="flex items-center gap-2 border-b border-black/5 px-4 py-3">
+        <div className="absolute inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-black/10 bg-white shadow-lg">
+          <div className="flex shrink-0 items-center gap-2 border-b border-black/5 px-4 py-3">
             <input
               className="flex-1 rounded-xl border border-black/10 px-3 py-2 text-sm"
               placeholder={t("menuStudio.searchCatalog")}
@@ -757,7 +856,7 @@ export function MenuStudio({
               {t("menuStudio.close")}
             </button>
           </div>
-          <div className="max-h-[70vh] space-y-4 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {(["structure", "dishes", "media"] as const).map((group) => {
               const items = filteredCatalog.filter((c) => c.group === group);
               if (!items.length) return null;
@@ -904,18 +1003,6 @@ export function MenuStudio({
         </div>
       ) : null}
 
-      {mediaBusy ? (
-        <div
-          className="absolute inset-0 z-[85] flex flex-col items-center justify-center gap-3 bg-[#f3eee6]/70 backdrop-blur-[2px]"
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-black/15 border-t-black" />
-          <p className="text-sm font-semibold text-zinc-800">{t("menuStudio.uploading")}</p>
-        </div>
-      ) : null}
-
       {cropJob ? (
         <MenuMediaCropper
           file={cropJob.file}
@@ -988,12 +1075,16 @@ function MenuSheet(props: {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 pb-1">
         <h2 className="text-sm font-bold uppercase tracking-wide">{t("menuStudio.tabMenu")}</h2>
         <button
           type="button"
-          className="rounded-2xl bg-black px-3 py-2 text-sm font-semibold text-white"
-          onClick={onAdd}
+          className="shrink-0 rounded-2xl bg-black px-4 py-2.5 text-sm font-semibold leading-none text-white"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAdd();
+          }}
         >
           {t("menuStudio.add")}
         </button>

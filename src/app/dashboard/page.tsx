@@ -114,7 +114,11 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {quickLinks.map((item) => (
-            <Link key={item.href} href={item.href} className={ui.cardGrid}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`${ui.cardGrid}${item.href === "/dashboard/crm" ? " sm:col-span-2" : ""}`}
+            >
               <h2 className="text-[15px] font-extrabold text-ink">{item.title}</h2>
               <p className="mt-1 text-sm font-medium text-muted">{item.desc}</p>
             </Link>
