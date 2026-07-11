@@ -772,126 +772,79 @@ export function MenuStudio({
     sheetPanelRef.current.style.height = `${sheetHeightPx}px`;
   }, [sheetHeightPx, tab, mode]);
 
-
-  const beginSheetDrag = (clientY: number) => {
-    draggingRef.current = true;
-    const preview = previewScrollRef.current;
-    const sheetScroll = sheetScrollRef.current;
-    const prevPreview = preview?.style.overflow ?? "";
-    const prevSheet = sheetScroll?.style.overflow ?? "";
-    if (preview) preview.style.overflow = "hidden";
-    if (sheetScroll) sheetScroll.style.overflow = "hidden";
-    return {
-      startY: clientY,
-      startH: sheetHeightRef.current,
-      moved: false,
-      prevPreview,
-      prevSheet,
-    };
-  };
-
-  const moveSheetDrag = (
-    clientY: number,
-    state: { startY: number; startH: number; moved: boolean },
-  ) => {
-    const dy = state.startY - clientY;
-    if (Math.abs(dy) > 3) state.moved = true;
-    const next = clampSheetHeightRef.current(state.startH + dy);
-    sheetHeightRef.current = next;
-    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-  };
-
-  const endSheetDrag = (state: {
-    startY: number;
-    startH: number;
-    moved: boolean;
-    prevPreview: string;
-    prevSheet: string;
-  }) => {
+  // Clear any leftover inline overflow locks (e.g. aborted mobile drag).
+  useEffect(() => {
+    previewScrollRef.current?.style.removeProperty("overflow");
+    sheetScrollRef.current?.style.removeProperty("overflow");
+    studioRef.current?.removeAttribute("data-dragging");
     draggingRef.current = false;
-    const preview = previewScrollRef.current;
-    const sheetScroll = sheetScrollRef.current;
-    if (preview) preview.style.overflow = state.prevPreview || "";
-    if (sheetScroll) sheetScroll.style.overflow = state.prevSheet || "";
-    // Restore scroll after drag — empty string clears inline override.
-    if (preview && !state.prevPreview) preview.style.removeProperty("overflow");
-    if (sheetScroll && !state.prevSheet) sheetScroll.style.removeProperty("overflow");
-    snapSheetHeightRef.current(sheetHeightRef.current, state.startH, state.moved);
-  };
+  }, [tab, mode]);
 
-  /** Mouse / pen / modern iOS pointer path — listeners on window so nothing steals the gesture. */
+  /** Same drag path for mouse and touch — pointer events + window listeners (PC behavior on mobile). */
   const onSheetHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "touch") return; // native touch path below is more reliable on iOS
-    if (e.button !== 0) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
+
+    const handle = e.currentTarget;
     const pointerId = e.pointerId;
-    const state = beginSheetDrag(e.clientY);
+    try {
+      handle.setPointerCapture(pointerId);
+    } catch {
+      /* ignore */
+    }
+
+    draggingRef.current = true;
+    studioRef.current?.setAttribute("data-dragging", "");
+    const state = {
+      startY: e.clientY,
+      startH: sheetHeightRef.current,
+      moved: false,
+    };
+    handle.style.cursor = "grabbing";
 
     const onMove = (ev: PointerEvent) => {
       if (ev.pointerId !== pointerId) return;
-      moveSheetDrag(ev.clientY, state);
+      const dy = state.startY - ev.clientY;
+      if (Math.abs(dy) > 3) state.moved = true;
+      const next = clampSheetHeightRef.current(state.startH + dy);
+      sheetHeightRef.current = next;
+      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
     };
+
     const onUp = (ev: PointerEvent) => {
       if (ev.pointerId !== pointerId) return;
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
-      endSheetDrag(state);
+      try {
+        handle.releasePointerCapture(pointerId);
+      } catch {
+        /* ignore */
+      }
+      handle.style.cursor = "grab";
+      draggingRef.current = false;
+      studioRef.current?.removeAttribute("data-dragging");
+      // Ensure scroll areas are never left locked
+      previewScrollRef.current?.style.removeProperty("overflow");
+      sheetScrollRef.current?.style.removeProperty("overflow");
+      snapSheetHeightRef.current(sheetHeightRef.current, state.startH, state.moved);
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
   };
 
-  /**
-   * iOS: bind native non-passive touch on the grey handle.
-   * React's onTouchStart can be passive and unreliable with nested scrollers.
-   */
+  // While dragging, block page/sheet scroll on iOS (non-passive).
   useEffect(() => {
     if (mode !== "edit" || !tab) return;
-    const handle = document.querySelector(
-      "[data-menu-sheet-handle]",
-    ) as HTMLElement | null;
-    if (!handle) return;
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      const touch = e.touches[0]!;
-      const touchId = touch.identifier;
-      const state = beginSheetDrag(touch.clientY);
-
-      const onMove = (ev: TouchEvent) => {
-        let t: Touch | undefined;
-        for (let i = 0; i < ev.touches.length; i++) {
-          if (ev.touches[i]!.identifier === touchId) {
-            t = ev.touches[i];
-            break;
-          }
-        }
-        if (!t) return;
-        ev.preventDefault();
-        moveSheetDrag(t.clientY, state);
-      };
-      const onEnd = (ev: TouchEvent) => {
-        let ended = false;
-        for (let i = 0; i < ev.changedTouches.length; i++) {
-          if (ev.changedTouches[i]!.identifier === touchId) ended = true;
-        }
-        if (!ended) return;
-        window.removeEventListener("touchmove", onMove, true);
-        window.removeEventListener("touchend", onEnd, true);
-        window.removeEventListener("touchcancel", onEnd, true);
-        endSheetDrag(state);
-      };
-
-      window.addEventListener("touchmove", onMove, { passive: false, capture: true });
-      window.addEventListener("touchend", onEnd, { capture: true });
-      window.addEventListener("touchcancel", onEnd, { capture: true });
+    const blockScroll = (e: TouchEvent) => {
+      if (!draggingRef.current) return;
+      e.preventDefault();
     };
-
-    handle.addEventListener("touchstart", onTouchStart, { passive: true });
-    return () => handle.removeEventListener("touchstart", onTouchStart);
+    document.addEventListener("touchmove", blockScroll, { passive: false, capture: true });
+    return () => document.removeEventListener("touchmove", blockScroll, true);
   }, [mode, tab]);
 
   const prevNodeCountRef = useRef(nodes.length);
@@ -919,8 +872,9 @@ export function MenuStudio({
     >
       <header
         ref={headerRef}
-        className="z-30 flex shrink-0 items-center gap-2 border-b border-black/10 bg-[#f3eee6] px-3 py-2"
+        className="z-30 flex w-full shrink-0 justify-center border-b border-black/10 bg-[#f3eee6] px-3 py-2"
       >
+        <div className="flex w-full max-w-lg items-center gap-2">
         <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
           <button
             type="button"
@@ -983,11 +937,12 @@ export function MenuStudio({
                   : null}
           </span>
         </div>
+        </div>
       </header>
 
       <div
         ref={previewScrollRef}
-        className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
+        className="menu-studio-preview relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
       >
         <div
           className="mx-auto w-full max-w-[430px] overflow-x-hidden rounded-[1.25rem] border border-black/10 shadow-sm"
@@ -1010,6 +965,9 @@ export function MenuStudio({
         <div
           ref={sheetPanelRef}
           className="relative z-[55] mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
+          style={{
+            height: draggingRef.current ? sheetHeightRef.current : sheetHeightPx,
+          }}
         >
           <div
             data-menu-sheet-handle
@@ -1019,7 +977,7 @@ export function MenuStudio({
             aria-valuemax={560}
             aria-label={t("menuStudio.resizeSheet")}
             title={t("menuStudio.resizeSheet")}
-            className="relative flex h-11 w-full shrink-0 cursor-grab select-none items-center justify-center border-b border-black/5 bg-white active:cursor-grabbing"
+            className="relative flex h-11 w-full shrink-0 cursor-grab touch-none select-none items-center justify-center border-b border-black/5 bg-white active:cursor-grabbing"
             style={{
               touchAction: "none",
               WebkitUserSelect: "none",
@@ -1034,8 +992,7 @@ export function MenuStudio({
           </div>
           <div
             ref={sheetScrollRef}
-            className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-3 [-webkit-overflow-scrolling:touch]"
-            style={{ paddingBottom: "1.25rem" }}
+            className="menu-studio-sheet-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-3 pb-5 [-webkit-overflow-scrolling:touch]"
           >
             {tab === "menu" ? (
               <MenuSheet

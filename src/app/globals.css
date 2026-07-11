@@ -355,6 +355,23 @@ body.menu-studio-active .menu-studio-tabbar {
   padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* During handle drag, freeze nested scrollers without leaving inline overflow:hidden behind */
+.menu-studio[data-dragging] .menu-studio-preview,
+.menu-studio[data-dragging] .menu-studio-sheet-scroll {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+@media (min-width: 1024px) {
+  body.menu-studio-active .menu-studio {
+    left: 50% !important;
+    right: auto !important;
+    width: min(100%, 64rem) !important;
+    transform: translateX(-50%);
+  }
+}
+
 @media (max-width: 1023px) {
   html.qr-studio-active,
   body.qr-studio-active,
