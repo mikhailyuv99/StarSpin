@@ -18,6 +18,22 @@ export function publicMerchantPath(slug: string): string {
   return `/${slug}`;
 }
 
+export function publicMerchantPlayPath(slug: string): string {
+  return `/${slug}/play`;
+}
+
+export function publicMerchantPlayUrl(slug: string): string {
+  return `${getAppUrl()}${publicMerchantPlayPath(slug)}`;
+}
+
+export function publicMerchantMenuPath(slug: string): string {
+  return `/${slug}/menu`;
+}
+
+export function publicMerchantMenuUrl(slug: string): string {
+  return `${getAppUrl()}${publicMerchantMenuPath(slug)}`;
+}
+
 /** Slugs that collide with app routes — blocked at signup. */
 export const RESERVED_SLUGS = new Set([
   "login",

@@ -48,6 +48,12 @@ export interface Merchant {
   spin_button_label?: string | null;
   journey_theme?: Record<string, unknown> | null;
   prize_odds_mode?: import("@/lib/prize-rarity").PrizeOddsMode;
+  menu_enabled?: boolean;
+  menu_entry_mode?: import("@/lib/menu").MenuEntryMode;
+  menu_style?: import("@/lib/menu").MenuStyle | Record<string, unknown> | null;
+  menu_background?: import("@/lib/menu").MenuBackground | Record<string, unknown> | null;
+  menu_info?: import("@/lib/menu").MenuInfo | Record<string, unknown> | null;
+  menu_updated_at?: string | null;
   created_at: string;
 }
 

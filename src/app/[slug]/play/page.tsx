@@ -6,15 +6,13 @@ import { resolveAndPersistMerchantPlaceId } from "@/lib/google-place-id.server";
 import { activeWheelPrizes } from "@/lib/prizes";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
-import { MerchantInactiveNotice } from "./MerchantInactiveNotice";
-import { MerchantHub } from "@/components/menu/MerchantHub";
+import { MerchantInactiveNotice } from "../MerchantInactiveNotice";
 import type { Merchant, Prize } from "@/lib/types";
 import { journeyFontHref, parseJourneyTheme } from "@/lib/journey-theme";
-import { parseMenuEntryMode } from "@/lib/menu";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublicMerchantPage({
+export default async function PublicMerchantPlayPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -22,7 +20,6 @@ export default async function PublicMerchantPage({
   noStore();
   const { slug: rawSlug } = await params;
   const slug = rawSlug.trim().toLowerCase();
-
   if (RESERVED_SLUGS.has(slug)) notFound();
 
   let supabase;
@@ -38,7 +35,6 @@ export default async function PublicMerchantPage({
     .eq("slug", slug)
     .maybeSingle();
 
-  // Truly unknown slug → 404. Known business without an active plan → branded notice.
   if (error || !merchantRow) notFound();
   if (!isMerchantLive(merchantRow.subscription_status)) {
     return <MerchantInactiveNotice businessName={merchantRow.name} />;
@@ -55,19 +51,6 @@ export default async function PublicMerchantPage({
     ...merchantRow,
     google_place_id: resolution.placeId ?? null,
   } as Merchant;
-
-  const entryMode = parseMenuEntryMode(merchant.menu_entry_mode);
-  if (merchant.menu_enabled && entryMode === "hub") {
-    return (
-      <MerchantHub
-        slug={merchant.slug}
-        name={merchant.name}
-        logoUrl={merchant.logo_url}
-        primaryColor={merchant.primary_color}
-        secondaryColor={merchant.secondary_color}
-      />
-    );
-  }
 
   const { data: prizes } = await supabase
     .from("prizes")

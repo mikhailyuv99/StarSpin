@@ -38,20 +38,27 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const qrStudio = pathname === "/dashboard/qr";
+  const menuStudio = pathname === "/dashboard/menu";
+  const fullBleedStudio = qrStudio || menuStudio;
 
   useEffect(() => {
-    if (!qrStudio) return;
-    document.documentElement.classList.add("qr-studio-active");
-    document.body.classList.add("qr-studio-active");
+    if (!fullBleedStudio) return;
+    const cls = qrStudio ? "qr-studio-active" : "menu-studio-active";
+    document.documentElement.classList.add(cls);
+    document.body.classList.add(cls);
+    if (menuStudio) {
+      document.documentElement.classList.add("qr-studio-active");
+      document.body.classList.add("qr-studio-active");
+    }
     return () => {
-      document.documentElement.classList.remove("qr-studio-active");
-      document.body.classList.remove("qr-studio-active");
+      document.documentElement.classList.remove("qr-studio-active", "menu-studio-active");
+      document.body.classList.remove("qr-studio-active", "menu-studio-active");
     };
-  }, [qrStudio]);
+  }, [fullBleedStudio, qrStudio, menuStudio]);
 
   return (
     <ActiveMerchantProvider initialMerchantId={activeMerchantId}>
-      <div className={`brutal-page ${qrStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
+      <div className={`brutal-page ${fullBleedStudio ? "brutal-page--qr-studio" : "pb-10"}`}>
         <div className="brutal-nav-wrap">
           <DashboardHeader
             nav={nav}

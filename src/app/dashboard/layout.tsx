@@ -18,6 +18,7 @@ export default async function DashboardLayout({
     { href: "/dashboard", label: t("dashboard.navHome") },
     { href: "/dashboard/establishments", label: t("dashboard.navEstablishments") },
     { href: "/dashboard/flow", label: t("dashboard.navSetup") },
+    { href: "/dashboard/menu", label: t("dashboard.navMenu") },
     { href: "/dashboard/prizes", label: t("dashboard.navPrizes") },
     { href: "/dashboard/qr", label: t("dashboard.navQr") },
     { href: "/dashboard/crm", label: t("dashboard.navCustomers") },

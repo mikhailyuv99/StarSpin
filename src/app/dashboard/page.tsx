@@ -31,9 +31,10 @@ export default async function DashboardPage() {
 
   const quickLinks = [
     { href: "/dashboard/flow", title: t("dashboard.flowCard"), desc: t("dashboard.flowCardDesc") },
+    { href: "/dashboard/menu", title: t("dashboard.menuCard"), desc: t("dashboard.menuCardDesc") },
     { href: "/dashboard/prizes", title: t("dashboard.prizesCard"), desc: t("dashboard.prizesDesc") },
     { href: "/dashboard/qr", title: t("dashboard.qrCard"), desc: t("dashboard.qrDesc") },
-    { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmDesc") },
+    { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmCardDesc") },
   ];
 
   const needsSubscribe = needsSubscription(account?.subscription_status ?? "cancelled");

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { publicMerchantPath, publicMerchantUrl } from "@/lib/app-url";
+import { publicMerchantMenuPath, publicMerchantPath, publicMerchantPlayPath, publicMerchantMenuUrl, publicMerchantPlayUrl, publicMerchantUrl } from "@/lib/app-url";
+import { parseMenuEntryMode } from "@/lib/menu";
 import { createClient } from "@/lib/supabase/client";
 import {
  BUSINESS_LOGO_ID,
@@ -91,6 +92,7 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
  const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
  const [error, setError] = useState<string | null>(null);
+ const [qrTarget, setQrTarget] = useState<"primary" | "menu" | "play">("primary");
  const skipAutosaveRef = useRef(true);
  const saveSeqRef = useRef(0);
  const savedStatusTimerRef = useRef<number | null>(null);
@@ -204,10 +206,24 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
  const sideDesign =
  template !== "qr" ? getSideDesign(design, template, visitCardSide) : null;
 
+ const menuEnabled = Boolean(merchant.menu_enabled);
+ const entryMode = parseMenuEntryMode(merchant.menu_entry_mode);
+
+ const displayPath =
+  qrTarget === "menu"
+    ? publicMerchantMenuPath(merchant.slug)
+    : qrTarget === "play"
+      ? publicMerchantPlayPath(merchant.slug)
+      : publicMerchantPath(merchant.slug);
+
  const displayUrl =
  typeof window !== "undefined"
- ? `${window.location.origin}${publicMerchantPath(merchant.slug)}`
- : publicMerchantUrl(merchant.slug);
+ ? `${window.location.origin}${displayPath}`
+ : qrTarget === "menu"
+   ? publicMerchantMenuUrl(merchant.slug)
+   : qrTarget === "play"
+     ? publicMerchantPlayUrl(merchant.slug)
+     : publicMerchantUrl(merchant.slug);
 
  const selectedPlacedImage =
  selectedElement?.kind === "image" && sideDesign
@@ -620,6 +636,32 @@ export function QRDesignStudio({ merchant }: { merchant: Merchant }) {
  </button>
  ))}
  </div>
+
+ {menuEnabled ? (
+ <div className="mt-2 flex flex-wrap gap-2">
+ {(
+ [
+ ["primary", entryMode === "hub" ? "dashboard.qrTargetHub" : "dashboard.qrTargetJourney"],
+ ["play", "dashboard.qrTargetPlay"],
+ ["menu", "dashboard.qrTargetMenu"],
+ ] as const
+ ).map(([id, label]) => (
+ <button
+ key={id}
+ type="button"
+ onClick={() => setQrTarget(id)}
+ className={`rounded-[14px] border-2 border-black px-3 py-1.5 text-xs font-extrabold ${
+ qrTarget === id ? "bg-[var(--c-yellow)]" : "bg-white"
+ }`}
+ >
+ {t(label)}
+ </button>
+ ))}
+ {entryMode === "separate" ? (
+ <p className="w-full text-xs text-zinc-600">{t("dashboard.qrTargetSeparateHint")}</p>
+ ) : null}
+ </div>
+ ) : null}
 
  <div
  className="qr-studio-layout relative flex flex-col gap-4 lg:block lg:gap-0"

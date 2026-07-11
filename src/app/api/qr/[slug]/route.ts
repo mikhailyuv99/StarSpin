@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
-import { publicMerchantUrl } from "@/lib/app-url";
+import {
+  publicMerchantMenuUrl,
+  publicMerchantPlayUrl,
+  publicMerchantUrl,
+} from "@/lib/app-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function normalizeHex(value: string | null, fallback: string): string {
@@ -16,8 +20,14 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const url = publicMerchantUrl(slug);
   const { searchParams } = new URL(request.url);
+  const target = searchParams.get("target");
+  const url =
+    target === "menu"
+      ? publicMerchantMenuUrl(slug)
+      : target === "play"
+        ? publicMerchantPlayUrl(slug)
+        : publicMerchantUrl(slug);
 
   let fg = normalizeHex(searchParams.get("fg"), "#0a0a0a");
   let bg = normalizeHex(searchParams.get("bg"), "#ffffff");
@@ -44,11 +54,14 @@ export async function GET(
     color: { dark: fg, light: bg },
   });
 
+  const filename =
+    target === "menu" ? `qr-${slug}-menu.png` : target === "play" ? `qr-${slug}-play.png` : `qr-${slug}.png`;
+
   return new NextResponse(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=60",
-      "Content-Disposition": `attachment; filename="qr-${slug}.png"`,
+      "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
 }
