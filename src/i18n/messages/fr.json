@@ -972,6 +972,8 @@
     "saveError": "Échec de l’enregistrement",
     "translating": "Traduction du menu…",
     "resizeSheet": "Redimensionner",
+    "sheetCollapse": "Réduire ou fermer",
+    "sheetExpand": "Agrandir le panneau",
     "tabMenu": "Carte",
     "tabInfo": "Infos",
     "tabStyle": "Style",

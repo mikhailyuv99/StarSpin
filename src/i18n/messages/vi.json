@@ -926,6 +926,8 @@
     "saveError": "Save failed",
     "translating": "Translating menu…",
     "resizeSheet": "Resize panel",
+    "sheetCollapse": "Shrink or close panel",
+    "sheetExpand": "Expand panel",
     "tabMenu": "Menu",
     "tabInfo": "Info",
     "tabStyle": "Style",

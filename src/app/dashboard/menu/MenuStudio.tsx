@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n, useTranslations } from "@/i18n/client";
 import { compressImageForUpload, MENU_BG_IMAGE_COMPRESS } from "@/lib/compress-image";
@@ -648,44 +648,64 @@ export function MenuStudio({
   const sheetMin = 200;
   const sheetCollapseAt = 130;
   const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
-  const sheetHandleRef = useRef<HTMLDivElement>(null);
+  const sheetHandleRef = useRef<HTMLDivElement | null>(null);
+  const sheetHandleCleanupRef = useRef<(() => void) | null>(null);
 
-  // iPhone Safari: setPointerCapture is unreliable — touchmove only keeps firing on the
-  // original touch target / document. Bind native non-passive touch listeners here.
-  useLayoutEffect(() => {
-    if (mode !== "edit" || !tab) return;
-    const el = sheetHandleRef.current;
+  const snapSheetHeight = useCallback((h: number, startH: number, moved: boolean) => {
+    if (!moved) {
+      const next = h > 340 ? 260 : sheetMax();
+      sheetHeightRef.current = next;
+      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
+      setSheetHeightPx(next);
+      return;
+    }
+    const pulledDown = startH - h;
+    if (h <= sheetCollapseAt || pulledDown >= 80) {
+      setTab(null);
+      return;
+    }
+    const snapped = h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260;
+    sheetHeightRef.current = snapped;
+    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${snapped}px`;
+    setSheetHeightPx(snapped);
+  }, []);
+
+  /**
+   * iOS Safari only respects preventDefault on touchmove if that listener was
+   * registered with {passive:false} BEFORE the gesture starts. Attaching it
+   * inside touchstart is too late — the browser already owns the scroll.
+   */
+  const setSheetHandleNode = useCallback((el: HTMLDivElement | null) => {
+    sheetHandleCleanupRef.current?.();
+    sheetHandleCleanupRef.current = null;
+    sheetHandleRef.current = el;
     if (!el) return;
 
     type Drag = { startY: number; startH: number; moved: boolean; id: number };
     let drag: Drag | null = null;
-
-    const panel = () => sheetPanelRef.current;
-    const preview = () => previewScrollRef.current;
-    const sheetScroll = () => sheetScrollRef.current;
     let prevPreviewOverflow = "";
     let prevSheetOverflow = "";
 
     const lockScroll = () => {
-      const p = preview();
-      const s = sheetScroll();
+      const p = previewScrollRef.current;
+      const s = sheetScrollRef.current;
       prevPreviewOverflow = p?.style.overflow ?? "";
       prevSheetOverflow = s?.style.overflow ?? "";
       if (p) p.style.overflow = "hidden";
       if (s) s.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
+      document.documentElement.style.setProperty("overflow", "hidden");
+      document.body.style.setProperty("overflow", "hidden");
+      document.body.style.setProperty("touch-action", "none");
     };
 
     const unlockScroll = () => {
-      const p = preview();
-      const s = sheetScroll();
+      const p = previewScrollRef.current;
+      const s = sheetScrollRef.current;
       if (p) p.style.overflow = prevPreviewOverflow;
       if (s) s.style.overflow = prevSheetOverflow;
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
+      document.documentElement.style.removeProperty("overflow");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("touch-action");
     };
 
     const applyY = (clientY: number) => {
@@ -694,33 +714,31 @@ export function MenuStudio({
       if (Math.abs(dy) > 4) drag.moved = true;
       const next = Math.max(72, Math.min(sheetMax(), drag.startH + dy));
       sheetHeightRef.current = next;
-      const pane = panel();
-      if (pane) pane.style.height = `${next}px`;
+      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
       setSheetHeightPx(next);
     };
 
-    const finish = () => {
+    const endDrag = () => {
       if (!drag) return;
       const finished = drag;
       drag = null;
       unlockScroll();
       el.style.cursor = "grab";
+      snapSheetHeight(sheetHeightRef.current, finished.startH, finished.moved);
+    };
 
-      if (!finished.moved) {
-        setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
-        return;
-      }
-      const h = sheetHeightRef.current;
-      const pulledDown = finished.startH - h;
-      if (h <= sheetCollapseAt || pulledDown >= 80) {
-        setTab(null);
-        return;
-      }
-      const snapped = h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260;
-      sheetHeightRef.current = snapped;
-      const pane = panel();
-      if (pane) pane.style.height = `${snapped}px`;
-      setSheetHeightPx(snapped);
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      // Claim the gesture immediately (requires passive:false on this listener).
+      e.preventDefault();
+      const tch = e.touches[0]!;
+      drag = {
+        startY: tch.clientY,
+        startH: sheetHeightRef.current,
+        moved: false,
+        id: tch.identifier,
+      };
+      lockScroll();
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -733,7 +751,6 @@ export function MenuStudio({
         }
       }
       if (!touch) return;
-      // Must preventDefault on the first move or iOS claims the gesture for page scroll.
       e.preventDefault();
       e.stopPropagation();
       applyY(touch.clientY);
@@ -746,29 +763,9 @@ export function MenuStudio({
         if (e.changedTouches[i]!.identifier === drag.id) ended = true;
       }
       if (!ended) return;
-      document.removeEventListener("touchmove", onTouchMove, true);
-      document.removeEventListener("touchend", onTouchEnd, true);
-      document.removeEventListener("touchcancel", onTouchEnd, true);
-      finish();
+      endDrag();
     };
 
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      const tch = e.touches[0]!;
-      drag = {
-        startY: tch.clientY,
-        startH: sheetHeightRef.current,
-        moved: false,
-        id: tch.identifier,
-      };
-      lockScroll();
-      // Attach to document during the gesture so moves keep firing off-handle (iOS).
-      document.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
-      document.addEventListener("touchend", onTouchEnd, { capture: true });
-      document.addEventListener("touchcancel", onTouchEnd, { capture: true });
-    };
-
-    // Desktop / tactile PC mouse path (touch is handled above — skip touch pointers).
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       if (e.button !== 0) return;
@@ -802,25 +799,36 @@ export function MenuStudio({
         } catch {
           /* ignore */
         }
-        finish();
+        endDrag();
       };
       document.addEventListener("pointermove", onMove, true);
       document.addEventListener("pointerup", onUp, true);
       document.addEventListener("pointercancel", onUp, true);
     };
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    // Bind BEFORE any gesture — passive:false is mandatory for iOS.
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
     el.addEventListener("pointerdown", onPointerDown);
 
-    return () => {
+    sheetHandleCleanupRef.current = () => {
       unlockScroll();
       el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
       el.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("touchmove", onTouchMove, true);
-      document.removeEventListener("touchend", onTouchEnd, true);
-      document.removeEventListener("touchcancel", onTouchEnd, true);
     };
-  }, [mode, tab]);
+  }, [snapSheetHeight]);
+
+  useEffect(() => {
+    return () => {
+      sheetHandleCleanupRef.current?.();
+      sheetHandleCleanupRef.current = null;
+    };
+  }, []);
 
   const prevNodeCountRef = useRef(nodes.length);
 
@@ -931,30 +939,56 @@ export function MenuStudio({
       {mode === "edit" && tab ? (
         <div
           ref={sheetPanelRef}
-          className="relative z-40 mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white"
+          className="relative z-[60] mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)]"
           style={{ height: sheetHeightPx }}
         >
-          <div
-            ref={sheetHandleRef}
-            role="slider"
-            aria-valuenow={sheetHeightPx}
-            aria-valuemin={200}
-            aria-valuemax={560}
-            aria-label={t("menuStudio.resizeSheet")}
-            title={t("menuStudio.resizeSheet")}
-            className="relative z-[60] flex h-16 w-full shrink-0 select-none items-center justify-center border-b border-black/5 bg-white active:bg-black/[0.06]"
-            style={{
-              cursor: "grab",
-              touchAction: "none",
-              WebkitUserSelect: "none",
-              userSelect: "none",
-              WebkitTouchCallout: "none",
-            }}
-          >
-            <span
-              aria-hidden
-              className="pointer-events-none h-1.5 w-14 rounded-full bg-zinc-400"
-            />
+          <div className="relative flex h-14 w-full shrink-0 items-center justify-between gap-1 border-b border-black/5 bg-white px-1">
+            <button
+              type="button"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600 active:bg-black/5"
+              aria-label={t("menuStudio.sheetCollapse")}
+              onClick={() => {
+                if (sheetHeightPx <= 280) setTab(null);
+                else {
+                  sheetHeightRef.current = 260;
+                  setSheetHeightPx(260);
+                }
+              }}
+            >
+              ↓
+            </button>
+            <div
+              ref={setSheetHandleNode}
+              role="slider"
+              aria-valuenow={sheetHeightPx}
+              aria-valuemin={200}
+              aria-valuemax={560}
+              aria-label={t("menuStudio.resizeSheet")}
+              title={t("menuStudio.resizeSheet")}
+              className="flex h-11 min-w-0 flex-1 cursor-grab select-none items-center justify-center rounded-xl active:bg-black/[0.04]"
+              style={{
+                touchAction: "none",
+                WebkitUserSelect: "none",
+                userSelect: "none",
+              }}
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none h-1.5 w-14 rounded-full bg-zinc-400"
+              />
+            </div>
+            <button
+              type="button"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg text-zinc-600 active:bg-black/5"
+              aria-label={t("menuStudio.sheetExpand")}
+              onClick={() => {
+                const next = sheetMax();
+                sheetHeightRef.current = next;
+                setSheetHeightPx(next);
+              }}
+            >
+              ↑
+            </button>
           </div>
           <div
             ref={sheetScrollRef}
