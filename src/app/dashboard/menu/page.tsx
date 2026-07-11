@@ -1,12 +1,10 @@
 import { requireMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
-import { getTranslations } from "@/i18n/server";
 import type { MenuNode } from "@/lib/menu";
 import { MenuStudio } from "./MenuStudio";
 
 export default async function DashboardMenuPage() {
   const merchant = await requireMerchant();
-  const t = await getTranslations();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("menu_nodes")
@@ -24,7 +22,6 @@ export default async function DashboardMenuPage() {
       <MenuStudio
         merchant={merchant}
         initialNodes={error ? [] : ((data as MenuNode[]) ?? [])}
-        pageTitle={t("dashboard.menuTitle")}
       />
     </div>
   );

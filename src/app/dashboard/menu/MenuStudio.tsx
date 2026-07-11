@@ -68,11 +68,9 @@ function cloneSnap(s: HistorySnap): HistorySnap {
 export function MenuStudio({
   merchant,
   initialNodes,
-  pageTitle,
 }: {
   merchant: Merchant;
   initialNodes: MenuNode[];
-  pageTitle?: string;
 }) {
   const t = useTranslations();
   const { locale } = useI18n();
@@ -653,27 +651,35 @@ export function MenuStudio({
   const studioRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const sheetHandleRef = useRef<HTMLDivElement>(null);
+  const [sheetHandleEl, setSheetHandleEl] = useState<HTMLDivElement | null>(null);
   const [navHeight, setNavHeight] = useState(64);
   const draggingRef = useRef(false);
-  const dragStateRef = useRef<{
-    startY: number;
-    startH: number;
-    moved: boolean;
-    pointerId: number;
-  } | null>(null);
+
+  const bindSheetHandle = useCallback((node: HTMLDivElement | null) => {
+    sheetHandleRef.current = node;
+    setSheetHandleEl(node);
+  }, []);
 
   /** Never taller than space above the bottom tab bar. */
   const sheetMax = useCallback(() => {
     const studioH = studioRef.current?.clientHeight ?? Math.round(window.innerHeight * 0.88);
     const headerH = headerRef.current?.offsetHeight ?? 52;
     const available = studioH - headerH - navHeight - 8;
-    return Math.max(sheetMin, Math.min(Math.round(window.innerHeight * 0.65), 480, available));
+    // Keep preview visible: cap at ~45% of studio.
+    return Math.max(sheetMin, Math.min(Math.round(studioH * 0.45), 360, available));
   }, [navHeight]);
 
   const clampSheetHeight = useCallback(
     (h: number) => Math.max(72, Math.min(sheetMax(), h)),
     [sheetMax],
   );
+
+  // Stable refs so drag listeners never rebind mid-gesture (that was killing iOS drag).
+  const clampSheetHeightRef = useRef(clampSheetHeight);
+  clampSheetHeightRef.current = clampSheetHeight;
+  const sheetMaxRef = useRef(sheetMax);
+  sheetMaxRef.current = sheetMax;
 
   useEffect(() => {
     const el = navRef.current;
@@ -686,209 +692,199 @@ export function MenuStudio({
   }, [mode]);
 
   useEffect(() => {
-    const onResize = () => setSheetHeightPx((h) => clampSheetHeight(h));
+    const onResize = () => setSheetHeightPx((h) => clampSheetHeightRef.current(h));
     window.addEventListener("resize", onResize);
     onResize();
     return () => window.removeEventListener("resize", onResize);
-  }, [clampSheetHeight, tab, mode]);
+  }, [tab, mode, navHeight]);
 
-  // Pre-bind non-passive document touchmove whenever the sheet is open.
-  // Blocks page/preview scroll while dragging and keeps height updates alive if the finger leaves the bar.
+  // Open tab → mid height so preview stays visible.
   useEffect(() => {
     if (mode !== "edit" || !tab) return;
-    const onTouchMove = (e: TouchEvent) => {
-      if (!draggingRef.current) return;
-      e.preventDefault();
-      const drag = dragStateRef.current;
-      if (!drag) return;
-      const touch = e.touches[0];
-      if (!touch) return;
-      const dy = drag.startY - touch.clientY;
-      if (Math.abs(dy) > 4) drag.moved = true;
-      const next = clampSheetHeight(drag.startH + dy);
+    const next = clampSheetHeightRef.current(Math.min(240, sheetMaxRef.current()));
+    sheetHeightRef.current = next;
+    setSheetHeightPx(next);
+    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
+  }, [tab, mode]);
+
+  const snapSheetHeight = useCallback((h: number, startH: number, moved: boolean) => {
+    const clamp = clampSheetHeightRef.current;
+    const max = sheetMaxRef.current;
+    if (!moved) {
+      const next = clamp(h > max() * 0.7 ? 220 : max());
       sheetHeightRef.current = next;
       if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-    };
-    document.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
-    return () => document.removeEventListener("touchmove", onTouchMove, true);
-  }, [mode, tab, clampSheetHeight]);
-
-  const snapSheetHeight = useCallback(
-    (h: number, startH: number, moved: boolean) => {
-      if (!moved) {
-        const next = clampSheetHeight(h > 340 ? 260 : sheetMax());
-        sheetHeightRef.current = next;
-        if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-        setSheetHeightPx(next);
-        return;
-      }
-      const pulledDown = startH - h;
-      if (h <= sheetCollapseAt || pulledDown >= 80) {
-        setTab(null);
-        return;
-      }
-      const snapped = clampSheetHeight(h >= (sheetMin + sheetMax()) / 2 ? sheetMax() : 260);
-      sheetHeightRef.current = snapped;
-      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${snapped}px`;
-      setSheetHeightPx(snapped);
-    },
-    [clampSheetHeight, sheetMax],
-  );
-
-  const lockScrollDuringDrag = useCallback(() => {
-    const preview = previewScrollRef.current;
-    const sheetScroll = sheetScrollRef.current;
-    const prevPreview = preview?.style.overflow ?? "";
-    const prevSheet = sheetScroll?.style.overflow ?? "";
-    return {
-      lock() {
-        if (preview) preview.style.overflow = "hidden";
-        if (sheetScroll) sheetScroll.style.overflow = "hidden";
-      },
-      unlock() {
-        if (preview) preview.style.overflow = prevPreview;
-        if (sheetScroll) sheetScroll.style.overflow = prevSheet;
-      },
-    };
+      setSheetHeightPx(next);
+      return;
+    }
+    const pulledDown = startH - h;
+    if (h <= sheetCollapseAt || pulledDown >= 80) {
+      setTab(null);
+      return;
+    }
+    const snapped = clamp(h >= (sheetMin + max()) / 2 ? max() : 220);
+    sheetHeightRef.current = snapped;
+    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${snapped}px`;
+    setSheetHeightPx(snapped);
   }, []);
 
-  // iOS: native non-passive touch on the handle (pointer capture alone is unreliable with nested scrollers).
-  const sheetHandleCleanupRef = useRef<(() => void) | null>(null);
-  const setSheetHandleNode = useCallback(
-    (node: HTMLDivElement | null) => {
-      sheetHandleCleanupRef.current?.();
-      sheetHandleCleanupRef.current = null;
-      if (!node) return;
+  const snapSheetHeightRef = useRef(snapSheetHeight);
+  snapSheetHeightRef.current = snapSheetHeight;
 
-      let scrollLock: ReturnType<typeof lockScrollDuringDrag> | null = null;
+  /**
+   * Grey handle drag — document-level touch listeners attached per gesture.
+   * Stable effect (deps: tab/mode only) so React never tears down listeners mid-drag.
+   */
+  useEffect(() => {
+    if (mode !== "edit" || !tab) return;
+    const handle = sheetHandleEl;
+    if (!handle) return;
 
-      const begin = (clientY: number) => {
-        draggingRef.current = true;
-        dragStateRef.current = {
-          startY: clientY,
-          startH: sheetHeightRef.current,
-          moved: false,
-          pointerId: -1,
-        };
-        scrollLock = lockScrollDuringDrag();
-        scrollLock.lock();
-      };
+    type Drag = { startY: number; startH: number; moved: boolean };
+    let drag: Drag | null = null;
+    let prevPreview = "";
+    let prevSheet = "";
 
-      const move = (clientY: number) => {
-        const drag = dragStateRef.current;
-        if (!drag) return;
-        const dy = drag.startY - clientY;
-        if (Math.abs(dy) > 4) drag.moved = true;
-        const next = clampSheetHeight(drag.startH + dy);
-        sheetHeightRef.current = next;
-        if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-      };
-
-      const end = () => {
-        if (!draggingRef.current) return;
-        const drag = dragStateRef.current;
-        draggingRef.current = false;
-        dragStateRef.current = null;
-        scrollLock?.unlock();
-        scrollLock = null;
-        if (drag) snapSheetHeight(sheetHeightRef.current, drag.startH, drag.moved);
-      };
-
-      const onTouchStart = (e: TouchEvent) => {
-        if (e.touches.length !== 1) return;
-        e.preventDefault();
-        e.stopPropagation();
-        begin(e.touches[0].clientY);
-      };
-
-      const onTouchMove = (e: TouchEvent) => {
-        if (!draggingRef.current) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const touch = e.touches[0];
-        if (touch) move(touch.clientY);
-      };
-
-      const onTouchEnd = (e: TouchEvent) => {
-        if (!draggingRef.current) return;
-        e.preventDefault();
-        end();
-      };
-
-      node.addEventListener("touchstart", onTouchStart, { passive: false });
-      node.addEventListener("touchmove", onTouchMove, { passive: false });
-      node.addEventListener("touchend", onTouchEnd, { passive: false });
-      node.addEventListener("touchcancel", onTouchEnd, { passive: false });
-
-      sheetHandleCleanupRef.current = () => {
-        node.removeEventListener("touchstart", onTouchStart);
-        node.removeEventListener("touchmove", onTouchMove);
-        node.removeEventListener("touchend", onTouchEnd);
-        node.removeEventListener("touchcancel", onTouchEnd);
-        if (draggingRef.current) end();
-      };
-    },
-    [clampSheetHeight, lockScrollDuringDrag, snapSheetHeight],
-  );
-
-  const onSheetHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Touch is handled by non-passive listeners above; avoid double-binding on iOS.
-    if (e.pointerType === "touch") return;
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const handle = e.currentTarget;
-    const pointerId = e.pointerId;
-    try {
-      handle.setPointerCapture(pointerId);
-    } catch {
-      /* ignore */
-    }
-
-    draggingRef.current = true;
-    dragStateRef.current = {
-      startY: e.clientY,
-      startH: sheetHeightRef.current,
-      moved: false,
-      pointerId,
+    const lockScroll = () => {
+      const p = previewScrollRef.current;
+      const s = sheetScrollRef.current;
+      prevPreview = p?.style.overflow ?? "";
+      prevSheet = s?.style.overflow ?? "";
+      if (p) p.style.overflow = "hidden";
+      if (s) s.style.overflow = "hidden";
     };
-    handle.style.cursor = "grabbing";
 
-    const scrollLock = lockScrollDuringDrag();
-    scrollLock.lock();
+    const unlockScroll = () => {
+      const p = previewScrollRef.current;
+      const s = sheetScrollRef.current;
+      if (p) p.style.overflow = prevPreview;
+      if (s) s.style.overflow = prevSheet;
+    };
 
-    const onMove = (ev: PointerEvent) => {
-      const drag = dragStateRef.current;
-      if (!drag || ev.pointerId !== pointerId) return;
-      const dy = drag.startY - ev.clientY;
+    const applyY = (clientY: number) => {
+      if (!drag) return;
+      const dy = drag.startY - clientY;
       if (Math.abs(dy) > 4) drag.moved = true;
-      const next = clampSheetHeight(drag.startH + dy);
+      const next = clampSheetHeightRef.current(drag.startH + dy);
       sheetHeightRef.current = next;
       if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
     };
 
-    const onUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) return;
-      handle.removeEventListener("pointermove", onMove);
-      handle.removeEventListener("pointerup", onUp);
-      handle.removeEventListener("pointercancel", onUp);
+    const endDrag = () => {
+      if (!drag) return;
+      const finished = drag;
+      drag = null;
+      draggingRef.current = false;
+      unlockScroll();
+      handle.style.cursor = "grab";
+      snapSheetHeightRef.current(sheetHeightRef.current, finished.startH, finished.moved);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || drag) return;
+      const touch = e.touches[0]!;
+      e.preventDefault();
+      e.stopPropagation();
+      drag = {
+        startY: touch.clientY,
+        startH: sheetHeightRef.current,
+        moved: false,
+      };
+      draggingRef.current = true;
+      lockScroll();
+
+      const touchId = touch.identifier;
+
+      const onTouchMove = (ev: TouchEvent) => {
+        if (!drag) return;
+        let t: Touch | undefined;
+        for (let i = 0; i < ev.touches.length; i++) {
+          if (ev.touches[i]!.identifier === touchId) {
+            t = ev.touches[i];
+            break;
+          }
+        }
+        if (!t) t = ev.touches[0];
+        if (!t) return;
+        ev.preventDefault();
+        applyY(t.clientY);
+      };
+
+      const onTouchEnd = (ev: TouchEvent) => {
+        let ended = false;
+        for (let i = 0; i < ev.changedTouches.length; i++) {
+          if (ev.changedTouches[i]!.identifier === touchId) ended = true;
+        }
+        if (!ended) return;
+        document.removeEventListener("touchmove", onTouchMove, true);
+        document.removeEventListener("touchend", onTouchEnd, true);
+        document.removeEventListener("touchcancel", onTouchEnd, true);
+        endDrag();
+      };
+
+      document.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+      document.addEventListener("touchend", onTouchEnd, { capture: true });
+      document.addEventListener("touchcancel", onTouchEnd, { capture: true });
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      if (e.button !== 0 || drag) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const pointerId = e.pointerId;
       try {
-        handle.releasePointerCapture(pointerId);
+        handle.setPointerCapture(pointerId);
       } catch {
         /* ignore */
       }
-      scrollLock.unlock();
-      handle.style.cursor = "grab";
-      const drag = dragStateRef.current;
-      draggingRef.current = false;
-      dragStateRef.current = null;
-      if (drag) snapSheetHeight(sheetHeightRef.current, drag.startH, drag.moved);
+      drag = {
+        startY: e.clientY,
+        startH: sheetHeightRef.current,
+        moved: false,
+      };
+      draggingRef.current = true;
+      lockScroll();
+      handle.style.cursor = "grabbing";
+
+      const onPointerMove = (ev: PointerEvent) => {
+        if (!drag || ev.pointerId !== pointerId) return;
+        applyY(ev.clientY);
+      };
+
+      const onPointerUp = (ev: PointerEvent) => {
+        if (ev.pointerId !== pointerId) return;
+        handle.removeEventListener("pointermove", onPointerMove);
+        handle.removeEventListener("pointerup", onPointerUp);
+        handle.removeEventListener("pointercancel", onPointerUp);
+        try {
+          handle.releasePointerCapture(pointerId);
+        } catch {
+          /* ignore */
+        }
+        endDrag();
+      };
+
+      handle.addEventListener("pointermove", onPointerMove);
+      handle.addEventListener("pointerup", onPointerUp);
+      handle.addEventListener("pointercancel", onPointerUp);
     };
 
-    handle.addEventListener("pointermove", onMove);
-    handle.addEventListener("pointerup", onUp);
-    handle.addEventListener("pointercancel", onUp);
-  };
+    handle.addEventListener("touchstart", onTouchStart, { passive: false });
+    handle.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      handle.removeEventListener("touchstart", onTouchStart);
+      handle.removeEventListener("pointerdown", onPointerDown);
+      if (drag) endDrag();
+    };
+  }, [mode, tab, sheetHandleEl]);
+
+  // Keep panel height in the DOM only (avoids React resetting height mid-drag).
+  useEffect(() => {
+    if (!sheetPanelRef.current || draggingRef.current) return;
+    sheetPanelRef.current.style.height = `${sheetHeightPx}px`;
+  }, [sheetHeightPx, tab, mode]);
 
   const prevNodeCountRef = useRef(nodes.length);
 
@@ -917,11 +913,6 @@ export function MenuStudio({
         ref={headerRef}
         className="z-30 flex shrink-0 items-center gap-2 border-b border-black/10 bg-[#f3eee6] px-3 py-2"
       >
-        {pageTitle ? (
-          <span className="mr-1 hidden max-w-[7rem] truncate text-xs font-bold uppercase tracking-wide text-zinc-500 sm:inline">
-            {pageTitle}
-          </span>
-        ) : null}
         <div className="flex rounded-2xl bg-black/5 p-1 text-xs font-semibold uppercase tracking-wide">
           <button
             type="button"
@@ -1010,27 +1001,22 @@ export function MenuStudio({
       {mode === "edit" && tab ? (
         <div
           ref={sheetPanelRef}
-          className="absolute inset-x-0 z-[55] mx-auto flex w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
-          style={{
-            bottom: navHeight,
-            height: clampSheetHeight(sheetHeightPx),
-          }}
+          className="relative z-[55] mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
         >
           <div
-            ref={setSheetHandleNode}
+            ref={bindSheetHandle}
             role="slider"
             aria-valuenow={sheetHeightPx}
             aria-valuemin={200}
             aria-valuemax={560}
             aria-label={t("menuStudio.resizeSheet")}
             title={t("menuStudio.resizeSheet")}
-            className="relative flex h-14 w-full shrink-0 cursor-grab touch-none select-none items-center justify-center border-b border-black/5 bg-white active:cursor-grabbing active:bg-black/[0.03]"
+            className="relative flex h-12 w-full shrink-0 cursor-grab touch-none select-none items-center justify-center border-b border-black/5 bg-white active:cursor-grabbing active:bg-black/[0.03]"
             style={{
               touchAction: "none",
               WebkitUserSelect: "none",
               userSelect: "none",
             }}
-            onPointerDown={onSheetHandlePointerDown}
           >
             <span
               aria-hidden
@@ -1040,7 +1026,7 @@ export function MenuStudio({
           <div
             ref={sheetScrollRef}
             className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-3 [-webkit-overflow-scrolling:touch]"
-            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+            style={{ paddingBottom: "1.25rem" }}
           >
             {tab === "menu" ? (
               <MenuSheet
@@ -1106,7 +1092,7 @@ export function MenuStudio({
       {mode === "edit" ? (
         <nav
           ref={navRef}
-          className="z-50 shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
+          className="relative z-[60] shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
         >
           <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
             {(
