@@ -673,18 +673,30 @@ export function MenuStudio({
   sheetMaxRef.current = sheetMax;
 
   // Pin studio under the dashboard header using the visual viewport (iOS-safe).
+  // Guard writes so we never trigger a visualViewport resize feedback loop (tab crash).
   useEffect(() => {
     const navWrap = document.querySelector(".brutal-nav-wrap") as HTMLElement | null;
+    let lastTop = -1;
+    let lastHeight = -1;
+    let raf = 0;
+
     const sync = () => {
-      const vv = window.visualViewport;
-      const top = Math.round(navWrap?.getBoundingClientRect().bottom ?? 56);
-      const layoutBottom = vv
-        ? Math.round(vv.offsetTop + vv.height)
-        : Math.round(window.innerHeight);
-      const height = Math.max(200, layoutBottom - top);
-      document.documentElement.style.setProperty("--menu-studio-top", `${top}px`);
-      document.documentElement.style.setProperty("--menu-studio-height", `${height}px`);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const vv = window.visualViewport;
+        const top = Math.round(navWrap?.getBoundingClientRect().bottom ?? 56);
+        const layoutBottom = vv
+          ? Math.round(vv.offsetTop + vv.height)
+          : Math.round(window.innerHeight);
+        const height = Math.max(200, layoutBottom - top);
+        if (top === lastTop && height === lastHeight) return;
+        lastTop = top;
+        lastHeight = height;
+        document.documentElement.style.setProperty("--menu-studio-top", `${top}px`);
+        document.documentElement.style.setProperty("--menu-studio-height", `${height}px`);
+      });
     };
+
     sync();
     const ro = navWrap ? new ResizeObserver(sync) : null;
     if (navWrap) ro?.observe(navWrap);
@@ -692,6 +704,7 @@ export function MenuStudio({
     window.visualViewport?.addEventListener("resize", sync);
     window.visualViewport?.addEventListener("scroll", sync);
     return () => {
+      cancelAnimationFrame(raf);
       ro?.disconnect();
       window.removeEventListener("resize", sync);
       window.visualViewport?.removeEventListener("resize", sync);
@@ -879,8 +892,6 @@ export function MenuStudio({
 
     handle.addEventListener("touchstart", onTouchStart, { passive: true });
     return () => handle.removeEventListener("touchstart", onTouchStart);
-    // begin/move/end read only refs — safe to omit from deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, tab]);
 
   const prevNodeCountRef = useRef(nodes.length);
