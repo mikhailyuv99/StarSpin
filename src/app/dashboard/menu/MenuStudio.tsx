@@ -1461,7 +1461,7 @@ function NodeRow({
                       })
                     }
                   >
-                    ✎
+                    <PencilIcon />
                   </button>
                   <button
                     type="button"
@@ -1469,7 +1469,7 @@ function NodeRow({
                     aria-label={t("menuStudio.delete")}
                     onClick={() => onUpdatePayload(node.id, { image_url: null })}
                   >
-                    🗑
+                    <TrashIcon />
                   </button>
                 </div>
               </div>
@@ -1631,7 +1631,7 @@ function MediaEditors({
                   })
                 }
               >
-                ✎
+                <PencilIcon />
               </button>
               <button
                 type="button"
@@ -1641,7 +1641,7 @@ function MediaEditors({
                   onUpdatePayload(node.id, { photo_urls: photos.filter((p) => p !== url) })
                 }
               >
-                🗑
+                <TrashIcon />
               </button>
             </div>
           </div>
@@ -1668,7 +1668,7 @@ function MediaEditors({
                   onUpdatePayload(node.id, { video_url: null, video_aspect: null })
                 }
               >
-                🗑
+                <TrashIcon />
               </button>
             </div>
           </div>
@@ -1938,7 +1938,7 @@ function BackgroundSheet({
                   })
                 }
               >
-                ✎
+                <PencilIcon />
               </button>
               <button
                 type="button"
@@ -1946,7 +1946,7 @@ function BackgroundSheet({
                 aria-label={t("menuStudio.removeBgImage")}
                 onClick={() => setBackground({ ...background, pageImageUrl: null })}
               >
-                🗑
+                <TrashIcon />
               </button>
             </div>
           </div>
@@ -1992,7 +1992,7 @@ function BackgroundSheet({
                   })
                 }
               >
-                ✎
+                <PencilIcon />
               </button>
               <button
                 type="button"
@@ -2000,7 +2000,7 @@ function BackgroundSheet({
                 aria-label={t("menuStudio.delete")}
                 onClick={() => setBackground({ ...background, bannerUrl: null, imageUrl: null })}
               >
-                🗑
+                <TrashIcon />
               </button>
             </div>
           </div>
