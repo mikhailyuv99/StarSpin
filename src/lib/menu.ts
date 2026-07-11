@@ -327,7 +327,8 @@ export function aspectNear(ratio: number, target: number, tolerance = 0.18): boo
 export function classifyVideoAspect(width: number, height: number): MenuVideoAspect | null {
   if (!width || !height) return null;
   const r = width / height;
-  if (aspectNear(r, 16 / 9)) return "16:9";
-  if (aspectNear(r, 9 / 16)) return "9:16";
-  return null;
+  if (aspectNear(r, 16 / 9, 0.35)) return "16:9";
+  if (aspectNear(r, 9 / 16, 0.35)) return "9:16";
+  // Orientation fallback — don't block upload for near-miss phone ratios.
+  return width >= height ? "16:9" : "9:16";
 }

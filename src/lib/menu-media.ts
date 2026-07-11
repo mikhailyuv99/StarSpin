@@ -9,8 +9,28 @@ export type VideoValidation =
   | { ok: true; aspect: MenuVideoAspect; duration: number }
   | { ok: false; error: string };
 
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v|mpeg|mpg)$/i;
+const ALLOWED_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-m4v",
+  "video/mpeg",
+]);
+
+/** True for video MIME or common video extensions (Windows often leaves type empty). */
+export function isMenuVideoFile(file: File): boolean {
+  if (file.type.startsWith("video/")) return true;
+  return VIDEO_EXT.test(file.name);
+}
+
 export function validateMenuVideoFile(file: File): Promise<VideoValidation> {
-  if (!["video/mp4", "video/webm"].includes(file.type)) {
+  const typeOk =
+    !file.type ||
+    ALLOWED_VIDEO_TYPES.has(file.type) ||
+    file.type.startsWith("video/") ||
+    VIDEO_EXT.test(file.name);
+  if (!typeOk) {
     return Promise.resolve({ ok: false, error: "videoType" });
   }
   if (file.size > MAX_VIDEO_BYTES) {
@@ -21,28 +41,38 @@ export function validateMenuVideoFile(file: File): Promise<VideoValidation> {
     const url = URL.createObjectURL(file);
     const video = document.createElement("video");
     video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    let settled = false;
+    let timer = 0;
+    const finish = (result: VideoValidation) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      resolve(result);
+    };
+
     video.onloadedmetadata = () => {
       const duration = video.duration;
       const aspect = classifyVideoAspect(video.videoWidth, video.videoHeight);
-      URL.revokeObjectURL(url);
       if (!Number.isFinite(duration) || duration <= 0) {
-        resolve({ ok: false, error: "videoMeta" });
+        finish({ ok: false, error: "videoMeta" });
         return;
       }
       if (duration > MAX_VIDEO_SECONDS + 0.25) {
-        resolve({ ok: false, error: "videoDuration" });
+        finish({ ok: false, error: "videoDuration" });
         return;
       }
       if (!aspect) {
-        resolve({ ok: false, error: "videoAspect" });
+        finish({ ok: false, error: "videoAspect" });
         return;
       }
-      resolve({ ok: true, aspect, duration });
+      finish({ ok: true, aspect, duration });
     };
-    video.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve({ ok: false, error: "videoMeta" });
-    };
+    video.onerror = () => finish({ ok: false, error: "videoMeta" });
+    // Some browsers never fire metadata for certain containers — fail soft after a wait.
+    timer = window.setTimeout(() => finish({ ok: false, error: "videoMeta" }), 8000);
     video.src = url;
   });
 }

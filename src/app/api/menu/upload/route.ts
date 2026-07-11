@@ -40,7 +40,17 @@ export async function POST(request: Request) {
 
   const kind = String(form.get("kind") ?? "image");
   const isVideo = kind === "video";
-  const contentType = file.type || (isVideo ? "video/mp4" : "image/jpeg");
+  const nameLower = file.name.toLowerCase();
+  const inferredVideoType =
+    nameLower.endsWith(".mov") || nameLower.endsWith(".qt")
+      ? "video/quicktime"
+      : nameLower.endsWith(".webm")
+        ? "video/webm"
+        : nameLower.endsWith(".m4v")
+          ? "video/x-m4v"
+          : "video/mp4";
+  const contentType =
+    file.type || (isVideo ? inferredVideoType : "image/jpeg");
   const allowed = isVideo ? VIDEO_TYPES : IMAGE_TYPES;
   if (
     contentType &&

@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
       dynamic: 30,
       static: 180,
     },
+    // Menu dish videos can be up to 25 MB; raise proxy buffer so uploads aren't truncated.
+    proxyClientMaxBodySize: "30mb",
+    serverActions: {
+      bodySizeLimit: "30mb",
+    },
   },
   images: {
     remotePatterns: [

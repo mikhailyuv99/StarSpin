@@ -316,9 +316,23 @@ export function MenuPublicView({
                 }`}
                 autoPlay
                 muted
+                defaultMuted
                 loop
                 playsInline
                 controls
+                controlsList="nodownload noplaybackrate noremoteplayback"
+                disablePictureInPicture
+                onLoadedMetadata={(e) => {
+                  e.currentTarget.muted = true;
+                  e.currentTarget.volume = 0;
+                }}
+                onVolumeChange={(e) => {
+                  const el = e.currentTarget;
+                  if (!el.muted || el.volume > 0) {
+                    el.muted = true;
+                    el.volume = 0;
+                  }
+                }}
               />
             ) : lightbox.photos[lightbox.index] ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -384,7 +398,17 @@ function DishRow({
         <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-[calc(var(--menu-radius)-4px)] object-cover" />
       ) : hasVideo ? (
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[calc(var(--menu-radius)-4px)] bg-black">
-          <video src={node.payload.video_url!} className="h-full w-full object-cover" muted playsInline />
+          <video
+            src={node.payload.video_url!}
+            className="h-full w-full object-cover"
+            muted
+            defaultMuted
+            playsInline
+            onLoadedMetadata={(e) => {
+              e.currentTarget.muted = true;
+              e.currentTarget.volume = 0;
+            }}
+          />
         </div>
       ) : null}
       <div className="min-w-0 flex-1">

@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n, useTranslations } from "@/i18n/client";
 import { compressImageForUpload, MENU_BG_IMAGE_COMPRESS } from "@/lib/compress-image";
-import { rasterizePdfPages, validateMenuVideoFile } from "@/lib/menu-media";
+import {
+  isMenuVideoFile,
+  rasterizePdfPages,
+  validateMenuVideoFile,
+} from "@/lib/menu-media";
 import {
   DEFAULT_MENU_BACKGROUND,
   DEFAULT_MENU_STYLE,
@@ -538,7 +542,6 @@ export function MenuStudio({
     kind: "image" | "video" = "image",
     quality: "default" | "high" = "default",
   ) => {
-    const body = new FormData();
     const prepared =
       kind === "image"
         ? await compressImageForUpload(
@@ -546,6 +549,47 @@ export function MenuStudio({
             quality === "high" ? MENU_BG_IMAGE_COMPRESS : undefined,
           ).catch(() => file)
         : file;
+
+    // Prefer direct browser → Supabase upload (avoids host body-size limits on videos).
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const nameLower = prepared.name.toLowerCase();
+      const ext =
+        prepared.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") ||
+        (kind === "video"
+          ? nameLower.includes("webm")
+            ? "webm"
+            : nameLower.includes("mov")
+              ? "mov"
+              : "mp4"
+          : "jpg");
+      const contentType =
+        prepared.type ||
+        (kind === "video"
+          ? ext === "webm"
+            ? "video/webm"
+            : ext === "mov"
+              ? "video/quicktime"
+              : "video/mp4"
+          : "image/jpeg");
+      const path = `${user.id}/${merchant.id}/menu-${crypto.randomUUID()}.${ext}`;
+
+      for (const bucket of ["menu-media", "merchant-logos"] as const) {
+        const { error } = await supabase.storage.from(bucket).upload(path, prepared, {
+          contentType,
+          upsert: false,
+        });
+        if (!error) {
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          return data.publicUrl;
+        }
+      }
+    }
+
+    // Fallback: API route (service role when configured).
+    const body = new FormData();
     body.append("file", prepared);
     body.append("kind", kind);
     const res = await fetch("/api/menu/upload", { method: "POST", body });
@@ -568,6 +612,24 @@ export function MenuStudio({
     input.click();
   };
 
+  /** Open the cropper on an already-uploaded image (pencil = adjust, not replace). */
+  const cropExistingImage = (imageUrl: string, onDone: (file: File) => void) => {
+    void (async () => {
+      try {
+        const res = await fetch(imageUrl);
+        if (!res.ok) throw new Error("fetch");
+        const blob = await res.blob();
+        const name =
+          imageUrl.split("/").pop()?.split("?")[0] ||
+          (blob.type.includes("png") ? "image.png" : "image.jpg");
+        const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+        setCropJob({ file, onDone });
+      } catch {
+        showToast(t("menuStudio.uploadFailed"));
+      }
+    })();
+  };
+
   const setLocaleField = (map: LocaleMap | undefined, value: string): LocaleMap => ({
     ...(map ?? {}),
     [locale]: value,
@@ -587,6 +649,7 @@ export function MenuStudio({
   };
 
   const sheetMin = 200;
+  const sheetCollapseAt = 130;
   const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
 
   const onSheetPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -611,7 +674,8 @@ export function MenuStudio({
       if (!drag || drag.pointerId !== ev.pointerId) return;
       const dy = drag.startY - ev.clientY;
       if (Math.abs(dy) > 6) drag.moved = true;
-      const next = Math.max(sheetMin, Math.min(sheetMax(), drag.startH + dy));
+      // Allow dragging below sheetMin so a push-down can collapse the deck.
+      const next = Math.max(72, Math.min(sheetMax(), drag.startH + dy));
       sheetHeightRef.current = next;
       setSheetHeightPx(next);
     };
@@ -634,7 +698,13 @@ export function MenuStudio({
         setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
         return;
       }
-      setSheetHeightPx((h) => {
+      const h = sheetHeightRef.current;
+      const pulledDown = drag.startH - h;
+      if (h <= sheetCollapseAt || pulledDown >= 100) {
+        setTab(null);
+        return;
+      }
+      setSheetHeightPx(() => {
         const mid = (sheetMin + sheetMax()) / 2;
         return h >= mid ? sheetMax() : 260;
       });
@@ -790,6 +860,7 @@ export function MenuStudio({
                 setLocaleField={setLocaleField}
                 uploadFile={uploadFile}
                 pickImageWithCrop={pickImageWithCrop}
+                cropExistingImage={cropExistingImage}
                 t={t}
                 showToast={showToast}
               />
@@ -805,6 +876,7 @@ export function MenuStudio({
                 background={background}
                 setBackground={(next) => { pushHistory(); setBackground(next); }}
                 pickImageWithCrop={pickImageWithCrop}
+                cropExistingImage={cropExistingImage}
                 uploadFile={uploadFile}
                 t={t}
                 showToast={showToast}
@@ -1054,6 +1126,7 @@ function MenuSheet(props: {
   setLocaleField: (map: LocaleMap | undefined, value: string) => LocaleMap;
   uploadFile: (file: File, kind?: "image" | "video") => Promise<string>;
   pickImageWithCrop: (onDone: (file: File) => void) => void;
+  cropExistingImage: (imageUrl: string, onDone: (file: File) => void) => void;
   t: (k: string) => string;
   showToast: (msg: string) => void;
 }) {
@@ -1072,6 +1145,7 @@ function MenuSheet(props: {
     setLocaleField,
     uploadFile,
     pickImageWithCrop,
+    cropExistingImage,
     t,
     showToast,
   } = props;
@@ -1121,6 +1195,7 @@ function MenuSheet(props: {
             setLocaleField={setLocaleField}
             uploadFile={uploadFile}
             pickImageWithCrop={pickImageWithCrop}
+            cropExistingImage={cropExistingImage}
             onAddItemToSection={onAddItemToSection}
             t={t}
             showToast={showToast}
@@ -1141,6 +1216,7 @@ function MenuSheet(props: {
                   setLocaleField={setLocaleField}
                   uploadFile={uploadFile}
                   pickImageWithCrop={pickImageWithCrop}
+                  cropExistingImage={cropExistingImage}
                   t={t}
                   showToast={showToast}
                 />
@@ -1165,6 +1241,7 @@ function NodeRow({
   setLocaleField,
   uploadFile,
   pickImageWithCrop,
+  cropExistingImage,
   onAddItemToSection,
   t,
   showToast,
@@ -1180,6 +1257,7 @@ function NodeRow({
   setLocaleField: (map: LocaleMap | undefined, value: string) => LocaleMap;
   uploadFile: (file: File, kind?: "image" | "video") => Promise<string>;
   pickImageWithCrop: (onDone: (file: File) => void) => void;
+  cropExistingImage: (imageUrl: string, onDone: (file: File) => void) => void;
   onAddItemToSection?: (sectionId: string) => void;
   t: (k: string) => string;
   showToast?: (msg: string) => void;
@@ -1323,7 +1401,7 @@ function NodeRow({
                 node={node}
                 onUpdatePayload={onUpdatePayload}
                 uploadFile={uploadFile}
-                pickImageWithCrop={pickImageWithCrop}
+                cropExistingImage={cropExistingImage}
                 t={t}
                 showToast={showToast}
               />
@@ -1340,7 +1418,7 @@ function NodeRow({
                     className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white/95 text-sm"
                     aria-label={t("menuStudio.editMedia")}
                     onClick={() =>
-                      pickImageWithCrop(async (file) => {
+                      cropExistingImage(node.payload.image_url!, async (file) => {
                         try {
                           const url = await uploadFile(file, "image");
                           onUpdatePayload(node.id, { image_url: url });
@@ -1411,14 +1489,14 @@ function MediaEditors({
   node,
   onUpdatePayload,
   uploadFile,
-  pickImageWithCrop,
+  cropExistingImage,
   t,
   showToast,
 }: {
   node: MenuNode;
   onUpdatePayload: (id: string, patch: Partial<MenuNode["payload"]>) => void;
   uploadFile: (file: File, kind?: "image" | "video") => Promise<string>;
-  pickImageWithCrop: (onDone: (file: File) => void) => void;
+  cropExistingImage: (imageUrl: string, onDone: (file: File) => void) => void;
   t: (k: string) => string;
   showToast?: (msg: string) => void;
 }) {
@@ -1442,9 +1520,12 @@ function MediaEditors({
       let nextAspect = node.payload.video_aspect ?? null;
 
       for (const file of files) {
-        const isVideo = file.type.startsWith("video/");
+        const isVideo = isMenuVideoFile(file);
         if (isVideo) {
-          if (nextVideo) continue;
+          if (nextVideo) {
+            fail(t("menuStudio.videoReady"));
+            continue;
+          }
           const check = await validateMenuVideoFile(file);
           if (!check.ok) {
             fail(t(`menuStudio.${check.error}`));
@@ -1460,6 +1541,7 @@ function MediaEditors({
           continue;
         }
         if (!file.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(file.name)) {
+          fail(t("menuStudio.uploadFailed"));
           continue;
         }
         if (nextPhotos.length >= MAX_DISH_PHOTOS) continue;
@@ -1504,7 +1586,7 @@ function MediaEditors({
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-white/95 text-sm"
                 aria-label={t("menuStudio.editMedia")}
                 onClick={() =>
-                  pickImageWithCrop(async (cropped) => {
+                  cropExistingImage(url, async (cropped) => {
                     try {
                       const next = await uploadFile(cropped, "image");
                       onUpdatePayload(node.id, {
@@ -1534,36 +1616,18 @@ function MediaEditors({
 
         {videoUrl ? (
           <div className="relative h-20 w-28 overflow-hidden rounded-2xl border border-black/10 bg-black">
-            <video src={videoUrl} className="h-full w-full object-cover" muted playsInline />
+            <video
+              src={videoUrl}
+              className="h-full w-full object-cover"
+              muted
+              defaultMuted
+              playsInline
+              onLoadedMetadata={(e) => {
+                e.currentTarget.muted = true;
+                e.currentTarget.volume = 0;
+              }}
+            />
             <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1 bg-gradient-to-t from-black/55 to-transparent p-1">
-              <button
-                type="button"
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-white/95 text-sm"
-                aria-label={t("menuStudio.editMedia")}
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = "video/mp4,video/webm,video/quicktime";
-                  input.onchange = async () => {
-                    const file = input.files?.[0];
-                    if (!file) return;
-                    const check = await validateMenuVideoFile(file);
-                    if (!check.ok) {
-                      alert(t(`menuStudio.${check.error}`));
-                      return;
-                    }
-                    try {
-                      const url = await uploadFile(file, "video");
-                      onUpdatePayload(node.id, { video_url: url, video_aspect: check.aspect });
-                    } catch {
-                      alert(t("menuStudio.uploadFailed"));
-                    }
-                  };
-                  input.click();
-                }}
-              >
-                ✎
-              </button>
               <button
                 type="button"
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-white/95 text-sm text-red-600"
@@ -1580,12 +1644,12 @@ function MediaEditors({
       </div>
 
       {canAddMore ? (
-        <label
-          className={`mx-0 flex min-h-[7rem] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-6 text-center text-sm transition ${
+        <div
+          className={`relative mx-0 flex min-h-[7rem] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-4 py-6 text-center text-sm transition ${
             dragging
               ? "border-black bg-[var(--c-cream)]"
               : "border-black/25 bg-zinc-50 hover:bg-[var(--c-cream)]"
-          }`}
+          } ${busy ? "pointer-events-none opacity-70" : ""}`}
           onDragEnter={(e) => {
             e.preventDefault();
             setDragging(true);
@@ -1604,7 +1668,7 @@ function MediaEditors({
             void processFiles(e.dataTransfer.files);
           }}
         >
-          <span className="font-semibold">
+          <span className="pointer-events-none font-semibold">
             {busy ? (
               <span className="inline-flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
@@ -1614,20 +1678,23 @@ function MediaEditors({
               t("menuStudio.dropMedia")
             )}
           </span>
-          <span className="mt-1 text-[11px] text-zinc-500">{t("menuStudio.dropMediaHint")}</span>
+          <span className="pointer-events-none mt-1 text-[11px] text-zinc-500">
+            {t("menuStudio.dropMediaHint")}
+          </span>
           <input
             type="file"
-            accept="image/*,video/mp4,video/webm,video/quicktime"
+            accept="image/*,video/*,.mp4,.webm,.mov,.m4v"
             multiple
-            className="hidden"
             disabled={busy}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+            aria-label={t("menuStudio.dropMedia")}
             onChange={(e) => {
               const files = e.target.files;
               e.target.value = "";
               if (files) void processFiles(files);
             }}
           />
-        </label>
+        </div>
       ) : null}
     </div>
   );
@@ -1753,6 +1820,7 @@ function BackgroundSheet({
   setBackground,
   uploadFile,
   pickImageWithCrop,
+  cropExistingImage,
   t,
   showToast,
 }: {
@@ -1764,6 +1832,7 @@ function BackgroundSheet({
     quality?: "default" | "high",
   ) => Promise<string>;
   pickImageWithCrop: (onDone: (file: File) => void) => void;
+  cropExistingImage: (imageUrl: string, onDone: (file: File) => void) => void;
   t: (k: string) => string;
   showToast: (msg: string) => void;
 }) {
@@ -1814,7 +1883,16 @@ function BackgroundSheet({
                 type="button"
                 className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white/95 text-sm shadow"
                 aria-label={t("menuStudio.editMedia")}
-                onClick={pickPageImage}
+                onClick={() =>
+                  cropExistingImage(pageImageUrl, async (file) => {
+                    try {
+                      const url = await uploadFile(file, "image", "high");
+                      setBackground({ ...background, pageImageUrl: url });
+                    } catch {
+                      showToast(t("menuStudio.uploadFailed"));
+                    }
+                  })
+                }
               >
                 ✎
               </button>
@@ -1860,7 +1938,7 @@ function BackgroundSheet({
                 className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white/95 text-sm shadow"
                 aria-label={t("menuStudio.editMedia")}
                 onClick={() =>
-                  pickImageWithCrop(async (file) => {
+                  cropExistingImage(bannerUrl, async (file) => {
                     try {
                       const url = await uploadFile(file, "image");
                       setBackground({ ...background, bannerUrl: url, imageUrl: url });
