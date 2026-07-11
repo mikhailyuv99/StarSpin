@@ -79,12 +79,7 @@ export function MenuStudio({
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [tab, setTab] = useState<StudioTab>("menu");
   const [sheetHeightPx, setSheetHeightPx] = useState(280);
-  const sheetDragRef = useRef<{
-    startY: number;
-    startH: number;
-    moved: boolean;
-    pointerId: number;
-  } | null>(null);
+  const sheetHandleRef = useRef<HTMLDivElement>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -652,54 +647,38 @@ export function MenuStudio({
   const sheetCollapseAt = 130;
   const sheetMax = () => Math.round(Math.min(window.innerHeight * 0.72, 560));
 
-  const onSheetPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Don't preventDefault — that breaks touch drag on mobile.
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    const el = e.currentTarget;
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-      /* some mobile browsers reject capture */
-    }
-    el.style.cursor = "grabbing";
-    sheetDragRef.current = {
-      startY: e.clientY,
-      startH: sheetHeightRef.current,
-      moved: false,
-      pointerId: e.pointerId,
-    };
+  // Native touch listeners (non-passive) so mobile browsers don't steal the
+  // gesture for page scroll. Mouse uses pointer events on the same handle.
+  useEffect(() => {
+    if (mode !== "edit" || !tab) return;
+    const el = sheetHandleRef.current;
+    if (!el) return;
 
-    const onMove = (ev: PointerEvent) => {
-      const drag = sheetDragRef.current;
-      if (!drag || drag.pointerId !== ev.pointerId) return;
-      const dy = drag.startY - ev.clientY;
-      if (Math.abs(dy) > 6) drag.moved = true;
-      // Allow dragging below sheetMin so a push-down can collapse the deck.
+    type Drag = { startY: number; startH: number; moved: boolean; id: number };
+    let drag: Drag | null = null;
+
+    const moveTo = (clientY: number) => {
+      if (!drag) return;
+      const dy = drag.startY - clientY;
+      if (Math.abs(dy) > 8) drag.moved = true;
       const next = Math.max(72, Math.min(sheetMax(), drag.startH + dy));
       sheetHeightRef.current = next;
       setSheetHeightPx(next);
     };
 
-    const onUp = (ev: PointerEvent) => {
-      if (sheetDragRef.current?.pointerId !== ev.pointerId) return;
-      const drag = sheetDragRef.current;
-      sheetDragRef.current = null;
-      el.style.cursor = "grab";
-      try {
-        el.releasePointerCapture(ev.pointerId);
-      } catch {
-        /* already released */
-      }
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+    const finish = () => {
       if (!drag) return;
-      if (!drag.moved) {
+      const finished = drag;
+      drag = null;
+      el.style.cursor = "grab";
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      if (!finished.moved) {
         setSheetHeightPx((h) => (h > 340 ? 260 : sheetMax()));
         return;
       }
       const h = sheetHeightRef.current;
-      const pulledDown = drag.startH - h;
+      const pulledDown = finished.startH - h;
       if (h <= sheetCollapseAt || pulledDown >= 100) {
         setTab(null);
         return;
@@ -710,10 +689,100 @@ export function MenuStudio({
       });
     };
 
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-  };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const tch = e.touches[0]!;
+      drag = {
+        startY: tch.clientY,
+        startH: sheetHeightRef.current,
+        moved: false,
+        id: tch.identifier,
+      };
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!drag) return;
+      let touch: Touch | undefined;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i]!.identifier === drag.id) {
+          touch = e.touches[i];
+          break;
+        }
+      }
+      if (!touch) return;
+      e.preventDefault();
+      moveTo(touch.clientY);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!drag) return;
+      let ended = false;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i]!.identifier === drag.id) ended = true;
+      }
+      if (!ended) return;
+      finish();
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      // Touch path uses touch* so we can preventDefault on move.
+      if (e.pointerType !== "mouse") return;
+      if (e.button !== 0) return;
+      e.preventDefault();
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      el.style.cursor = "grabbing";
+      drag = {
+        startY: e.clientY,
+        startH: sheetHeightRef.current,
+        moved: false,
+        id: e.pointerId,
+      };
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!drag || e.pointerType !== "mouse" || drag.id !== e.pointerId) return;
+      e.preventDefault();
+      moveTo(e.clientY);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!drag || e.pointerType !== "mouse" || drag.id !== e.pointerId) return;
+      try {
+        el.releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      finish();
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [mode, tab]);
 
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const prevNodeCountRef = useRef(nodes.length);
@@ -828,15 +897,15 @@ export function MenuStudio({
           style={{ height: sheetHeightPx }}
         >
           <div
+            ref={sheetHandleRef}
             role="slider"
             aria-valuenow={sheetHeightPx}
             aria-valuemin={200}
             aria-valuemax={560}
             aria-label={t("menuStudio.resizeSheet")}
             title={t("menuStudio.resizeSheet")}
-            className="relative z-10 flex h-14 w-full shrink-0 touch-none select-none items-center justify-center border-b border-black/5 bg-white hover:bg-black/[0.03] active:bg-black/[0.06]"
-            style={{ cursor: "grab", touchAction: "none" }}
-            onPointerDown={onSheetPointerDown}
+            className="relative z-10 flex h-16 w-full shrink-0 touch-none select-none items-center justify-center border-b border-black/5 bg-white hover:bg-black/[0.03] active:bg-black/[0.06]"
+            style={{ cursor: "grab", touchAction: "none", WebkitUserSelect: "none" }}
           >
             <span
               aria-hidden
