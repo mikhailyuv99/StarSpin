@@ -1667,7 +1667,7 @@ html.locale-es .cadeo-hero-accent {
   color: var(--pj-ink, var(--c-black));
 }
 
-/* Preview mode: exact mobile viewport ? same 390×svh canvas as live journey. */
+/* Preview mode: exact mobile viewport ? same 390xsvh canvas as live journey. */
 .public-flow.public-flow--preview {
   position: relative;
   width: 390px;
@@ -2471,7 +2471,7 @@ html.locale-es .cadeo-hero-accent {
   overflow: visible;
 }
 
-/* ---- Phone mockup ? bezel matches 390×742 (iPhone 14 svh) ratio ---- */
+/* ---- Phone mockup ? bezel matches 390x742 (iPhone 14 svh) ratio ---- */
 .pj-phone {
   position: relative;
   box-sizing: border-box;
