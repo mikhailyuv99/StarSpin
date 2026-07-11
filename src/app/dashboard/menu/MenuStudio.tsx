@@ -42,6 +42,7 @@ import { MenuPublicView } from "@/components/menu/MenuPublicView";
 import { MenuSelect } from "@/components/menu/MenuSelect";
 import { MenuColorField } from "@/components/menu/MenuColorField";
 import { MenuMediaCropper } from "@/components/menu/MenuMediaCropper";
+import { DockSheet } from "@/components/menu/DockSheet";
 import { QRFontPicker } from "@/app/dashboard/qr/QRFontPicker";
 import { ensureQRFontLoaded } from "@/lib/qr-fonts";
 import {
@@ -78,9 +79,6 @@ export function MenuStudio({
 
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [tab, setTab] = useState<StudioTab>("menu");
-  const [sheetHeightPx, setSheetHeightPx] = useState(280);
-  const sheetPanelRef = useRef<HTMLDivElement>(null);
-  const sheetScrollRef = useRef<HTMLDivElement>(null);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
@@ -160,8 +158,6 @@ export function MenuStudio({
   const skipHistory = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedJsonRef = useRef<string | null>(null);
-  const sheetHeightRef = useRef(sheetHeightPx);
-  sheetHeightRef.current = sheetHeightPx;
 
   const translatingRef = useRef(false);
   const nodesRef = useRef(nodes);
@@ -646,34 +642,12 @@ export function MenuStudio({
     }
   };
 
-  const sheetMin = 200;
-  const sheetCollapseAt = 130;
   const studioRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const [navHeight, setNavHeight] = useState(56);
-  const draggingRef = useRef(false);
-
-  /** Space left for the sheet between studio header and tab bar. */
-  const sheetMax = useCallback(() => {
-    const studioH = studioRef.current?.clientHeight ?? Math.round(window.innerHeight * 0.7);
-    const headerH = headerRef.current?.offsetHeight ?? 48;
-    const available = studioH - headerH - navHeight - 4;
-    return Math.max(sheetMin, Math.min(Math.round(studioH * 0.42), 320, available));
-  }, [navHeight]);
-
-  const clampSheetHeight = useCallback(
-    (h: number) => Math.max(72, Math.min(sheetMax(), h)),
-    [sheetMax],
-  );
-
-  const clampSheetHeightRef = useRef(clampSheetHeight);
-  clampSheetHeightRef.current = clampSheetHeight;
-  const sheetMaxRef = useRef(sheetMax);
-  sheetMaxRef.current = sheetMax;
 
   // Pin studio under the dashboard header using the visual viewport (iOS-safe).
-  // Guard writes so we never trigger a visualViewport resize feedback loop (tab crash).
   useEffect(() => {
     const navWrap = document.querySelector(".brutal-nav-wrap") as HTMLElement | null;
     let lastTop = -1;
@@ -723,129 +697,6 @@ export function MenuStudio({
     ro.observe(el);
     return () => ro.disconnect();
   }, [mode]);
-
-  useEffect(() => {
-    const onResize = () => setSheetHeightPx((h) => clampSheetHeightRef.current(h));
-    window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
-    onResize();
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
-    };
-  }, [tab, mode, navHeight]);
-
-  useEffect(() => {
-    if (mode !== "edit" || !tab) return;
-    const next = clampSheetHeightRef.current(Math.min(220, sheetMaxRef.current()));
-    sheetHeightRef.current = next;
-    setSheetHeightPx(next);
-    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-  }, [tab, mode]);
-
-  const snapSheetHeight = useCallback((h: number, startH: number, moved: boolean) => {
-    const clamp = clampSheetHeightRef.current;
-    const max = sheetMaxRef.current;
-    if (!moved) {
-      const next = clamp(h > max() * 0.7 ? 200 : max());
-      sheetHeightRef.current = next;
-      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-      setSheetHeightPx(next);
-      return;
-    }
-    const pulledDown = startH - h;
-    if (h <= sheetCollapseAt || pulledDown >= 80) {
-      setTab(null);
-      return;
-    }
-    const snapped = clamp(h >= (sheetMin + max()) / 2 ? max() : 200);
-    sheetHeightRef.current = snapped;
-    if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${snapped}px`;
-    setSheetHeightPx(snapped);
-  }, []);
-
-  const snapSheetHeightRef = useRef(snapSheetHeight);
-  snapSheetHeightRef.current = snapSheetHeight;
-
-  useEffect(() => {
-    if (!sheetPanelRef.current || draggingRef.current) return;
-    sheetPanelRef.current.style.height = `${sheetHeightPx}px`;
-  }, [sheetHeightPx, tab, mode]);
-
-  // Clear any leftover inline overflow locks (e.g. aborted mobile drag).
-  useEffect(() => {
-    previewScrollRef.current?.style.removeProperty("overflow");
-    sheetScrollRef.current?.style.removeProperty("overflow");
-    studioRef.current?.removeAttribute("data-dragging");
-    draggingRef.current = false;
-  }, [tab, mode]);
-
-  /** Same drag path for mouse and touch — pointer events + window listeners (PC behavior on mobile). */
-  const onSheetHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-
-    const handle = e.currentTarget;
-    const pointerId = e.pointerId;
-    try {
-      handle.setPointerCapture(pointerId);
-    } catch {
-      /* ignore */
-    }
-
-    draggingRef.current = true;
-    studioRef.current?.setAttribute("data-dragging", "");
-    const state = {
-      startY: e.clientY,
-      startH: sheetHeightRef.current,
-      moved: false,
-    };
-    handle.style.cursor = "grabbing";
-
-    const onMove = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) return;
-      const dy = state.startY - ev.clientY;
-      if (Math.abs(dy) > 3) state.moved = true;
-      const next = clampSheetHeightRef.current(state.startH + dy);
-      sheetHeightRef.current = next;
-      if (sheetPanelRef.current) sheetPanelRef.current.style.height = `${next}px`;
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) return;
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-      try {
-        handle.releasePointerCapture(pointerId);
-      } catch {
-        /* ignore */
-      }
-      handle.style.cursor = "grab";
-      draggingRef.current = false;
-      studioRef.current?.removeAttribute("data-dragging");
-      // Ensure scroll areas are never left locked
-      previewScrollRef.current?.style.removeProperty("overflow");
-      sheetScrollRef.current?.style.removeProperty("overflow");
-      snapSheetHeightRef.current(sheetHeightRef.current, state.startH, state.moved);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-  };
-
-  // While dragging, block page/sheet scroll on iOS (non-passive).
-  useEffect(() => {
-    if (mode !== "edit" || !tab) return;
-    const blockScroll = (e: TouchEvent) => {
-      if (!draggingRef.current) return;
-      e.preventDefault();
-    };
-    document.addEventListener("touchmove", blockScroll, { passive: false, capture: true });
-    return () => document.removeEventListener("touchmove", blockScroll, true);
-  }, [mode, tab]);
 
   const prevNodeCountRef = useRef(nodes.length);
 
@@ -961,39 +812,14 @@ export function MenuStudio({
         </div>
       </div>
 
-      {mode === "edit" && tab ? (
-        <div
-          ref={sheetPanelRef}
-          className="relative z-[55] mx-auto flex w-full max-w-lg shrink-0 flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
-          style={{
-            height: draggingRef.current ? sheetHeightRef.current : sheetHeightPx,
-          }}
+      {mode === "edit" ? (
+        <DockSheet
+          open={tab !== null}
+          onClose={() => setTab(null)}
+          bottomOffset={navHeight}
+          ariaLabel={t("menuStudio.resizeSheet")}
         >
-          <div
-            data-menu-sheet-handle
-            role="slider"
-            aria-valuenow={sheetHeightPx}
-            aria-valuemin={200}
-            aria-valuemax={560}
-            aria-label={t("menuStudio.resizeSheet")}
-            title={t("menuStudio.resizeSheet")}
-            className="relative flex h-11 w-full shrink-0 cursor-grab touch-none select-none items-center justify-center border-b border-black/5 bg-white active:cursor-grabbing"
-            style={{
-              touchAction: "none",
-              WebkitUserSelect: "none",
-              userSelect: "none",
-            }}
-            onPointerDown={onSheetHandlePointerDown}
-          >
-            <span
-              aria-hidden
-              className="pointer-events-none h-1.5 w-12 rounded-full bg-zinc-400"
-            />
-          </div>
-          <div
-            ref={sheetScrollRef}
-            className="menu-studio-sheet-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-3 pb-5 [-webkit-overflow-scrolling:touch]"
-          >
+
             {tab === "menu" ? (
               <MenuSheet
                 roots={roots}
@@ -1051,8 +877,7 @@ export function MenuStudio({
                 t={t}
               />
             ) : null}
-          </div>
-        </div>
+        </DockSheet>
       ) : null}
 
       {mode === "edit" ? (

@@ -355,12 +355,15 @@ body.menu-studio-active .menu-studio-tabbar {
   padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* During handle drag, freeze nested scrollers without leaving inline overflow:hidden behind */
-.menu-studio[data-dragging] .menu-studio-preview,
-.menu-studio[data-dragging] .menu-studio-sheet-scroll {
-  overflow: hidden !important;
-  overscroll-behavior: none !important;
-  touch-action: none !important;
+/* Preview: scrollable without a visible scrollbar (avoids layout jump on handle press) */
+.menu-studio-preview {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.menu-studio-preview::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @media (min-width: 1024px) {
