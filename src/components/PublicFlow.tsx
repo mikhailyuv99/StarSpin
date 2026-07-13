@@ -19,7 +19,6 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
-import { PrizeCoupon } from "@/components/PrizeCoupon";
 import { PrizeWheelIcon } from "@/components/PrizeWheelIcon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
 import { computePreviewWheelSize } from "@/lib/preview-wheel-size";
@@ -47,6 +46,11 @@ const Wheel = dynamic(
       />
     ),
   },
+);
+
+const PrizeCoupon = dynamic(
+  () => import("@/components/PrizeCoupon").then((m) => ({ default: m.PrizeCoupon })),
+  { ssr: false },
 );
 
 const LocaleSwitcher = dynamic(

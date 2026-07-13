@@ -25,7 +25,7 @@ export function MerchantHeader({
           alt={merchant.name}
           width={64}
           height={64}
-          decoding="async"
+          decoding="sync"
           fetchPriority="high"
           onError={(e) => {
             if (merchant.logo_url && e.currentTarget.src !== merchant.logo_url) {

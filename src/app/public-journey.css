@@ -86,29 +86,6 @@ body {
   box-shadow: none !important;
 }
 
-.brutal-alert-error {
-  border: var(--brutal-border);
-  border-radius: var(--brutal-radius);
-  background: #fee2e2;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #991b1b;
-}
-
-.brutal-alert-success {
-  border: var(--brutal-border);
-  border-radius: var(--brutal-radius);
-  background: var(--c-mint);
-  padding: 0.65rem 0.9rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #14532d;
-}
-
-.brutal-stat {
-  border: var(--brutal-border);
-
 .locale-switcher {
   position: relative;
   z-index: 110;
