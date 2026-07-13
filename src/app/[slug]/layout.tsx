@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "@/i18n/server";
+import "../public-journey.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();

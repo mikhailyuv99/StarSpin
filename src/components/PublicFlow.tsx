@@ -724,16 +724,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       data-pj-theme={theme.id}
       style={theme.vars as React.CSSProperties}
     >
-      <div className="pj-decor" aria-hidden>
-        <span className="pj-orb pj-orb--1" />
-        <span className="pj-orb pj-orb--2" />
-        <span className="pj-orb pj-orb--3" />
-        <span className="pj-spark pj-spark--1" />
-        <span className="pj-spark pj-spark--2" />
-        <span className="pj-spark pj-spark--3" />
-        <span className="pj-spark pj-spark--4" />
-        <span className="pj-spark pj-spark--5" />
-      </div>
+      {/* Ambient decor deferred — was competing with LCP on mobile. */}
       <div className="mx-auto flex w-full max-w-lg flex-col">
         <div className="mb-2 flex justify-end px-1">
           <LocaleSwitcher variant="journey" />

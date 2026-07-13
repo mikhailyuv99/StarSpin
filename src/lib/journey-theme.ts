@@ -126,10 +126,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   arcade: {
     id: "arcade",
     accent: "#ff3ea5",
-    fonts: [
-      { family: "Orbitron", axis: "wght@600;700;800" },
-      { family: "Rubik", axis: "wght@400;500;700" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg":
         "radial-gradient(120% 90% at 50% -10%, #3a1d6e 0%, #1a0f3d 45%, #0b0a1f 100%)",
@@ -166,8 +163,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "14px",
       "--pj-logo-border": "1.5px solid rgba(0,229,255,0.7)",
       "--pj-coupon-bg": "rgba(11,10,31,0.55)",
-      "--pj-font-display": `"Orbitron", ${FONT_DISPLAY_FALLBACK}`,
-      "--pj-font-body": `"Rubik", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `${FONT_DISPLAY_FALLBACK}`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "uppercase",
       "--pj-heading-spacing": "0.04em",
     },
@@ -187,10 +184,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   aurora: {
     id: "aurora",
     accent: "#7c5cff",
-    fonts: [
-      { family: "Sora", axis: "wght@500;600;700;800" },
-      { family: "Inter", axis: "wght@400;500;600;700" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg":
         "linear-gradient(125deg, #ffd6ef 0%, #d3e4ff 30%, #d9fff1 55%, #e9d5ff 80%, #ffd6ef 100%)",
@@ -228,8 +222,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "20px",
       "--pj-logo-border": "1px solid rgba(255,255,255,0.8)",
       "--pj-coupon-bg": "rgba(255,255,255,0.55)",
-      "--pj-font-display": `"Sora", ${FONT_DISPLAY_FALLBACK}`,
-      "--pj-font-body": `"Inter", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `${FONT_DISPLAY_FALLBACK}`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "none",
       "--pj-heading-spacing": "-0.01em",
     },
@@ -249,10 +243,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   luxe: {
     id: "luxe",
     accent: "#b8912f",
-    fonts: [
-      { family: "Playfair Display", axis: "wght@500;600;700" },
-      { family: "Jost", axis: "wght@300;400;500;600" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg": "linear-gradient(180deg, #faf5ec 0%, #f0e6d2 100%)",
       "--pj-bg-accent": "rgba(184,145,47,0.14)",
@@ -287,8 +278,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "50%",
       "--pj-logo-border": "1px solid #cbb37a",
       "--pj-coupon-bg": "#f7efdd",
-      "--pj-font-display": `"Playfair Display", Georgia, serif`,
-      "--pj-font-body": `"Jost", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `Georgia, "Times New Roman", Georgia, serif`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "none",
       "--pj-heading-spacing": "0.01em",
     },
@@ -308,10 +299,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   noir: {
     id: "noir",
     accent: "#d4af5f",
-    fonts: [
-      { family: "Cormorant Garamond", axis: "wght@500;600;700" },
-      { family: "Jost", axis: "wght@300;400;500;600" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg": "radial-gradient(120% 100% at 50% -10%, #2a241d 0%, #161310 45%, #0b0908 100%)",
       "--pj-bg-accent": "rgba(212,175,95,0.12)",
@@ -348,8 +336,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "50%",
       "--pj-logo-border": "1px solid rgba(212,175,95,0.6)",
       "--pj-coupon-bg": "rgba(0,0,0,0.3)",
-      "--pj-font-display": `"Cormorant Garamond", Georgia, serif`,
-      "--pj-font-body": `"Jost", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `Georgia, "Times New Roman", Georgia, serif`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "none",
       "--pj-heading-spacing": "0.02em",
     },
@@ -369,10 +357,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   candy: {
     id: "candy",
     accent: "#ff5fa2",
-    fonts: [
-      { family: "Baloo 2", axis: "wght@500;600;700;800" },
-      { family: "Nunito", axis: "wght@400;600;700;800" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg": "linear-gradient(160deg, #ffe3f1 0%, #e7f0ff 55%, #e8fbf3 100%)",
       "--pj-bg-accent": "rgba(255,95,162,0.16)",
@@ -407,8 +392,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "24px",
       "--pj-logo-border": "3px solid #ff8fc7",
       "--pj-coupon-bg": "#fff2f8",
-      "--pj-font-display": `"Baloo 2", ${FONT_DISPLAY_FALLBACK}`,
-      "--pj-font-body": `"Nunito", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `${FONT_DISPLAY_FALLBACK}`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "none",
       "--pj-heading-spacing": "0",
     },
@@ -428,10 +413,7 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
   minimal: {
     id: "minimal",
     accent: "#4f46e5",
-    fonts: [
-      { family: "Space Grotesk", axis: "wght@500;600;700" },
-      { family: "Inter", axis: "wght@400;500;600;700" },
-    ],
+    fonts: [],
     vars: {
       "--pj-bg": "#f6f6f4",
       "--pj-bg-accent": "rgba(79,70,229,0.05)",
@@ -466,8 +448,8 @@ export const JOURNEY_TEMPLATES: Record<JourneyTemplateId, JourneyTemplateDef> = 
       "--pj-logo-radius": "14px",
       "--pj-logo-border": "1px solid #e4e4e7",
       "--pj-coupon-bg": "#fafafa",
-      "--pj-font-display": `"Space Grotesk", ${FONT_DISPLAY_FALLBACK}`,
-      "--pj-font-body": `"Inter", ${FONT_BODY_FALLBACK}`,
+      "--pj-font-display": `${FONT_DISPLAY_FALLBACK}`,
+      "--pj-font-body": `${FONT_BODY_FALLBACK}`,
       "--pj-heading-transform": "none",
       "--pj-heading-spacing": "-0.03em",
     },

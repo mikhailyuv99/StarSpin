@@ -1,5 +1,10 @@
+import { SiteProviders } from "./load-site-css";
 import { LandingPage } from "@/components/marketing/LandingPage";
 
 export default function HomePage() {
-  return <LandingPage />;
+  return (
+    <SiteProviders>
+      <LandingPage />
+    </SiteProviders>
+  );
 }

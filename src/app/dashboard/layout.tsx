@@ -1,3 +1,4 @@
+import { SiteProviders } from "../load-site-css";
 import { DashboardShell } from "@/components/DashboardShell";
 import { getCurrentMerchant, getOwnerMerchants } from "@/lib/merchant";
 import { getTranslations } from "@/i18n/server";
@@ -27,12 +28,14 @@ export default async function DashboardLayout({
   ];
 
   return (
-    <DashboardShell
-      nav={NAV}
-      establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
-      activeMerchantId={merchant.id}
-    >
-      {children}
-    </DashboardShell>
+    <SiteProviders>
+      <DashboardShell
+        nav={NAV}
+        establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
+        activeMerchantId={merchant.id}
+      >
+        {children}
+      </DashboardShell>
+    </SiteProviders>
   );
 }

@@ -1,12 +1,11 @@
-import { JourneyFontLink } from "@/components/JourneyFontLink";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
 import { isMerchantLive } from "@/lib/merchant-access";
 import { getCachedPublicMerchant } from "@/lib/public-merchant";
+import { merchantLogoDisplayUrl } from "@/lib/merchant-logo-url";
 import { notFound } from "next/navigation";
 import { PublicFlow } from "@/components/PublicFlow";
 import { MerchantInactiveNotice } from "../MerchantInactiveNotice";
-import { journeyFontHref, parseJourneyTheme } from "@/lib/journey-theme";
 
 export default async function PublicMerchantPlayPage({
   params,
@@ -49,14 +48,11 @@ export default async function PublicMerchantPlayPage({
       .catch(() => {});
   }
 
-  const fontHref = journeyFontHref(parseJourneyTheme(merchant.journey_theme).template);
+  const logoSrc = merchantLogoDisplayUrl(merchant.logo_url, 128);
 
   return (
     <>
-      {merchant.logo_url ? (
-        <link rel="preload" as="image" href={merchant.logo_url} fetchPriority="high" />
-      ) : null}
-      {fontHref && <JourneyFontLink href={fontHref} />}
+      {logoSrc ? <link rel="preload" as="image" href={logoSrc} fetchPriority="high" /> : null}
       <PublicFlow merchant={merchant} prizes={payload.prizes} />
     </>
   );
