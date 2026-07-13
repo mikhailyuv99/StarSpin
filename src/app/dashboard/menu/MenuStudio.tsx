@@ -702,23 +702,29 @@ export function MenuStudio({
   useEffect(() => {
     const navWrap = document.querySelector(".brutal-nav-wrap") as HTMLElement | null;
     let lastTop = -1;
-    let lastHeight = -1;
+    let lastBottom = -1;
     let raf = 0;
 
     const sync = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const vv = window.visualViewport;
-        const top = Math.round(navWrap?.getBoundingClientRect().bottom ?? 56);
-        const layoutBottom = vv
+        const headerBottom = Math.round(navWrap?.getBoundingClientRect().bottom ?? 56);
+        const offsetTop = vv ? Math.round(vv.offsetTop) : 0;
+        const visualBottom = vv
           ? Math.round(vv.offsetTop + vv.height)
           : Math.round(window.innerHeight);
-        const height = Math.max(200, layoutBottom - top);
-        if (top === lastTop && height === lastHeight) return;
-        lastTop = top;
-        lastHeight = height;
-        document.documentElement.style.setProperty("--menu-studio-top", `${top}px`);
-        document.documentElement.style.setProperty("--menu-studio-height", `${height}px`);
+        const layoutBottom = Math.round(window.innerHeight);
+        // getBoundingClientRect is visual-relative → convert to layout for position:fixed.
+        const fixedTop = headerBottom + offsetTop;
+        // Lift off the layout bottom when browser chrome eats the visual viewport.
+        const bottomInset = Math.max(0, layoutBottom - visualBottom);
+
+        if (fixedTop === lastTop && bottomInset === lastBottom) return;
+        lastTop = fixedTop;
+        lastBottom = bottomInset;
+        document.documentElement.style.setProperty("--menu-studio-top", `${fixedTop}px`);
+        document.documentElement.style.setProperty("--menu-studio-bottom", `${bottomInset}px`);
       });
     };
 
@@ -735,6 +741,7 @@ export function MenuStudio({
       window.visualViewport?.removeEventListener("resize", sync);
       window.visualViewport?.removeEventListener("scroll", sync);
       document.documentElement.style.removeProperty("--menu-studio-top");
+      document.documentElement.style.removeProperty("--menu-studio-bottom");
       document.documentElement.style.removeProperty("--menu-studio-height");
     };
   }, []);
@@ -938,7 +945,7 @@ export function MenuStudio({
       {mode === "edit" ? (
         <nav
           ref={navRef}
-          className="menu-studio-tabbar relative z-[60] shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pt-1.5"
+          className="menu-studio-tabbar relative z-[60] shrink-0 border-t border-black/10 bg-[#f3eee6] px-2 pt-1.5 pb-3"
         >
           <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
             {(
