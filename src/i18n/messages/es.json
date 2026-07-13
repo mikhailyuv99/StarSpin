@@ -270,7 +270,8 @@
     "hubPlay": "Jugar y ganar un premio",
     "menuEmpty": "Carta próximamente.",
     "menuClose": "Cerrar",
-    "menuDisabled": "Esta carta aún no está disponible."
+    "menuDisabled": "Esta carta aún no está disponible.",
+    "uploadFailed": "Upload failed. Please try again."
   },
   "login": {
     "merchantSpace": "Espacio comerciante",
@@ -875,7 +876,18 @@
     "qrTargetJourney": "Recorrido premios",
     "qrTargetPlay": "Solo juego",
     "qrTargetMenu": "Solo carta",
-    "qrTargetSeparateHint": "Usa «Solo carta» para imprimir un segundo sticker."
+    "qrTargetSeparateHint": "Usa «Solo carta» para imprimir un segundo sticker.",
+    "crmActivityTitle": "Every spin",
+    "crmActivityHint": "Full activity log — every wheel play with customer, device, and screenshot proof when available.",
+    "crmNoActivity": "No spins recorded yet.",
+    "crmColWhen": "When",
+    "crmColPrize": "Prize / steps",
+    "crmColCustomer": "Customer",
+    "crmColDevice": "Locale / IP / device",
+    "crmColProof": "Screenshot",
+    "crmColStatus": "Status",
+    "crmStatusClaimed": "Claimed",
+    "crmStatusOpen": "Open"
   },
   "admin": {
     "title": "Administración",

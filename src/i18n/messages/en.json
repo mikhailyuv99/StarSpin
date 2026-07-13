@@ -222,6 +222,7 @@
     "reviewLinkUnavailable": "Review link not ready — ask the venue to update their Google link in the dashboard.",
     "uploadScreenshot": "📷 Upload my screenshot",
     "uploadAnalyzing": "Uploading…",
+    "uploadFailed": "Upload failed. Please try again.",
     "reviewHint": "Take a screenshot of your published review",
     "wheelTitle": "Your turn!",
     "wheelSubtitle": "Hit the button - the wheel decides",
@@ -873,7 +874,18 @@
     "qrTargetJourney": "Prize journey",
     "qrTargetPlay": "Play only",
     "qrTargetMenu": "Menu only",
-    "qrTargetSeparateHint": "Use “Menu only” to print a second sticker for the carte."
+    "qrTargetSeparateHint": "Use “Menu only” to print a second sticker for the carte.",
+    "crmActivityTitle": "Every spin",
+    "crmActivityHint": "Full activity log — every wheel play with customer, device, and screenshot proof when available.",
+    "crmNoActivity": "No spins recorded yet.",
+    "crmColWhen": "When",
+    "crmColPrize": "Prize / steps",
+    "crmColCustomer": "Customer",
+    "crmColDevice": "Locale / IP / device",
+    "crmColProof": "Screenshot",
+    "crmColStatus": "Status",
+    "crmStatusClaimed": "Claimed",
+    "crmStatusOpen": "Open"
   },
   "admin": {
     "title": "Administration",

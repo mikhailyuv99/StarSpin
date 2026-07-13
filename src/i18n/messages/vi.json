@@ -270,7 +270,8 @@
     "hubPlay": "Chơi và nhận quà",
     "menuEmpty": "Thực đơn sắp có.",
     "menuClose": "Đóng",
-    "menuDisabled": "Thực đơn chưa sẵn sàng."
+    "menuDisabled": "Thực đơn chưa sẵn sàng.",
+    "uploadFailed": "Upload failed. Please try again."
   },
   "login": {
     "merchantSpace": "Không gian thương nhân",
@@ -875,7 +876,18 @@
     "qrTargetJourney": "Hành trình quà",
     "qrTargetPlay": "Chỉ chơi",
     "qrTargetMenu": "Chỉ menu",
-    "qrTargetSeparateHint": "Dùng «Chỉ menu» để in sticker thứ hai."
+    "qrTargetSeparateHint": "Dùng «Chỉ menu» để in sticker thứ hai.",
+    "crmActivityTitle": "Every spin",
+    "crmActivityHint": "Full activity log — every wheel play with customer, device, and screenshot proof when available.",
+    "crmNoActivity": "No spins recorded yet.",
+    "crmColWhen": "When",
+    "crmColPrize": "Prize / steps",
+    "crmColCustomer": "Customer",
+    "crmColDevice": "Locale / IP / device",
+    "crmColProof": "Screenshot",
+    "crmColStatus": "Status",
+    "crmStatusClaimed": "Claimed",
+    "crmStatusOpen": "Open"
   },
   "admin": {
     "title": "Quản trị",

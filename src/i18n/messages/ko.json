@@ -270,7 +270,8 @@
     "hubPlay": "게임하고 경품 받기",
     "menuEmpty": "메뉴 준비 중.",
     "menuClose": "닫기",
-    "menuDisabled": "이 메뉴는 아직 사용할 수 없습니다."
+    "menuDisabled": "이 메뉴는 아직 사용할 수 없습니다.",
+    "uploadFailed": "Upload failed. Please try again."
   },
   "login": {
     "merchantSpace": "매장 공간",
@@ -873,7 +874,18 @@
     "qrTargetJourney": "경품 여정",
     "qrTargetPlay": "게임만",
     "qrTargetMenu": "메뉴만",
-    "qrTargetSeparateHint": "「메뉴만」으로 두 번째 스티커를 인쇄하세요."
+    "qrTargetSeparateHint": "「메뉴만」으로 두 번째 스티커를 인쇄하세요.",
+    "crmActivityTitle": "Every spin",
+    "crmActivityHint": "Full activity log — every wheel play with customer, device, and screenshot proof when available.",
+    "crmNoActivity": "No spins recorded yet.",
+    "crmColWhen": "When",
+    "crmColPrize": "Prize / steps",
+    "crmColCustomer": "Customer",
+    "crmColDevice": "Locale / IP / device",
+    "crmColProof": "Screenshot",
+    "crmColStatus": "Status",
+    "crmStatusClaimed": "Claimed",
+    "crmStatusOpen": "Open"
   },
   "admin": {
     "title": "관리",

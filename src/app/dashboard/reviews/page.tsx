@@ -15,7 +15,7 @@ export default async function ReviewsPage() {
     .eq("merchant_id", merchant.id)
     .not("review_screenshot_url", "is", null)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(500);
 
   return (
     <div className="space-y-8">

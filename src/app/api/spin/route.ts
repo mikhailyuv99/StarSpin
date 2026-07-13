@@ -97,6 +97,8 @@ export async function POST(request: Request) {
     }
 
     const status = reviewScreenshotStatus ?? "pending";
+    const userAgent = (request.headers.get("user-agent") ?? "").slice(0, 500);
+    const clientIp = getClientIp(request);
 
     const { data: spin, error: spinError } = await insertSpinRow(supabase, {
       merchant_id: merchantId,
@@ -108,6 +110,9 @@ export async function POST(request: Request) {
       review_screenshot_url: reviewScreenshotUrl ?? null,
       review_screenshot_status: status,
       completed_flow_steps: Array.isArray(completedFlowSteps) ? completedFlowSteps : [],
+      client_locale: locale,
+      client_user_agent: userAgent || null,
+      client_ip: clientIp !== "unknown" ? clientIp : null,
     });
 
     if (spinError || !spin?.id) {
@@ -129,6 +134,8 @@ export async function POST(request: Request) {
     if (stockPrize) {
       const ok = await decrementPrizeStock(supabase, stockPrize);
       if (!ok) {
+        // Never leave a "successful" spin that couldn't award stock — roll it back.
+        await supabase.from("spins").delete().eq("id", spin.id);
         return NextResponse.json({ error: t("api.noPrizes") }, { status: 400 });
       }
     }

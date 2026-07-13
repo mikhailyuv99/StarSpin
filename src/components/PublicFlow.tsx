@@ -328,7 +328,6 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     setLoading(true);
     setError(null);
 
-    /** Always let the customer continue — never surface upload UI errors on this step. */
     const finishSuccess = (pathOrUrl: string | null) => {
       setReviewStatus("pending");
       setScreenshotUrl(pathOrUrl);
@@ -345,7 +344,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
         formData.append("merchantId", merchant.id);
 
         const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 25_000);
+        const timer = window.setTimeout(() => controller.abort(), 35_000);
         try {
           const uploadRes = await fetch("/api/review/upload", {
             method: "POST",
@@ -354,16 +353,13 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
             signal: controller.signal,
           });
           const raw = await uploadRes.text();
-          if (!raw) return uploadRes.ok ? {} : null;
+          if (!raw) return null;
           try {
             const data = JSON.parse(raw) as { path?: string; url?: string; error?: string };
             if (data.path || data.url) return data;
-            // Ambiguous/empty success body after storage write — treat as ok.
-            if (uploadRes.ok) return data;
             return null;
           } catch {
-            // HTML/proxy noise after a successful write — prefer continuing.
-            return uploadRes.ok ? {} : null;
+            return null;
           }
         } finally {
           window.clearTimeout(timer);
@@ -371,19 +367,38 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
       };
 
       let result: { path?: string; url?: string } | null = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
           result = await postOnce();
-          if (result) break;
+          if (result?.path || result?.url) break;
         } catch {
-          /* retry once — flaky mobile networks */
+          /* retry — flaky mobile networks */
         }
       }
 
-      finishSuccess(result?.path ?? result?.url ?? null);
+      const stored = result?.path ?? result?.url ?? null;
+      if (!stored) {
+        setError(t("public.uploadFailed"));
+        return;
+      }
+
+      finishSuccess(stored);
+
+      // If the customer already spun (rare race), attach proof to that row.
+      if (spinId && spinId !== "preview") {
+        void fetch("/api/spin/screenshot", {
+          method: "POST",
+          headers: localeHeaders(locale),
+          body: JSON.stringify({
+            spinId,
+            merchantId: merchant.id,
+            reviewScreenshotUrl: stored,
+            reviewScreenshotStatus: "pending",
+          }),
+        }).catch(() => {});
+      }
     } catch {
-      // Compression / unexpected client failure — still never block the journey.
-      finishSuccess(null);
+      setError(t("public.uploadFailed"));
     } finally {
       setLoading(false);
       const input = fileInputRef.current;
@@ -477,6 +492,21 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
         nearMissTarget: (data.nearMissTarget as string | null) ?? null,
       };
       setPreparedSpin(prepared);
+
+      // Guarantee screenshot is linked even if state raced the insert.
+      if (screenshotUrl && prepared.spinId) {
+        void fetch("/api/spin/screenshot", {
+          method: "POST",
+          headers: localeHeaders(locale),
+          body: JSON.stringify({
+            spinId: prepared.spinId,
+            merchantId: merchant.id,
+            reviewScreenshotUrl: screenshotUrl,
+            reviewScreenshotStatus: reviewStatus,
+          }),
+        }).catch(() => {});
+      }
+
       return prepared;
     } catch (e) {
       setError(e instanceof Error ? e.message : t("public.error"));
@@ -838,7 +868,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                         type="button"
                         onClick={() => {
                           if (!preview) window.open(url, "_blank", "noopener,noreferrer");
-                          advance();
+                          advance(actionStep);
                         }}
                         className="public-btn public-touch-target flex items-center justify-center gap-2.5"
                         style={accentBtnStyle}

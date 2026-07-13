@@ -105,6 +105,9 @@ export interface Spin {
   redeem_min_spend_cents?: number | null;
   redeem_expires_at?: string | null;
   completed_flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
+  client_locale?: string | null;
+  client_user_agent?: string | null;
+  client_ip?: string | null;
   created_at: string;
   prize?: Prize;
 }

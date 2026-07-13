@@ -270,7 +270,8 @@
     "hubPlay": "Играть и выиграть приз",
     "menuEmpty": "Меню скоро появится.",
     "menuClose": "Закрыть",
-    "menuDisabled": "Это меню пока недоступно."
+    "menuDisabled": "Это меню пока недоступно.",
+    "uploadFailed": "Upload failed. Please try again."
   },
   "login": {
     "merchantSpace": "Пространство продавца",
@@ -875,7 +876,18 @@
     "qrTargetJourney": "Розыгрыш",
     "qrTargetPlay": "Только игра",
     "qrTargetMenu": "Только меню",
-    "qrTargetSeparateHint": "«Только меню» — второй стикер для карты."
+    "qrTargetSeparateHint": "«Только меню» — второй стикер для карты.",
+    "crmActivityTitle": "Every spin",
+    "crmActivityHint": "Full activity log — every wheel play with customer, device, and screenshot proof when available.",
+    "crmNoActivity": "No spins recorded yet.",
+    "crmColWhen": "When",
+    "crmColPrize": "Prize / steps",
+    "crmColCustomer": "Customer",
+    "crmColDevice": "Locale / IP / device",
+    "crmColProof": "Screenshot",
+    "crmColStatus": "Status",
+    "crmStatusClaimed": "Claimed",
+    "crmStatusOpen": "Open"
   },
   "admin": {
     "title": "Администрирование",

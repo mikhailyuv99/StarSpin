@@ -20,11 +20,11 @@ export default async function CrmPage() {
     supabase
       .from("spins")
       .select(
-        "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, prize:prizes(label)",
+        "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes(label)",
       )
       .eq("merchant_id", merchant.id)
       .order("created_at", { ascending: false })
-      .limit(5000),
+      .limit(10000),
     supabase
       .from("review_counts_history")
       .select("*")
@@ -41,7 +41,7 @@ export default async function CrmPage() {
 
   const funnel = computeCrmFunnel(spins);
   const contacts = aggregateCrmContacts(spins);
-  const recent = spins.slice(0, 20);
+  const activity = spins.slice(0, 200);
 
   return (
     <div className="space-y-8">
@@ -73,6 +73,97 @@ export default async function CrmPage() {
         <div className={ui.stat}>
           <p className={ui.statLabel}>{t("dashboard.crmFunnelClaimed")}</p>
           <p className={ui.statValue}>{funnel.withClaim}</p>
+        </div>
+      </div>
+
+      <div className={ui.card}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className={ui.h2}>{t("dashboard.crmActivityTitle")}</h2>
+            <p className="mt-1 text-sm text-muted">{t("dashboard.crmActivityHint")}</p>
+          </div>
+          <Link href="/dashboard/reviews" className={ui.link}>
+            {t("dashboard.reviewsTitle")} →
+          </Link>
+        </div>
+        <div className="mt-4 overflow-x-auto rounded-[14px] border-2 border-black">
+          <table className={ui.table}>
+            <thead>
+              <tr>
+                <th className={ui.th}>{t("dashboard.crmColWhen")}</th>
+                <th className={ui.th}>{t("dashboard.crmColPrize")}</th>
+                <th className={ui.th}>{t("dashboard.crmColCustomer")}</th>
+                <th className={ui.th}>{t("dashboard.crmColDevice")}</th>
+                <th className={ui.th}>{t("dashboard.crmColProof")}</th>
+                <th className={ui.th}>{t("dashboard.crmColStatus")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activity.length === 0 && (
+                <tr>
+                  <td colSpan={6} className={`${ui.td} text-center text-muted`}>
+                    {t("dashboard.crmNoActivity")}
+                  </td>
+                </tr>
+              )}
+              {activity.map((spin) => {
+                const name = spin.claim_first_name?.trim();
+                const email = spin.claim_email?.trim();
+                const phone = spin.phone_number?.trim();
+                const customer =
+                  [name, email, phone].filter(Boolean).join(" · ") || t("dashboard.crmAnonymous");
+                const deviceBits = [
+                  spin.client_locale,
+                  spin.client_ip,
+                  spin.device_fingerprint ? `${spin.device_fingerprint.slice(0, 8)}…` : null,
+                ].filter(Boolean);
+                const steps = Array.isArray(spin.completed_flow_steps)
+                  ? spin.completed_flow_steps.join(", ")
+                  : "";
+                return (
+                  <tr key={spin.id}>
+                    <td className={`${ui.td} whitespace-nowrap font-mono text-xs`}>
+                      {new Date(spin.created_at).toLocaleString(intl)}
+                    </td>
+                    <td className={ui.td}>
+                      <div className="font-extrabold">{spin.prize?.label ?? "—"}</div>
+                      {steps ? <div className="mt-0.5 text-[11px] text-muted">{steps}</div> : null}
+                    </td>
+                    <td className={ui.td}>
+                      <div className="max-w-[16rem] truncate text-sm">{customer}</div>
+                      {spin.prize_code ? (
+                        <div className="mt-0.5 font-mono text-[11px] text-muted">{spin.prize_code}</div>
+                      ) : null}
+                    </td>
+                    <td className={`${ui.td} max-w-[12rem] truncate text-[11px] text-muted`}>
+                      {deviceBits.length ? deviceBits.join(" · ") : "—"}
+                    </td>
+                    <td className={ui.td}>
+                      {spin.review_screenshot_url ? (
+                        <a
+                          href={reviewScreenshotHref(spin.review_screenshot_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`text-xs font-bold ${ui.link}`}
+                        >
+                          {t("dashboard.viewScreenshot")}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
+                    </td>
+                    <td className={ui.td}>
+                      <span className="text-xs font-bold">
+                        {spin.prize_code
+                          ? t("dashboard.crmStatusClaimed")
+                          : t("dashboard.crmStatusOpen")}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -132,46 +223,6 @@ export default async function CrmPage() {
           </div>
         </div>
       )}
-
-      <div className={ui.card}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className={ui.h2}>{t("dashboard.recentSpins")}</h2>
-          <Link href="/dashboard/reviews" className={ui.link}>
-            {t("dashboard.reviewsTitle")} →
-          </Link>
-        </div>
-        <div className="mt-4 overflow-hidden rounded-[14px] border-2 border-black">
-          {recent.map((spin) => (
-            <div
-              key={spin.id}
-              className="grid grid-cols-1 items-center gap-2 border-b-2 border-black/10 bg-white px-4 py-3 text-sm last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)_auto]"
-            >
-              <span className="font-mono text-xs text-muted">
-                {new Date(spin.created_at).toLocaleString(intl)}
-              </span>
-              <span className="truncate font-extrabold text-ink">
-                {spin.prize?.label ?? "-"}
-              </span>
-              <span className="truncate text-xs text-muted">
-                {spin.claim_email ?? t("dashboard.crmAnonymous")}
-                {spin.prize_code ? ` · ${spin.prize_code}` : ""}
-              </span>
-              {spin.review_screenshot_url ? (
-                <a
-                  href={reviewScreenshotHref(spin.review_screenshot_url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-xs font-bold ${ui.link}`}
-                >
-                  {t("dashboard.viewScreenshot")}
-                </a>
-              ) : (
-                <span className="text-xs text-muted">—</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

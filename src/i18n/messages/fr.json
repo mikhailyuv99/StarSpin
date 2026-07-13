@@ -318,7 +318,8 @@
     "hubPlay": "Jouer et gagner un lot",
     "menuEmpty": "Carte bientôt disponible.",
     "menuClose": "Fermer",
-    "menuDisabled": "Cette carte n’est pas encore disponible."
+    "menuDisabled": "Cette carte n’est pas encore disponible.",
+    "uploadFailed": "Echec de l'envoi. Reessayez."
   },
   "login": {
     "merchantSpace": "Espace commerçant",
@@ -921,7 +922,18 @@
     "qrTargetJourney": "Parcours lots",
     "qrTargetPlay": "Jeu seul",
     "qrTargetMenu": "Carte seule",
-    "qrTargetSeparateHint": "Utilisez « Carte seule » pour imprimer un second sticker."
+    "qrTargetSeparateHint": "Utilisez « Carte seule » pour imprimer un second sticker.",
+    "crmActivityTitle": "Chaque tour",
+    "crmActivityHint": "Journal complet — chaque partie avec client, appareil et capture si disponible.",
+    "crmNoActivity": "Aucun tour enregistre.",
+    "crmColWhen": "Quand",
+    "crmColPrize": "Prix / etapes",
+    "crmColCustomer": "Client",
+    "crmColDevice": "Langue / IP / appareil",
+    "crmColProof": "Capture",
+    "crmColStatus": "Statut",
+    "crmStatusClaimed": "Reclame",
+    "crmStatusOpen": "Ouvert"
   },
   "admin": {
     "title": "Administration",

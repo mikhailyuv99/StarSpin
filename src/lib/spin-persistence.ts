@@ -10,6 +10,9 @@ export type SpinInsertRow = {
   review_screenshot_url: string | null;
   review_screenshot_status: string;
   completed_flow_steps?: string[];
+  client_locale?: string | null;
+  client_user_agent?: string | null;
+  client_ip?: string | null;
 };
 
 function isMissingColumnError(message: string, column: string): boolean {
@@ -36,9 +39,24 @@ function coreSpinRow(row: SpinInsertRow) {
   };
 }
 
+function withAnalytics(row: SpinInsertRow) {
+  return {
+    client_locale: row.client_locale?.trim() || null,
+    client_user_agent: row.client_user_agent?.slice(0, 500) || null,
+    client_ip: row.client_ip?.trim() || null,
+  };
+}
+
 /** Insert a spin row, retrying without optional columns when the DB schema lags migrations. */
 export async function insertSpinRow(supabase: SupabaseClient, row: SpinInsertRow) {
+  const analytics = withAnalytics(row);
   const payloads: Record<string, unknown>[] = [
+    {
+      ...coreSpinRow(row),
+      ...analytics,
+      resolved_prize_id: row.resolved_prize_id ?? null,
+      completed_flow_steps: row.completed_flow_steps ?? [],
+    },
     {
       ...coreSpinRow(row),
       resolved_prize_id: row.resolved_prize_id ?? null,
@@ -56,6 +74,11 @@ export async function insertSpinRow(supabase: SupabaseClient, row: SpinInsertRow
   for (const payload of payloads) {
     const result = await supabase.from("spins").insert(payload).select("id").single();
     if (!result.error && result.data?.id) {
+      if (payload !== payloads[0]) {
+        console.warn("Spin insert used schema fallback; some analytics columns may be missing", {
+          keys: Object.keys(payload),
+        });
+      }
       return result;
     }
 
@@ -65,7 +88,10 @@ export async function insertSpinRow(supabase: SupabaseClient, row: SpinInsertRow
     const message = result.error.message;
     const optionalColumnMissing =
       isMissingColumnError(message, "resolved_prize_id") ||
-      isMissingColumnError(message, "completed_flow_steps");
+      isMissingColumnError(message, "completed_flow_steps") ||
+      isMissingColumnError(message, "client_locale") ||
+      isMissingColumnError(message, "client_user_agent") ||
+      isMissingColumnError(message, "client_ip");
 
     if (!optionalColumnMissing) {
       return result;
@@ -99,4 +125,25 @@ export async function updateSpinPrizeResolution(
   }
 
   return result;
+}
+
+/** Attach / refresh review screenshot on an existing unclaimed spin. */
+export async function attachSpinScreenshot(
+  supabase: SupabaseClient,
+  spinId: string,
+  merchantId: string,
+  screenshotUrl: string,
+  status: string = "pending",
+) {
+  return supabase
+    .from("spins")
+    .update({
+      review_screenshot_url: screenshotUrl,
+      review_screenshot_status: status,
+    })
+    .eq("id", spinId)
+    .eq("merchant_id", merchantId)
+    .is("prize_code", null)
+    .select("id")
+    .maybeSingle();
 }
