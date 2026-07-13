@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import type { Metadata } from "next";
-import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { PricingMarketProvider } from "@/components/providers/PricingMarketProvider";
 import { I18nProvider } from "@/i18n/client";
 import { getMessages, getPublicJourneyMessages } from "@/i18n/get-messages";
@@ -71,7 +70,7 @@ export default async function RootLayout({
       >
         <PricingMarketProvider market={pricingMarket}>
           <I18nProvider locale={locale} messages={messages}>
-            {isPublicJourney ? children : <SmoothScrollProvider>{children}</SmoothScrollProvider>}
+            {children}
           </I18nProvider>
         </PricingMarketProvider>
       </body>
