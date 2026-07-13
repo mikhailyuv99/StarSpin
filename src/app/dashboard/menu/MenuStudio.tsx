@@ -699,54 +699,6 @@ export function MenuStudio({
   const navRef = useRef<HTMLElement>(null);
   const [navHeight, setNavHeight] = useState(56);
 
-  // Pin studio under the dashboard header using the visual viewport (iOS-safe).
-  useEffect(() => {
-    const navWrap = document.querySelector(".brutal-nav-wrap") as HTMLElement | null;
-    let lastTop = -1;
-    let lastBottom = -1;
-    let raf = 0;
-
-    const sync = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const vv = window.visualViewport;
-        const headerBottom = Math.round(navWrap?.getBoundingClientRect().bottom ?? 56);
-        const offsetTop = vv ? Math.round(vv.offsetTop) : 0;
-        const visualBottom = vv
-          ? Math.round(vv.offsetTop + vv.height)
-          : Math.round(window.innerHeight);
-        const layoutBottom = Math.round(window.innerHeight);
-        // getBoundingClientRect is visual-relative → convert to layout for position:fixed.
-        const fixedTop = headerBottom + offsetTop;
-        // Lift off the layout bottom when browser chrome eats the visual viewport.
-        const bottomInset = Math.max(0, layoutBottom - visualBottom);
-
-        if (fixedTop === lastTop && bottomInset === lastBottom) return;
-        lastTop = fixedTop;
-        lastBottom = bottomInset;
-        document.documentElement.style.setProperty("--menu-studio-top", `${fixedTop}px`);
-        document.documentElement.style.setProperty("--menu-studio-bottom", `${bottomInset}px`);
-      });
-    };
-
-    sync();
-    const ro = navWrap ? new ResizeObserver(sync) : null;
-    if (navWrap) ro?.observe(navWrap);
-    window.addEventListener("resize", sync);
-    window.visualViewport?.addEventListener("resize", sync);
-    window.visualViewport?.addEventListener("scroll", sync);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro?.disconnect();
-      window.removeEventListener("resize", sync);
-      window.visualViewport?.removeEventListener("resize", sync);
-      window.visualViewport?.removeEventListener("scroll", sync);
-      document.documentElement.style.removeProperty("--menu-studio-top");
-      document.documentElement.style.removeProperty("--menu-studio-bottom");
-      document.documentElement.style.removeProperty("--menu-studio-height");
-    };
-  }, []);
-
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;

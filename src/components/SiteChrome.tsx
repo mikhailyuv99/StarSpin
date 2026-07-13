@@ -4,7 +4,7 @@ import { siteFontClassName } from "@/lib/site-fonts";
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${siteFontClassName} min-h-dvh [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]`}
+      className={`site-chrome ${siteFontClassName} min-h-dvh [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]`}
     >
       {children}
     </div>

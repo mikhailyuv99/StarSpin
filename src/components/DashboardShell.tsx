@@ -23,7 +23,7 @@ function DashboardMain({
   const { isRefreshingMerchant } = useActiveMerchant();
 
   return (
-    <div className={`mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6 ${fullHeight ? "flex min-h-0 flex-1 flex-col !pt-2" : ""}`}>
+    <div className={`mx-auto min-w-0 max-w-5xl overflow-x-clip px-4 pt-6 sm:px-6 ${fullHeight ? "flex min-h-0 w-full max-w-none flex-1 flex-col !px-0 !pt-0" : ""}`}>
       <main className={`min-w-0 ${fullHeight ? "flex min-h-0 flex-1 flex-col" : ""}`}>
         {isRefreshingMerchant ? <DashboardContentSkeleton /> : children}
       </main>
