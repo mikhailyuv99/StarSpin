@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
 import { RESERVED_SLUGS } from "@/lib/app-url";
+import { revalidatePublicMerchantClient } from "@/lib/revalidate-public-merchant-client";
 import {
   FLOW_ACTION_STEPS,
   normalizeFlowSteps,
@@ -253,6 +254,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     }
     setSlugConfirmOpen(false);
     setPendingSlug(null);
+    await revalidatePublicMerchantClient(slug, merchant.slug);
     setMessage(t("common.saved"));
     router.refresh();
   };

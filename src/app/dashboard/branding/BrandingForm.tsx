@@ -9,6 +9,7 @@ import { ui } from "@/components/ui/styles";
 import { useTranslations } from "@/i18n/client";
 import { extractGooglePlaceId, normalizeGoogleReviewLink, sanitizeGooglePlaceId } from "@/lib/google-place-id";
 import { resolveGooglePlaceIdViaApi } from "@/lib/resolve-google-place-client";
+import { revalidatePublicMerchantClient } from "@/lib/revalidate-public-merchant-client";
 
 export function BrandingForm({
   merchant,
@@ -94,6 +95,7 @@ export function BrandingForm({
       setMessage(error.message);
       return;
     }
+    await revalidatePublicMerchantClient(merchant.slug);
     setMessage(t("common.saved"));
     router.refresh();
   };

@@ -2,9 +2,27 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/env";
 
+function needsAuthSession(path: string): boolean {
+  return (
+    path.startsWith("/dashboard") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/setup") ||
+    path.startsWith("/subscribe") ||
+    path === "/login" ||
+    path.startsWith("/login/") ||
+    path === "/auth/reset-password"
+  );
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
   const path = request.nextUrl.pathname;
+
+  // Public QR journeys (/{slug}, /{slug}/play, /{slug}/menu) skip Auth RTT.
+  if (!needsAuthSession(path)) {
+    return supabaseResponse;
+  }
+
   const isProtected =
     path.startsWith("/dashboard") ||
     path.startsWith("/admin") ||

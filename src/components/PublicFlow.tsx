@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { pickWeightedPrize, pickRetrySpinPrize } from "@/lib/wheel";
@@ -17,16 +18,14 @@ import { resolveSpinOutcome } from "@/lib/spin-resolution";
 import type { Merchant, Prize } from "@/lib/types";
 import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
-import { Wheel } from "@/components/Wheel";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { PrizeCoupon } from "@/components/PrizeCoupon";
 import { PrizeWheelIcon } from "@/components/PrizeWheelIcon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
-import { computePreviewWheelSize } from "@/components/dashboard/JourneyPhonePreview";
+import { computePreviewWheelSize } from "@/lib/preview-wheel-size";
 import { resolveJourneyTheme } from "@/lib/journey-theme";
-import { compressImageForUpload } from "@/lib/compress-image";
 import {
   buildPublicStepOrder,
   isSocialFlowStep,
@@ -38,6 +37,19 @@ import {
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
+
+const Wheel = dynamic(
+  () => import("@/components/Wheel").then((m) => ({ default: m.Wheel })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="mx-auto aspect-square w-full max-w-[320px] animate-pulse rounded-full bg-black/10"
+        aria-hidden
+      />
+    ),
+  },
+);
 
 interface PublicFlowProps {
   merchant: Merchant;
@@ -286,6 +298,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     };
 
     try {
+      const { compressImageForUpload } = await import("@/lib/compress-image");
       const uploadFile = await compressImageForUpload(file);
 
       const postOnce = async (): Promise<{ path?: string; url?: string } | null> => {

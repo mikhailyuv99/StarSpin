@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { revalidatePublicMerchant } from "@/lib/revalidate-public-merchant";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -186,7 +187,7 @@ async function getOwnedMerchant() {
 }
 
 function revalidateMerchantPages(slug: string) {
-  revalidatePath(`/${slug}`);
+  revalidatePublicMerchant(slug);
   revalidatePath("/dashboard/prizes");
 }
 

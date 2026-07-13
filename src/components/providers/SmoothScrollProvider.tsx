@@ -3,13 +3,30 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { RESERVED_SLUGS } from "@/lib/app-url";
 
+/** Marketing pages only — never on QR customer journeys (/{slug}, /play, /menu). */
 function isSmoothScrollPath(path: string): boolean {
-  if (path === "/" || path.startsWith("/dashboard") || path.startsWith("/admin") || path.startsWith("/login") || path.startsWith("/setup")) {
+  if (
+    path === "/" ||
+    path.startsWith("/dashboard") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/login") ||
+    path.startsWith("/setup") ||
+    path.startsWith("/subscribe") ||
+    path.startsWith("/auth") ||
+    path.startsWith("/api")
+  ) {
     return false;
   }
+
   const seg = path.split("/").filter(Boolean);
-  return seg.length === 1 && !["login", "setup", "admin"].includes(seg[0]);
+  // Public merchant routes: /{slug}, /{slug}/play, /{slug}/menu
+  if (seg.length >= 1 && !RESERVED_SLUGS.has(seg[0])) {
+    return false;
+  }
+
+  return seg.length === 1;
 }
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {

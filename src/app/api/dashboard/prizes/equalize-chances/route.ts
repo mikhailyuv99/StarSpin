@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { revalidatePublicMerchant } from "@/lib/revalidate-public-merchant";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -74,7 +75,7 @@ export async function POST() {
     updated.push(data as Prize);
   }
 
-  revalidatePath(`/${merchant.slug}`);
+  revalidatePublicMerchant(merchant.slug);
   revalidatePath("/dashboard/prizes");
 
   return NextResponse.json({ prizes: updated });

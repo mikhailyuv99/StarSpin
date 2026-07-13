@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { revalidatePublicMerchant } from "@/lib/revalidate-public-merchant";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     prizes = synced;
   }
 
-  revalidatePath(`/${merchant.slug}`);
+  revalidatePublicMerchant(merchant.slug);
   revalidatePath("/dashboard/prizes");
 
   return NextResponse.json({ mode, prizes });
