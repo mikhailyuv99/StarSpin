@@ -147,12 +147,19 @@ export default async function RootLayout({
   const messages = isPublicJourney ? getPublicJourneyMessages(locale) : getMessages(locale);
   const pricingMarket = pricingMarketFromHeaders(headerStore);
 
+  const fontClassName = isPublicJourney
+    ? `locale-${locale} antialiased`
+    : `locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${wordmarkFont.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`;
+
   return (
-    <html
-      lang={locale}
-      className={`locale-${locale} ${plexSans.variable} ${plexMono.variable} ${display.variable} ${wordmarkFont.variable} ${bodyFont.variable} ${gameFont.variable} ${gameFontCyrillic.variable} ${bodyRu.variable} ${displayRu.variable} ${bodyVi.variable} ${displayVi.variable} ${gameVi.variable} antialiased`}
-    >
-      <body className="font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]">
+    <html lang={locale} className={fontClassName}>
+      <body
+        className={
+          isPublicJourney
+            ? "font-sans [font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif]"
+            : "font-sans [font-family:var(--font-body),var(--font-plex-sans),system-ui,sans-serif]"
+        }
+      >
         <PricingMarketProvider market={pricingMarket}>
           <I18nProvider locale={locale} messages={messages}>
             <SmoothScrollProvider>{children}</SmoothScrollProvider>

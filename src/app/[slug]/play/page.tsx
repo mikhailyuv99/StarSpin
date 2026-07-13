@@ -53,6 +53,9 @@ export default async function PublicMerchantPlayPage({
 
   return (
     <>
+      {merchant.logo_url ? (
+        <link rel="preload" as="image" href={merchant.logo_url} fetchPriority="high" />
+      ) : null}
       {fontHref && <JourneyFontLink href={fontHref} />}
       <PublicFlow merchant={merchant} prizes={payload.prizes} />
     </>

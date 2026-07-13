@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import Lenis from "lenis";
 import { RESERVED_SLUGS } from "@/lib/app-url";
 
 /** Marketing pages only — never on QR customer journeys (/{slug}, /play, /menu). */
@@ -21,7 +20,6 @@ function isSmoothScrollPath(path: string): boolean {
   }
 
   const seg = path.split("/").filter(Boolean);
-  // Public merchant routes: /{slug}, /{slug}/play, /{slug}/menu
   if (seg.length >= 1 && !RESERVED_SLUGS.has(seg[0])) {
     return false;
   }
@@ -31,7 +29,7 @@ function isSmoothScrollPath(path: string): boolean {
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const lenisRef = useRef<Lenis | null>(null);
+  const lenisRef = useRef<{ destroy: () => void; raf: (time: number) => void } | null>(null);
 
   useEffect(() => {
     if (!isSmoothScrollPath(pathname)) return;
@@ -39,23 +37,29 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
-    const lenis = new Lenis({
-      duration: 1.1,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-    lenisRef.current = lenis;
-
+    let cancelled = false;
     let raf = 0;
-    const loop = (time: number) => {
-      lenis.raf(time);
+
+    void import("lenis").then(({ default: Lenis }) => {
+      if (cancelled) return;
+      const lenis = new Lenis({
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+      lenisRef.current = lenis;
+
+      const loop = (time: number) => {
+        lenis.raf(time);
+        raf = requestAnimationFrame(loop);
+      };
       raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+    });
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
-      lenis.destroy();
+      lenisRef.current?.destroy();
       lenisRef.current = null;
     };
   }, [pathname]);

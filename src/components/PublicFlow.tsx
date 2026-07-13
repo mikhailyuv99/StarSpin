@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion } from "framer-motion";
 import { SocialIcon, type SocialBrand } from "@/components/icons/SocialIcons";
 import { pickWeightedPrize, pickRetrySpinPrize } from "@/lib/wheel";
 import {
@@ -20,7 +19,6 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { MerchantHeader } from "@/components/MerchantHeader";
 import { useI18n } from "@/i18n/client";
 import { localeHeaders } from "@/lib/locale-headers";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { PrizeCoupon } from "@/components/PrizeCoupon";
 import { PrizeWheelIcon } from "@/components/PrizeWheelIcon";
 import type { RedemptionRulesSnapshot } from "@/lib/redemption-rules";
@@ -51,6 +49,11 @@ const Wheel = dynamic(
   },
 );
 
+const LocaleSwitcher = dynamic(
+  () => import("@/components/LocaleSwitcher").then((m) => m.LocaleSwitcher),
+  { ssr: false },
+);
+
 interface PublicFlowProps {
   merchant: Merchant;
   prizes: Prize[];
@@ -64,11 +67,6 @@ type PreparedSpin = {
   nearMissTarget?: string | null;
 };
 
-const stepVariants = {
-  enter: { opacity: 0, x: 24 },
-  center: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -24 },
-};
 
 function fireConfetti(accent: string) {
   import("canvas-confetti").then(({ default: confetti }) => {
@@ -616,14 +614,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   const renderActionStep = (actionStep: FlowActionStep) => {
     if (actionStep === "google_review") {
       return (
-        <motion.div
+        <div
           key="google_review"
-          variants={stepVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.3 }}
-          className="space-y-4"
+          className="pj-step space-y-4"
         >
           <div className="text-center">
             <p className="text-3xl" aria-hidden>
@@ -678,7 +671,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
             {loading ? t("public.uploadAnalyzing") : t("public.uploadScreenshot")}
           </button>
           <p className="text-center text-xs font-medium text-muted">{t("public.reviewHint")}</p>
-        </motion.div>
+        </div>
       );
     }
 
@@ -692,14 +685,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     });
 
     return (
-      <motion.div
+      <div
         key={actionStep}
-        variants={stepVariants}
-        initial="enter"
-        animate="center"
-        exit="exit"
-        transition={{ duration: 0.3 }}
-        className="space-y-4"
+        className="pj-step space-y-4"
       >
         <div className="text-center">
           <p className="text-3xl" aria-hidden>
@@ -726,7 +714,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
         ) : (
           <p className="text-center text-sm font-medium text-muted">{t("public.stepNotConfigured")}</p>
         )}
-      </motion.div>
+      </div>
     );
   };
 
@@ -758,11 +746,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
             <span>{Math.round(progress)}%</span>
           </div>
           <div className="public-progress-track">
-            <motion.div
+            <div
               className="public-progress-fill"
-              initial={false}
-              animate={{ scaleX: progress / 100 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transform: `scaleX(${progress / 100})` }}
             />
           </div>
         </div>
@@ -783,7 +769,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
           )}
 
           <div className={preview ? "p-4" : "p-4 sm:p-6"}>
-            <AnimatePresence mode="wait">
+
               {step !== "wheel" &&
                 step !== "claim" &&
                 step !== "result" &&
@@ -791,14 +777,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                 renderActionStep(step)}
 
               {isSocialUnlockBonusStep(step) && (
-                <motion.div
+                <div
                   key={step}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  className="pj-step space-y-4"
                 >
                   <div className="text-center">
                     <p className="text-3xl" aria-hidden>
@@ -838,18 +819,13 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                       </button>
                     );
                   })()}
-                </motion.div>
+                </div>
               )}
 
               {step === "wheel" && (
-                <motion.div
+                <div
                   key="wheel"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className={preview ? "space-y-4" : "public-wheel-step"}
+                  className={(preview ? "space-y-4" : "public-wheel-step") + " pj-step"}
                 >
                   {retryOffer ? (
                     <div className="text-center">
@@ -903,12 +879,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                       </div>
                     </div>
                   ) : mysteryReveal && wonPrize ? (
-                    <motion.div
-                      className="text-center"
-                      initial={{ scale: 0.85, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 280, damping: 20 }}
-                    >
+                    <div className="text-center pj-step">
                       <p className="text-3xl" aria-hidden>
                         ❓
                       </p>
@@ -919,7 +890,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                         <PrizeWheelIcon icon={wonPrize.icon} size={40} />
                       </div>
                       <p className="public-heading mt-3 text-2xl font-extrabold">{wonPrize.label}</p>
-                    </motion.div>
+                    </div>
                   ) : preview ? (
                     <div className="text-center">
                       <p className="text-xs font-extrabold uppercase tracking-widest text-muted">
@@ -975,18 +946,13 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                             : spinLabel}
                     </button>
                   )}
-                </motion.div>
+                </div>
               )}
 
               {step === "claim" && wonPrize && (
-                <motion.div
+                <div
                   key="claim"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  className="pj-step space-y-4"
                 >
                   <div className="text-center">
                     <p className="text-xs font-extrabold uppercase tracking-widest text-muted">{stepHeading}</p>
@@ -1001,7 +967,7 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
 
                   <form
                     ref={claimFormRef}
-                    className="space-y-4"
+                    className="pj-step space-y-4"
                     onSubmit={(event) => void submitClaim(event)}
                   >
                   <input
@@ -1045,41 +1011,27 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                     {loading ? t("public.claimSending") : t("public.claimSubmit")}
                   </button>
                   </form>
-                </motion.div>
+                </div>
               )}
 
               {step === "result" && noWinResult && (
-                <motion.div
-                  key="result-nowin"
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="space-y-4 py-4 text-center"
-                >
+                <div key="result-nowin" className="pj-step space-y-4 py-4 text-center">
                   <p className="text-4xl" aria-hidden>
                     😔
                   </p>
                   <h2 className="public-heading text-xl font-extrabold">{t("public.noWinTitle")}</h2>
                   <p className="text-sm font-medium text-muted">{t("public.noWinSubtitle")}</p>
-                </motion.div>
+                </div>
               )}
 
               {step === "result" && wonPrize && prizeCode && (
-                <motion.div
+                <div
                   key="result"
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                  className={preview ? "public-result-step space-y-3" : "space-y-5 py-2"}
+                  className={(preview ? "public-result-step space-y-3" : "space-y-5 py-2") + " pj-step pj-result-pop"}
                 >
-                  <motion.p
-                    className="text-center"
-                    initial={{ scale: 0.4, rotate: -20 }}
-                    animate={{ scale: 1, rotate: [0, -8, 8, 0] }}
-                    transition={{ duration: 0.5 }}
-                    aria-hidden
-                  >
+                  <p className="text-center pj-reward-pop" aria-hidden>
                     <span className="public-reward-emoji">🎉</span>
-                  </motion.p>
+                  </p>
                   <PrizeCoupon
                     prizeLabel={wonPrize.label}
                     prizeIcon={wonPrize.icon}
@@ -1106,9 +1058,9 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
                       </p>
                     </>
                   )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+
           </div>
         </div>
       </div>

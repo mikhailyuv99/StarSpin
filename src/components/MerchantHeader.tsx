@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import type { Merchant } from "@/lib/types";
 import { useTranslations } from "@/i18n/client";
 
@@ -15,24 +14,23 @@ export function MerchantHeader({
   const t = useTranslations();
   const headline = merchant.customer_page_headline?.trim() || merchant.name;
   const subtitle = merchant.customer_page_subtitle?.trim() || t("public.headerSubtitle");
-  const logoClass = `mx-auto mb-3 object-cover${forceMobileLayout ? "" : " sm:h-[4.5rem] sm:w-[4.5rem]"}`;
-  const logoStyle = {
-    borderRadius: "var(--pj-logo-radius, 14px)",
-    border: "var(--pj-logo-border, 2.5px solid #0a0a0a)",
-  } as const;
 
   return (
     <header className={`mb-5 text-center${forceMobileLayout ? "" : " sm:mb-6"}`}>
       {merchant.logo_url && (
-        <Image
+        // eslint-disable-next-line @next/next/no-img-element -- direct CDN avoids slow image optimizer on QR open
+        <img
           src={merchant.logo_url}
           alt={merchant.name}
-          width={72}
-          height={72}
-          sizes="72px"
-          priority
-          className={`${logoClass} h-16 w-16`}
-          style={logoStyle}
+          width={64}
+          height={64}
+          decoding="async"
+          fetchPriority="high"
+          className={`mx-auto mb-3 h-16 w-16 object-cover${forceMobileLayout ? "" : " sm:h-[4.5rem] sm:w-[4.5rem]"}`}
+          style={{
+            borderRadius: "var(--pj-logo-radius, 14px)",
+            border: "var(--pj-logo-border, 2.5px solid #0a0a0a)",
+          }}
         />
       )}
       <h1

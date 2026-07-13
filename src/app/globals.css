@@ -1965,7 +1965,53 @@ html.locale-es .cadeo-hero-accent {
   transform: scaleX(0);
   overflow: hidden;
   background: var(--pj-progress-fill, var(--pj-accent, var(--c-yellow)));
-  will-change: transform;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pj-step {
+  animation: pj-step-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pj-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pj-result-pop {
+  animation: pj-result-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pj-result-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pj-reward-pop {
+  animation: pj-reward-wiggle 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pj-reward-wiggle {
+  0% {
+    transform: scale(0.4) rotate(-20deg);
+  }
+  60% {
+    transform: scale(1.05) rotate(6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 /* Shine band sweeps fully off-screen at both ends so the loop has no visible jump. */

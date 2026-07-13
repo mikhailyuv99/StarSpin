@@ -1,14 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import type { SimpleIcon } from "simple-icons";
-import {
-  siFacebook,
-  siGoogle,
-  siInstagram,
-  siTiktok,
-  siTripadvisor,
-} from "simple-icons";
+
+/** Official social brand marks — inlined so the public journey never pulls simple-icons. */
 
 export type SocialBrand = "google" | "instagram" | "tiktok" | "facebook" | "tripadvisor";
 
@@ -19,20 +13,30 @@ type SocialIconProps = {
   title?: string;
 };
 
-const BRAND_ICONS: Record<Exclude<SocialBrand, "google" | "instagram" | "tiktok">, SimpleIcon> = {
-  facebook: siFacebook,
-  tripadvisor: siTripadvisor,
-};
-
 const iconSvgStyle = {
   display: "block",
   flexShrink: 0,
   overflow: "visible",
 } as const;
 
-/** Official TikTok logomark — cyan / red chromatic aberration layers. */
+const TITLES: Record<SocialBrand, string> = {
+  google: "Google",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  facebook: "Facebook",
+  tripadvisor: "Tripadvisor",
+};
+
+const FACEBOOK_PATH =
+  "M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z";
+
+const TRIPADVISOR_PATH =
+  "M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 6-5.998 5.982 5.982 0 0 0-1.957-4.432L24 6.648h-4.35a13.573 13.573 0 0 0-7.644-2.353zM12 6.255c1.531 0 3.063.303 4.504.903C13.943 8.138 12 10.43 12 13.1c0-2.671-1.942-4.962-4.504-5.942A11.72 11.72 0 0 1 12 6.256zM6.002 9.157a4.059 4.059 0 1 1 0 8.118 4.059 4.059 0 0 1 0-8.118zm11.992.002a4.057 4.057 0 1 1 .003 8.115 4.057 4.057 0 0 1-.003-8.115zm-11.992 1.93a2.128 2.128 0 0 0 0 4.256 2.128 2.128 0 0 0 0-4.256zm11.992 0a2.128 2.128 0 0 0 0 4.256 2.128 2.128 0 0 0 0-4.256z";
+
+const TIKTOK_PATH =
+  "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z";
+
 function TikTokIcon({ size, className, label }: { size: number; className: string; label: string }) {
-  const d = siTiktok.path;
   return (
     <svg
       width={size}
@@ -46,14 +50,13 @@ function TikTokIcon({ size, className, label }: { size: number; className: strin
       style={iconSvgStyle}
     >
       <title>{label}</title>
-      <path d={d} fill="#25F4EE" transform="translate(-0.45 -0.45)" />
-      <path d={d} fill="#FE2C55" transform="translate(0.45 0.45)" />
-      <path d={d} fill="#000000" />
+      <path d={TIKTOK_PATH} fill="#25F4EE" transform="translate(-0.45 -0.45)" />
+      <path d={TIKTOK_PATH} fill="#FE2C55" transform="translate(0.45 0.45)" />
+      <path d={TIKTOK_PATH} fill="#000000" />
     </svg>
   );
 }
 
-/** Official Instagram glyph (Meta brand asset path + gradient). */
 function InstagramIcon({ size, className, label }: { size: number; className: string; label: string }) {
   const gradId = useId();
   return (
@@ -86,13 +89,15 @@ function InstagramIcon({ size, className, label }: { size: number; className: st
   );
 }
 
-function SimpleBrandIcon({
-  icon,
+function PathIcon({
+  path,
+  fill,
   size,
   className,
   label,
 }: {
-  icon: SimpleIcon;
+  path: string;
+  fill: string;
   size: number;
   className: string;
   label: string;
@@ -110,7 +115,7 @@ function SimpleBrandIcon({
       style={iconSvgStyle}
     >
       <title>{label}</title>
-      <path d={icon.path} fill={`#${icon.hex}`} />
+      <path d={path} fill={fill} />
     </svg>
   );
 }
@@ -150,15 +155,7 @@ function GoogleIcon({ size, className, label }: { size: number; className: strin
 }
 
 export function SocialIcon({ brand, size = 18, className = "", title }: SocialIconProps) {
-  const label =
-    title ??
-    (brand === "google"
-      ? siGoogle.title
-      : brand === "instagram"
-        ? siInstagram.title
-        : brand === "tiktok"
-          ? siTiktok.title
-          : BRAND_ICONS[brand].title);
+  const label = title ?? TITLES[brand];
 
   if (brand === "google") {
     return <GoogleIcon size={size} className={className} label={label} />;
@@ -169,8 +166,12 @@ export function SocialIcon({ brand, size = 18, className = "", title }: SocialIc
   if (brand === "tiktok") {
     return <TikTokIcon size={size} className={className} label={label} />;
   }
-
+  if (brand === "facebook") {
+    return (
+      <PathIcon path={FACEBOOK_PATH} fill="#0866FF" size={size} className={className} label={label} />
+    );
+  }
   return (
-    <SimpleBrandIcon icon={BRAND_ICONS[brand]} size={size} className={className} label={label} />
+    <PathIcon path={TRIPADVISOR_PATH} fill="#34E0A1" size={size} className={className} label={label} />
   );
 }
