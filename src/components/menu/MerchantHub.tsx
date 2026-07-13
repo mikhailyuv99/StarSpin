@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { useTranslations } from "@/i18n/client";
@@ -29,10 +30,13 @@ export function MerchantHub({ slug, name, logoUrl, primaryColor, secondaryColor 
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center text-center">
         {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={logoUrl}
             alt={name}
+            width={96}
+            height={96}
+            sizes="96px"
+            priority
             className="mb-5 h-24 w-24 rounded-full object-cover shadow-sm ring-4 ring-white"
           />
         ) : (

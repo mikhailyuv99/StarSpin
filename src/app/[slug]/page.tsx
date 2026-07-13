@@ -1,3 +1,4 @@
+import { JourneyFontLink } from "@/components/JourneyFontLink";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
 import { isMerchantLive } from "@/lib/merchant-access";
@@ -34,7 +35,6 @@ export default async function PublicMerchantPage({
   }
 
   // Place ID resolution stays off the HTML path — /api/google/review resolves on click.
-  // Warm the stored id in the background when missing (never block first paint).
   if (merchant.google_review_link && !merchant.google_place_id) {
     void import("@/lib/google-place-id.server")
       .then(async ({ resolveAndPersistMerchantPlaceId }) => {
@@ -70,7 +70,7 @@ export default async function PublicMerchantPage({
 
   return (
     <>
-      {fontHref && <link rel="stylesheet" href={fontHref} />}
+      {fontHref && <JourneyFontLink href={fontHref} />}
       <PublicFlow merchant={merchant} prizes={payload.prizes} />
     </>
   );

@@ -8,6 +8,13 @@ const supabaseAnonKey =
   process.env.SUPABASE_PUBLISHABLE_KEY ??
   "";
 
+let supabaseHostname = "";
+try {
+  supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : "";
+} catch {
+  supabaseHostname = "";
+}
+
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
@@ -31,6 +38,21 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      ...(supabaseHostname
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: supabaseHostname,
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]
+        : [
+            {
+              protocol: "https" as const,
+              hostname: "**.supabase.co",
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]),
     ],
   },
 };

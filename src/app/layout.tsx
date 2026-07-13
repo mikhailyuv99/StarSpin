@@ -4,16 +4,18 @@ import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { PricingMarketProvider } from "@/components/providers/PricingMarketProvider";
 import { I18nProvider } from "@/i18n/client";
-import { getMessages } from "@/i18n/get-messages";
+import { getMessages, getPublicJourneyMessages } from "@/i18n/get-messages";
 import { getLocale, getTranslations } from "@/i18n/server";
 import { OFFICIAL_SITE_URL } from "@/lib/brand";
 import { pricingMarketFromHeaders } from "@/lib/pricing-market";
 import "./globals.css";
 
+// preload: false on all — QR journeys must not compete with 5×40KB font preloads on FCP/LCP.
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-plex-sans",
+  preload: false,
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -27,24 +29,28 @@ const display = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-display",
+  preload: false,
 });
 
 const wordmarkFont = Bruno_Ace({
   subsets: ["latin"],
   weight: ["400"],
   variable: "--font-wordmark",
+  preload: false,
 });
 
 const bodyFont = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-body",
+  preload: false,
 });
 
 const gameFont = Fredoka({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-game",
+  preload: false,
 });
 
 const gameFontCyrillic = Comfortaa({
@@ -136,8 +142,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-  const messages = getMessages(locale);
-  const pricingMarket = pricingMarketFromHeaders(await headers());
+  const headerStore = await headers();
+  const isPublicJourney = headerStore.get("x-starspin-public-journey") === "1";
+  const messages = isPublicJourney ? getPublicJourneyMessages(locale) : getMessages(locale);
+  const pricingMarket = pricingMarketFromHeaders(headerStore);
 
   return (
     <html

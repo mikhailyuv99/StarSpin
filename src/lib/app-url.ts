@@ -56,3 +56,12 @@ export const RESERVED_SLUGS = new Set([
   "privacy",
   "billing",
 ]);
+
+/** True for /{slug}, /{slug}/play, /{slug}/menu customer-facing routes. */
+export function isPublicMerchantPath(pathname: string): boolean {
+  const seg = pathname.split("/").filter(Boolean);
+  if (seg.length === 0 || seg.length > 2) return false;
+  if (RESERVED_SLUGS.has(seg[0])) return false;
+  if (seg.length === 2 && seg[1] !== "play" && seg[1] !== "menu") return false;
+  return true;
+}

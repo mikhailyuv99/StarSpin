@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { isLocale, localeFromCountry, LOCALE_COOKIE } from "@/i18n/config";
+import { isPublicMerchantPath } from "@/lib/app-url";
 import {
   countryFromNetlifyMiddleware,
   countryFromPlatformHeaders,
@@ -18,6 +19,9 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set("x-starspin-country", country);
   }
   requestHeaders.set("x-starspin-pricing-market", market);
+  if (isPublicMerchantPath(request.nextUrl.pathname)) {
+    requestHeaders.set("x-starspin-public-journey", "1");
+  }
 
   const enrichedRequest = new NextRequest(request.url, {
     headers: requestHeaders,

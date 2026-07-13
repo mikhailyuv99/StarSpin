@@ -1,3 +1,4 @@
+import { JourneyFontLink } from "@/components/JourneyFontLink";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/app-url";
 import { isMerchantLive } from "@/lib/merchant-access";
@@ -52,7 +53,7 @@ export default async function PublicMerchantPlayPage({
 
   return (
     <>
-      {fontHref && <link rel="stylesheet" href={fontHref} />}
+      {fontHref && <JourneyFontLink href={fontHref} />}
       <PublicFlow merchant={merchant} prizes={payload.prizes} />
     </>
   );
