@@ -65,10 +65,17 @@ export default async function PublicMerchantPage({
   }
 
   const logoSrc = merchantLogoDisplayUrl(merchant.logo_url, 128);
+  const hasGoogleReview = Boolean(merchant.google_review_link?.trim());
 
   return (
     <>
       {logoSrc ? <link rel="preload" as="image" href={logoSrc} fetchPriority="high" /> : null}
+      {hasGoogleReview ? (
+        <>
+          <link rel="dns-prefetch" href="https://search.google.com" />
+          <link rel="preconnect" href="https://search.google.com" crossOrigin="" />
+        </>
+      ) : null}
       <PublicFlow merchant={merchant} prizes={payload.prizes} />
     </>
   );

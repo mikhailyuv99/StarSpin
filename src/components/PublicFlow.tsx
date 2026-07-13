@@ -34,6 +34,7 @@ import {
   type FlowActionStep,
   type PublicStep,
 } from "@/lib/flow-steps";
+import { pickGoogleReviewOpenUrl } from "@/lib/google-place-id";
 
 const Wheel = dynamic(
   () => import("@/components/Wheel").then((m) => ({ default: m.Wheel })),
@@ -145,9 +146,16 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     color: "var(--pj-accent-ink)",
   };
   const followedSocial = completedSteps.some(isSocialFlowStep);
-  const googleReviewHref = merchant.google_review_link?.trim()
+  const directGoogleReviewHref = useMemo(
+    () => pickGoogleReviewOpenUrl(merchant.google_review_link, merchant.google_place_id),
+    [merchant.google_place_id, merchant.google_review_link],
+  );
+  const [warmedGoogleReviewHref, setWarmedGoogleReviewHref] = useState<string | null>(null);
+  const googleReviewApiHref = merchant.google_review_link?.trim()
     ? `/api/google/review?slug=${encodeURIComponent(merchant.slug)}`
     : null;
+  const googleReviewHref =
+    directGoogleReviewHref ?? warmedGoogleReviewHref ?? googleReviewApiHref;
   const stepPosition = useMemo(
     () => journeyStepPosition(stepOrder, step),
     [stepOrder, step],
@@ -166,6 +174,34 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
   useEffect(() => {
     if (step === "claim") setLoading(false);
   }, [step]);
+
+  // Resolve short Maps links in the background so the Reviews button opens Google directly.
+  useEffect(() => {
+    if (preview || directGoogleReviewHref || !googleReviewApiHref) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    void fetch(`${googleReviewApiHref}&format=json`, {
+      signal: controller.signal,
+      credentials: "same-origin",
+    })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { url?: string };
+        if (!cancelled && data.url?.startsWith("http")) {
+          setWarmedGoogleReviewHref(data.url);
+        }
+      })
+      .catch(() => {
+        // Keep API redirect href as fallback.
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [directGoogleReviewHref, googleReviewApiHref, preview]);
 
   useEffect(() => {
     if (!preview) return;

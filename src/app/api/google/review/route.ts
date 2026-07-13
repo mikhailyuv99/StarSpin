@@ -3,9 +3,33 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isMerchantLive } from "@/lib/merchant-access";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 import {
+  buildGoogleWriteReviewUrl,
+  sanitizeGooglePlaceId,
+} from "@/lib/google-place-id";
+import {
   buildReviewOpenUrl,
   resolveAndPersistMerchantPlaceId,
 } from "@/lib/google-place-id.server";
+
+function reviewResponse(destination: string, wantsJson: boolean) {
+  if (wantsJson) {
+    return NextResponse.json(
+      { url: destination },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=300",
+        },
+      },
+    );
+  }
+  return NextResponse.redirect(destination, {
+    status: 302,
+    headers: {
+      // Place-ID writereview URLs are stable; short cache helps repeat taps.
+      "Cache-Control": "private, max-age=120",
+    },
+  });
+}
 
 export async function GET(request: Request) {
   const limited = rateLimit(clientIpKey(request, "google-review"), 40, 60_000);
@@ -13,7 +37,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const slug = new URL(request.url).searchParams.get("slug")?.trim().toLowerCase();
+  const requestUrl = new URL(request.url);
+  const slug = requestUrl.searchParams.get("slug")?.trim().toLowerCase();
+  const wantsJson = requestUrl.searchParams.get("format") === "json";
   if (!slug) {
     return NextResponse.json({ error: "Missing slug" }, { status: 400 });
   }
@@ -39,6 +65,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No review link configured" }, { status: 404 });
   }
 
+  // Instant path: never re-fetch Maps / Places when we already have a Place ID.
+  const knownPlaceId = sanitizeGooglePlaceId(
+    merchant.google_place_id,
+    merchant.google_review_link,
+  );
+  if (knownPlaceId) {
+    return reviewResponse(buildGoogleWriteReviewUrl(knownPlaceId), wantsJson);
+  }
+
   const resolution = await resolveAndPersistMerchantPlaceId(supabase, merchant);
   const userAgent = request.headers.get("user-agent") ?? "";
   const destination = buildReviewOpenUrl(
@@ -52,5 +87,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Could not resolve review link" }, { status: 502 });
   }
 
-  return NextResponse.redirect(destination, 302);
+  return reviewResponse(destination, wantsJson);
 }
