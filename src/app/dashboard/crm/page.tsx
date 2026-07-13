@@ -10,38 +10,34 @@ import { reviewScreenshotHref } from "@/lib/review-screenshot";
 import Link from "next/link";
 
 const SPIN_SELECT_FULL =
-  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes(label)";
+  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes!prize_id(label)";
 
 const SPIN_SELECT_CORE =
-  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, device_fingerprint, prize:prizes(label)";
+  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, device_fingerprint, prize:prizes!prize_id(label)";
+
+const SPIN_SELECT_BARE =
+  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, device_fingerprint, prize_id";
 
 async function loadMerchantSpins(
   supabase: Awaited<ReturnType<typeof createClient>>,
   merchantId: string,
 ) {
-  const full = await supabase
-    .from("spins")
-    .select(SPIN_SELECT_FULL)
-    .eq("merchant_id", merchantId)
-    .order("created_at", { ascending: false })
-    .limit(10000);
+  const attempts = [SPIN_SELECT_FULL, SPIN_SELECT_CORE, SPIN_SELECT_BARE];
 
-  if (!full.error) return full.data ?? [];
+  for (const select of attempts) {
+    const result = await supabase
+      .from("spins")
+      .select(select)
+      .eq("merchant_id", merchantId)
+      .order("created_at", { ascending: false })
+      .limit(10000);
 
-  // Migration 025 not applied yet — don't blank the whole CRM.
-  console.warn("CRM spins full select failed, falling back:", full.error.message);
-  const core = await supabase
-    .from("spins")
-    .select(SPIN_SELECT_CORE)
-    .eq("merchant_id", merchantId)
-    .order("created_at", { ascending: false })
-    .limit(10000);
-
-  if (core.error) {
-    console.error("CRM spins core select failed:", core.error.message);
-    return [];
+    if (!result.error) return result.data ?? [];
+    console.warn("CRM spins select failed:", select, result.error.message);
   }
-  return core.data ?? [];
+
+  console.error("CRM spins: all select attempts failed for merchant", merchantId);
+  return [];
 }
 
 export default async function CrmPage() {

@@ -9,13 +9,17 @@ export default async function ReviewsPage() {
   const merchant = await requireMerchant();
   const t = await getTranslations();
   const supabase = await createClient();
-  const { data: spins } = await supabase
+  const { data: spins, error } = await supabase
     .from("spins")
-    .select("*, prize:prizes(label)")
+    .select("*, prize:prizes!prize_id(label)")
     .eq("merchant_id", merchant.id)
     .not("review_screenshot_url", "is", null)
     .order("created_at", { ascending: false })
     .limit(500);
+
+  if (error) {
+    console.error("Reviews spins select failed:", error.message);
+  }
 
   return (
     <div className="space-y-8">
