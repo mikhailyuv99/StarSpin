@@ -51,7 +51,7 @@ async function loadMerchantSpins(
       .order("created_at", { ascending: false })
       .limit(10000);
 
-    if (!result.error) return (result.data ?? []) as SpinRow[];
+    if (!result.error) return (result.data ?? []) as unknown as SpinRow[];
     console.warn("CRM spins select failed:", select, result.error.message);
   }
 
