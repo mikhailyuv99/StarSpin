@@ -37,6 +37,11 @@ export type MenuBackground = {
   bannerUrl?: string | null;
   /** Optional full-page wallpaper (cover) behind the menu */
   pageImageUrl?: string | null;
+  /**
+   * How much to darken a page photo for text contrast (0–80).
+   * Applied only when pageImageUrl is set. Default ~48.
+   */
+  pageImageDim?: number | null;
   /** @deprecated use bannerUrl */
   imageUrl?: string | null;
 };
@@ -126,11 +131,20 @@ export const DEFAULT_MENU_STYLE: Required<MenuStyle> = {
 export const DEFAULT_MENU_BACKGROUND: Required<Pick<MenuBackground, "color">> & {
   bannerUrl: string | null;
   pageImageUrl: string | null;
+  pageImageDim: number;
 } = {
   color: "#FFF8F1",
   bannerUrl: null,
   pageImageUrl: null,
+  pageImageDim: 48,
 };
+
+/** Clamp page-photo darken amount used for text contrast. */
+export function clampMenuPageImageDim(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_MENU_BACKGROUND.pageImageDim;
+  return Math.min(80, Math.max(0, Math.round(n)));
+}
 
 export const MAX_DISH_PHOTOS = 3;
 export const MAX_VIDEO_SECONDS = 15;
@@ -233,6 +247,9 @@ export function parseMenuBackground(value: unknown): MenuBackground {
     color: raw.color || DEFAULT_MENU_BACKGROUND.color,
     bannerUrl,
     pageImageUrl,
+    pageImageDim: pageImageUrl
+      ? clampMenuPageImageDim(raw.pageImageDim ?? DEFAULT_MENU_BACKGROUND.pageImageDim)
+      : null,
     imageUrl: bannerUrl,
   };
 }

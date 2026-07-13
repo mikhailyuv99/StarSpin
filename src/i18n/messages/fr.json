@@ -1100,6 +1100,12 @@
     "videoReady": "1 video",
     "uploading": "Envoi…",
     "editMedia": "Modifier",
-    "videoCount": "Vidéo"
+    "videoCount": "Vidéo",
+    "dropBgImage": "Déposez une image de fond ici",
+    "dropBgImageHint": "ou cliquez pour parcourir · haute qualité",
+    "bgDim": "Assombrir le fond",
+    "bgDimHint": "Garde titres et textes lisibles sur les photos chargées.",
+    "dropBanner": "Déposez une bannière ici",
+    "dropBannerHint": "ou cliquez pour parcourir et recadrer"
   }
 }

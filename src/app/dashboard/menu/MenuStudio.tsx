@@ -15,6 +15,7 @@ import {
   MENU_CATALOG,
   MENU_CURRENCIES,
   MAX_DISH_PHOTOS,
+  clampMenuPageImageDim,
   defaultPayloadForType,
   emptyLocaleMap,
   groupMenuNodes,
@@ -915,6 +916,7 @@ export function MenuStudio({
                 setBackground={(next) => { pushHistory(); setBackground(next); }}
                 pickImageWithCrop={pickImageWithCrop}
                 cropExistingImage={cropExistingImage}
+                cropFile={(file, onDone) => setCropJob({ file, onDone })}
                 uploadFile={uploadFile}
                 t={t}
                 showToast={showToast}
@@ -1872,6 +1874,7 @@ function BackgroundSheet({
   uploadFile,
   pickImageWithCrop,
   cropExistingImage,
+  cropFile,
   t,
   showToast,
 }: {
@@ -1884,30 +1887,51 @@ function BackgroundSheet({
   ) => Promise<string>;
   pickImageWithCrop: (onDone: (file: File) => void) => void;
   cropExistingImage: (imageUrl: string, onDone: (file: File) => void) => void;
+  cropFile: (file: File, onDone: (file: File) => void) => void;
   t: (k: string) => string;
   showToast: (msg: string) => void;
 }) {
   const color = background.color || DEFAULT_MENU_BACKGROUND.color;
   const bannerUrl = background.bannerUrl ?? background.imageUrl ?? null;
   const pageImageUrl = background.pageImageUrl ?? null;
+  const pageDim = clampMenuPageImageDim(
+    background.pageImageDim ?? DEFAULT_MENU_BACKGROUND.pageImageDim,
+  );
+  const [pageBusy, setPageBusy] = useState(false);
+  const [bannerBusy, setBannerBusy] = useState(false);
+  const [pageDragging, setPageDragging] = useState(false);
+  const [bannerDragging, setBannerDragging] = useState(false);
 
-  const pickPageImage = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) return;
-      void (async () => {
-        try {
-          const url = await uploadFile(file, "image", "high");
-          setBackground({ ...background, pageImageUrl: url });
-        } catch {
-          showToast(t("menuStudio.uploadFailed"));
-        }
-      })();
-    };
-    input.click();
+  const uploadPageImage = async (file: File | undefined | null) => {
+    if (!file || !file.type.startsWith("image/")) {
+      if (file) showToast(t("menuStudio.uploadFailed"));
+      return;
+    }
+    setPageBusy(true);
+    try {
+      const url = await uploadFile(file, "image", "high");
+      setBackground({
+        ...background,
+        pageImageUrl: url,
+        pageImageDim: background.pageImageDim ?? DEFAULT_MENU_BACKGROUND.pageImageDim,
+      });
+    } catch {
+      showToast(t("menuStudio.uploadFailed"));
+    } finally {
+      setPageBusy(false);
+    }
+  };
+
+  const saveBannerFromCrop = async (file: File) => {
+    setBannerBusy(true);
+    try {
+      const url = await uploadFile(file, "image");
+      setBackground({ ...background, bannerUrl: url, imageUrl: url });
+    } catch {
+      showToast(t("menuStudio.uploadFailed"));
+    } finally {
+      setBannerBusy(false);
+    }
   };
 
   return (
@@ -1929,6 +1953,12 @@ function BackgroundSheet({
           <div className="relative mb-2 overflow-hidden rounded-2xl border border-black/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={pageImageUrl} alt="" className="aspect-[9/16] max-h-56 w-full object-cover" />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, rgba(0,0,0,${(pageDim / 100) * 0.92}) 0%, rgba(0,0,0,${(pageDim / 100) * 0.55}) 100%)`,
+              }}
+            />
             <div className="absolute right-2 top-2 flex gap-1">
               <button
                 type="button"
@@ -1936,12 +1966,7 @@ function BackgroundSheet({
                 aria-label={t("menuStudio.editMedia")}
                 onClick={() =>
                   cropExistingImage(pageImageUrl, async (file) => {
-                    try {
-                      const url = await uploadFile(file, "image", "high");
-                      setBackground({ ...background, pageImageUrl: url });
-                    } catch {
-                      showToast(t("menuStudio.uploadFailed"));
-                    }
+                    await uploadPageImage(file);
                   })
                 }
               >
@@ -1951,21 +1976,89 @@ function BackgroundSheet({
                 type="button"
                 className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white/95 text-sm text-red-600 shadow"
                 aria-label={t("menuStudio.removeBgImage")}
-                onClick={() => setBackground({ ...background, pageImageUrl: null })}
+                onClick={() =>
+                  setBackground({ ...background, pageImageUrl: null, pageImageDim: null })
+                }
               >
                 <TrashIcon />
               </button>
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className="flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/20 bg-zinc-50 px-3 py-6 text-sm transition hover:bg-[var(--c-cream)]"
-            onClick={pickPageImage}
+          <div
+            className={`relative mb-2 flex min-h-[8.5rem] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-3 py-6 text-center text-sm transition ${
+              pageDragging
+                ? "border-black bg-[var(--c-cream)]"
+                : "border-black/25 bg-zinc-50 hover:bg-[var(--c-cream)]"
+            } ${pageBusy ? "pointer-events-none opacity-70" : ""}`}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setPageDragging(true);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setPageDragging(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setPageDragging(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setPageDragging(false);
+              void uploadPageImage(e.dataTransfer.files?.[0]);
+            }}
           >
-            <span className="font-semibold">{t("menuStudio.uploadBgImage")}</span>
-          </button>
+            <span className="pointer-events-none font-semibold">
+              {pageBusy ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                  {t("menuStudio.uploading")}
+                </span>
+              ) : (
+                t("menuStudio.dropBgImage")
+              )}
+            </span>
+            <span className="pointer-events-none mt-1 text-[11px] text-zinc-500">
+              {t("menuStudio.dropBgImageHint")}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={pageBusy}
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+              aria-label={t("menuStudio.dropBgImage")}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                void uploadPageImage(file);
+              }}
+            />
+          </div>
         )}
+        {pageImageUrl ? (
+          <label className="mt-3 block">
+            <span className="mb-1 flex items-center justify-between text-xs font-semibold text-zinc-700">
+              <span>{t("menuStudio.bgDim")}</span>
+              <span className="tabular-nums text-zinc-500">{pageDim}%</span>
+            </span>
+            <input
+              type="range"
+              min={15}
+              max={75}
+              step={1}
+              value={pageDim}
+              className="w-full accent-black"
+              onChange={(e) =>
+                setBackground({
+                  ...background,
+                  pageImageDim: clampMenuPageImageDim(Number(e.target.value)),
+                })
+              }
+            />
+            <span className="mt-1 block text-[11px] text-zinc-500">{t("menuStudio.bgDimHint")}</span>
+          </label>
+        ) : null}
       </div>
 
       <div>
@@ -1990,12 +2083,7 @@ function BackgroundSheet({
                 aria-label={t("menuStudio.editMedia")}
                 onClick={() =>
                   cropExistingImage(bannerUrl, async (file) => {
-                    try {
-                      const url = await uploadFile(file, "image");
-                      setBackground({ ...background, bannerUrl: url, imageUrl: url });
-                    } catch {
-                      showToast(t("menuStudio.uploadFailed"));
-                    }
+                    await saveBannerFromCrop(file);
                   })
                 }
               >
@@ -2012,22 +2100,57 @@ function BackgroundSheet({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className="flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/20 bg-zinc-50 px-3 py-6 text-sm transition hover:bg-[var(--c-cream)]"
-            onClick={() =>
-              pickImageWithCrop(async (file) => {
-                try {
-                  const url = await uploadFile(file, "image");
-                  setBackground({ ...background, bannerUrl: url, imageUrl: url });
-                } catch {
-                  showToast(t("menuStudio.uploadFailed"));
-                }
-              })
-            }
+          <div
+            className={`relative flex min-h-[7rem] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-3 py-6 text-center text-sm transition ${
+              bannerDragging
+                ? "border-black bg-[var(--c-cream)]"
+                : "border-black/25 bg-zinc-50 hover:bg-[var(--c-cream)]"
+            } ${bannerBusy ? "pointer-events-none opacity-70" : ""}`}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setBannerDragging(true);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setBannerDragging(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setBannerDragging(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setBannerDragging(false);
+              const file = e.dataTransfer.files?.[0];
+              if (!file || !file.type.startsWith("image/")) {
+                if (file) showToast(t("menuStudio.uploadFailed"));
+                return;
+              }
+              cropFile(file, (cropped) => {
+                void saveBannerFromCrop(cropped);
+              });
+            }}
+            onClick={() => {
+              if (bannerBusy) return;
+              pickImageWithCrop((cropped) => {
+                void saveBannerFromCrop(cropped);
+              });
+            }}
           >
-            <span className="font-semibold">{t("menuStudio.uploadBanner")}</span>
-          </button>
+            <span className="pointer-events-none font-semibold">
+              {bannerBusy ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                  {t("menuStudio.uploading")}
+                </span>
+              ) : (
+                t("menuStudio.dropBanner")
+              )}
+            </span>
+            <span className="pointer-events-none mt-1 text-[11px] text-zinc-500">
+              {t("menuStudio.dropBannerHint")}
+            </span>
+          </div>
         )}
       </div>
     </div>

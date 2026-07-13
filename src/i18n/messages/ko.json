@@ -1052,6 +1052,12 @@
     "videoReady": "1 video",
     "uploading": "Uploading…",
     "editMedia": "Edit",
-    "videoCount": "Video"
+    "videoCount": "Video",
+    "dropBgImage": "Drop a background image here",
+    "dropBgImageHint": "or click to browse · high quality",
+    "bgDim": "Darken background",
+    "bgDimHint": "Keeps titles and text readable on busy photos.",
+    "dropBanner": "Drop a banner image here",
+    "dropBannerHint": "or click to browse and crop"
   }
 }
