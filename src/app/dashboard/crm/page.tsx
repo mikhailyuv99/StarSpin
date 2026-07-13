@@ -9,6 +9,41 @@ import { CrmExportButton } from "@/app/dashboard/crm/CrmExportButton";
 import { reviewScreenshotHref } from "@/lib/review-screenshot";
 import Link from "next/link";
 
+const SPIN_SELECT_FULL =
+  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes(label)";
+
+const SPIN_SELECT_CORE =
+  "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, device_fingerprint, prize:prizes(label)";
+
+async function loadMerchantSpins(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  merchantId: string,
+) {
+  const full = await supabase
+    .from("spins")
+    .select(SPIN_SELECT_FULL)
+    .eq("merchant_id", merchantId)
+    .order("created_at", { ascending: false })
+    .limit(10000);
+
+  if (!full.error) return full.data ?? [];
+
+  // Migration 025 not applied yet — don't blank the whole CRM.
+  console.warn("CRM spins full select failed, falling back:", full.error.message);
+  const core = await supabase
+    .from("spins")
+    .select(SPIN_SELECT_CORE)
+    .eq("merchant_id", merchantId)
+    .order("created_at", { ascending: false })
+    .limit(10000);
+
+  if (core.error) {
+    console.error("CRM spins core select failed:", core.error.message);
+    return [];
+  }
+  return core.data ?? [];
+}
+
 export default async function CrmPage() {
   const merchant = await requireMerchant();
   const t = await getTranslations();
@@ -16,15 +51,8 @@ export default async function CrmPage() {
   const intl = localeToIntl(locale);
   const supabase = await createClient();
 
-  const [{ data: spinsRaw }, { data: reviewHistory }] = await Promise.all([
-    supabase
-      .from("spins")
-      .select(
-        "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes(label)",
-      )
-      .eq("merchant_id", merchant.id)
-      .order("created_at", { ascending: false })
-      .limit(10000),
+  const [spinsRaw, { data: reviewHistory }] = await Promise.all([
+    loadMerchantSpins(supabase, merchant.id),
     supabase
       .from("review_counts_history")
       .select("*")
@@ -33,7 +61,7 @@ export default async function CrmPage() {
       .limit(30),
   ]);
 
-  const spins = (spinsRaw ?? []).map((spin) => {
+  const spins = spinsRaw.map((spin) => {
     const prize = spin.prize;
     const label = Array.isArray(prize) ? prize[0]?.label : (prize as { label: string } | null)?.label;
     return { ...spin, prize: label ? { label } : undefined };
