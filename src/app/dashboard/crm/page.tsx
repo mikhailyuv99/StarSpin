@@ -9,6 +9,25 @@ import { CrmExportButton } from "@/app/dashboard/crm/CrmExportButton";
 import { reviewScreenshotHref } from "@/lib/review-screenshot";
 import Link from "next/link";
 
+type SpinRow = {
+  id: string;
+  created_at: string;
+  claim_email?: string | null;
+  claim_first_name?: string | null;
+  phone_number?: string | null;
+  prize_code?: string | null;
+  followed_social?: boolean | null;
+  review_screenshot_url?: string | null;
+  review_screenshot_status?: string | null;
+  completed_flow_steps?: string[] | null;
+  client_locale?: string | null;
+  client_user_agent?: string | null;
+  client_ip?: string | null;
+  device_fingerprint?: string | null;
+  prize_id?: string | null;
+  prize?: { label: string } | { label: string }[] | null;
+};
+
 const SPIN_SELECT_FULL =
   "id, created_at, claim_email, claim_first_name, phone_number, prize_code, followed_social, review_screenshot_url, review_screenshot_status, completed_flow_steps, client_locale, client_user_agent, client_ip, device_fingerprint, prize:prizes!prize_id(label)";
 
@@ -21,7 +40,7 @@ const SPIN_SELECT_BARE =
 async function loadMerchantSpins(
   supabase: Awaited<ReturnType<typeof createClient>>,
   merchantId: string,
-) {
+): Promise<SpinRow[]> {
   const attempts = [SPIN_SELECT_FULL, SPIN_SELECT_CORE, SPIN_SELECT_BARE];
 
   for (const select of attempts) {
@@ -32,7 +51,7 @@ async function loadMerchantSpins(
       .order("created_at", { ascending: false })
       .limit(10000);
 
-    if (!result.error) return result.data ?? [];
+    if (!result.error) return (result.data ?? []) as SpinRow[];
     console.warn("CRM spins select failed:", select, result.error.message);
   }
 
@@ -59,7 +78,7 @@ export default async function CrmPage() {
 
   const spins = spinsRaw.map((spin) => {
     const prize = spin.prize;
-    const label = Array.isArray(prize) ? prize[0]?.label : (prize as { label: string } | null)?.label;
+    const label = Array.isArray(prize) ? prize[0]?.label : prize?.label;
     return { ...spin, prize: label ? { label } : undefined };
   }) as Spin[];
 
