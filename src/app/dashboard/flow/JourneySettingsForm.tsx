@@ -80,6 +80,8 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [slugConfirmOpen, setSlugConfirmOpen] = useState(false);
+  const [pendingSlug, setPendingSlug] = useState<string | null>(null);
 
   const disabledSteps = useMemo(
     () => FLOW_ACTION_STEPS.filter((step) => !steps.includes(step)),
@@ -175,23 +177,7 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
     update("logo_url", data.publicUrl);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (steps.length === 0) {
-      setError(t("dashboard.flowStepsRequired"));
-      return;
-    }
-
-    const slug = cleanSlug(form.slug);
-    if (!slug) {
-      setError(t("dashboard.slugInvalid"));
-      return;
-    }
-    if (RESERVED_SLUGS.has(slug)) {
-      setError(t("setup.slugReserved"));
-      return;
-    }
-
+  const saveJourney = async (slug: string) => {
     setLoading(true);
     setMessage(null);
     setError(null);
@@ -207,6 +193,8 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         .maybeSingle();
       if (taken) {
         setLoading(false);
+        setSlugConfirmOpen(false);
+        setPendingSlug(null);
         setError(t("dashboard.slugTaken"));
         return;
       }
@@ -255,17 +243,48 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
 
     setLoading(false);
     if (updateError) {
+      setSlugConfirmOpen(false);
+      setPendingSlug(null);
       setError(updateError.message);
       return;
     }
     if (resolvedPlaceId) {
       setPlaceIdWarning(false);
     }
+    setSlugConfirmOpen(false);
+    setPendingSlug(null);
     setMessage(t("common.saved"));
     router.refresh();
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (steps.length === 0) {
+      setError(t("dashboard.flowStepsRequired"));
+      return;
+    }
+
+    const slug = cleanSlug(form.slug);
+    if (!slug) {
+      setError(t("dashboard.slugInvalid"));
+      return;
+    }
+    if (RESERVED_SLUGS.has(slug)) {
+      setError(t("setup.slugReserved"));
+      return;
+    }
+
+    if (slug !== merchant.slug) {
+      setPendingSlug(slug);
+      setSlugConfirmOpen(true);
+      return;
+    }
+
+    void saveJourney(slug);
+  };
+
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
       {message && <p className={ui.alertSuccess}>{message}</p>}
       {error && <p className={ui.alertError}>{error}</p>}
@@ -298,6 +317,9 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
           onUpload={handleLogoUpload}
         />
 
+        <button type="submit" disabled={loading} className={ui.btn}>
+          {loading ? t("common.saving") : t("common.save")}
+        </button>
       </section>
 
       <section className={`${ui.card} space-y-5`}>
@@ -502,5 +524,63 @@ export function JourneySettingsForm({ merchant }: { merchant: Merchant }) {
         )}
       </section>
     </form>
+
+    {slugConfirmOpen && pendingSlug && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        role="presentation"
+        onClick={() => {
+          if (!loading) {
+            setSlugConfirmOpen(false);
+            setPendingSlug(null);
+          }
+        }}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="slug-change-title"
+          className={`${ui.card} w-full max-w-md space-y-4`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 id="slug-change-title" className={ui.h2}>
+            {t("dashboard.slugChangeTitle")}
+          </h2>
+          <p className="text-sm font-medium text-ink">
+            {t("dashboard.slugChangeBody", {
+              oldSlug: merchant.slug,
+              newSlug: pendingSlug,
+            })}
+          </p>
+          <p className="rounded-[14px] border-2 border-black bg-[var(--c-cream)] px-3 py-2 font-mono text-xs font-bold text-ink">
+            starspin.cc/{merchant.slug}
+            <span className="mx-2 text-muted">→</span>
+            starspin.cc/{pendingSlug}
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              type="button"
+              className={ui.btnOutline}
+              disabled={loading}
+              onClick={() => {
+                setSlugConfirmOpen(false);
+                setPendingSlug(null);
+              }}
+            >
+              {t("dashboard.slugChangeCancel")}
+            </button>
+            <button
+              type="button"
+              className={ui.btnDanger}
+              disabled={loading}
+              onClick={() => void saveJourney(pendingSlug)}
+            >
+              {loading ? t("common.saving") : t("dashboard.slugChangeConfirm")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

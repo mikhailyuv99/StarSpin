@@ -54,6 +54,7 @@ export async function POST(request: Request) {
 
   const flow_steps: FlowActionStep[] = ["google_review"];
 
+  // One account subscription covers every establishment — inherit live status.
   const { data: merchant, error: insertError } = await supabase
     .from("merchants")
     .insert({
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
       owner_id: user.id,
       account_id: accountId,
       flow_steps,
+      subscription_status: account?.subscription_status ?? "cancelled",
     })
     .select("id, name, slug")
     .single();
