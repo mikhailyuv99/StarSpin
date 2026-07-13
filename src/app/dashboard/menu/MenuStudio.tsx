@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n, useTranslations } from "@/i18n/client";
 import { compressImageForUpload, MENU_BG_IMAGE_COMPRESS } from "@/lib/compress-image";
@@ -926,8 +927,12 @@ export function MenuStudio({
         </nav>
       ) : null}
 
-      {catalogOpen ? (
-        <div className="absolute inset-x-0 bottom-0 z-[80] mx-auto flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-black/10 bg-white shadow-lg">
+      {catalogOpen
+        ? createPortal(
+            <div
+              className="fixed inset-x-0 bottom-0 z-[200] mx-auto flex max-h-[min(85dvh,calc(100dvh-4rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-black/10 bg-white shadow-lg"
+              style={{ marginBottom: navHeight }}
+            >
           <div className="flex shrink-0 items-center gap-2 border-b border-black/5 px-4 py-3">
             <input
               className="flex-1 rounded-xl border border-black/10 px-3 py-2 text-sm"
@@ -1078,8 +1083,10 @@ export function MenuStudio({
               </label>
             </div>
           </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
 
       {toast ? (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-[70] -translate-x-1/2 rounded-full bg-black px-4 py-2 text-xs font-medium text-white">

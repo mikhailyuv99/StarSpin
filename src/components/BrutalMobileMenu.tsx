@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "@/i18n/client";
 
 export type MobileMenuItem =
@@ -18,7 +19,12 @@ export function BrutalMobileMenu({
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const panelId = useId();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -33,6 +39,62 @@ export function BrutalMobileMenu({
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  const overlay =
+    open && mounted
+      ? createPortal(
+          <>
+            <button
+              type="button"
+              className="brutal-mobile-menu-backdrop"
+              aria-label={t("common.cancel")}
+              onClick={() => setOpen(false)}
+            />
+            <nav id={panelId} className="brutal-mobile-menu-panel" aria-label={t("common.menu")}>
+              {items.map((item) => {
+                if (item.type === "link") {
+                  return (
+                    <Link
+                      key={`${item.type}-${item.href}`}
+                      href={item.href}
+                      className={`brutal-mobile-menu-item${item.emphasis ? " brutal-mobile-menu-item--cta" : ""}`}
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                }
+                if (item.type === "anchor") {
+                  return (
+                    <a
+                      key={`${item.type}-${item.href}`}
+                      href={item.href}
+                      className="brutal-mobile-menu-item"
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </a>
+                  );
+                }
+                return (
+                  <button
+                    key={`${item.type}-${item.label}`}
+                    type="button"
+                    className={`brutal-mobile-menu-item${item.danger ? " brutal-mobile-menu-item--danger" : ""}`}
+                    onClick={() => {
+                      setOpen(false);
+                      void item.onClick();
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </>,
+          document.body,
+        )
+      : null;
 
   return (
     <div className={`brutal-mobile-menu ${className}`.trim()}>
@@ -57,58 +119,7 @@ export function BrutalMobileMenu({
           <rect x="0" y="12" width="18" height="2" rx="1" fill="currentColor" />
         </svg>
       </button>
-
-      {open && (
-        <>
-          <button
-            type="button"
-            className="brutal-mobile-menu-backdrop"
-            aria-label={t("common.cancel")}
-            onClick={() => setOpen(false)}
-          />
-          <nav id={panelId} className="brutal-mobile-menu-panel" aria-label={t("common.menu")}>
-            {items.map((item) => {
-              if (item.type === "link") {
-                return (
-                  <Link
-                    key={`${item.type}-${item.href}`}
-                    href={item.href}
-                    className={`brutal-mobile-menu-item${item.emphasis ? " brutal-mobile-menu-item--cta" : ""}`}
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              }
-              if (item.type === "anchor") {
-                return (
-                  <a
-                    key={`${item.type}-${item.href}`}
-                    href={item.href}
-                    className="brutal-mobile-menu-item"
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </a>
-                );
-              }
-              return (
-                <button
-                  key={`${item.type}-${item.label}`}
-                  type="button"
-                  className={`brutal-mobile-menu-item${item.danger ? " brutal-mobile-menu-item--danger" : ""}`}
-                  onClick={() => {
-                    setOpen(false);
-                    void item.onClick();
-                  }}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </>
-      )}
+      {overlay}
     </div>
   );
 }

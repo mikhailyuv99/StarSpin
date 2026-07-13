@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const HALF_VH = 52;
 const EXPANDED_VH = 92;
@@ -15,7 +16,7 @@ function clamp(n: number, min: number, max: number) {
 
 /**
  * Docked bottom sheet: half (~52dvh) ↔ expanded (~92dvh), grabber-only Pointer Events drag.
- * No backdrop. Snaps on release. Does not lock/hide nested scrollbars (avoids layout jump).
+ * Portaled to document.body so menu-studio overflow never clips it.
  */
 export function DockSheet({
   open,
@@ -37,6 +38,7 @@ export function DockSheet({
   const [entered, setEntered] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [mounted, setMounted] = useState(open);
+  const [portalReady, setPortalReady] = useState(false);
 
   const dragRef = useRef<{
     pointerId: number;
@@ -48,6 +50,10 @@ export function DockSheet({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sheetVh = liveVh ?? (expanded ? EXPANDED_VH : HALF_VH);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   // Mount / open → always reset to half, animate in from below.
   useEffect(() => {
@@ -81,7 +87,7 @@ export function DockSheet({
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- mount machine keyed on open only
 
-  if (!mounted) return null;
+  if (!mounted || !portalReady) return null;
 
   const requestClose = () => {
     onClose();
@@ -144,14 +150,14 @@ export function DockSheet({
       }
       return;
     }
-    // Stay at current resting state
   };
 
   const visible = entered && !exiting;
+  const maxHeight = `calc(100dvh - ${Math.max(0, bottomOffset)}px)`;
 
-  return (
+  return createPortal(
     <div
-      className="pointer-events-none absolute inset-x-0 top-0 z-[55] flex items-end justify-center"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[200] flex items-end justify-center"
       style={{ bottom: bottomOffset }}
       aria-hidden={!open || exiting}
     >
@@ -162,7 +168,7 @@ export function DockSheet({
         className="pointer-events-auto flex w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-black/10 border-b-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
         style={{
           height: `${sheetVh}dvh`,
-          maxHeight: "100%",
+          maxHeight,
           transition: dragging
             ? "none"
             : "height 260ms ease, transform 280ms ease",
@@ -188,6 +194,7 @@ export function DockSheet({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
