@@ -14,20 +14,10 @@ export function getMessages(locale: Locale): Messages {
 }
 
 /**
- * Tiny catalog for QR customer journeys — keeps the RSC/HTML payload small.
- * Only includes namespaces PublicFlow / inactive / menu pages actually read.
+ * @deprecated Prefer getMessages(). Partial catalogs break soft-navigation when the
+ * root I18nProvider stays mounted (e.g. inactive merchant → /).
  */
 export function getPublicJourneyMessages(locale: Locale): Messages {
-  const full = getMessages(locale);
-  return {
-    public: full.public,
-    inactive: full.inactive,
-    meta: {
-      merchantTitle: full.meta.merchantTitle,
-      merchantDescription: full.meta.merchantDescription,
-    },
-    api: {
-      invalidEmail: full.api.invalidEmail,
-    },
-  } as Messages;
+  return getMessages(locale);
 }
+
