@@ -29,23 +29,23 @@ async function loadSubscribeContext(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" as const, status: 401 as const };
+  if (!user) return { ok: false as const, error: "Unauthorized", status: 401 };
 
   const merchant = await getCurrentMerchant();
-  if (!merchant) return { error: "Create your business first" as const, status: 400 as const };
+  if (!merchant) return { ok: false as const, error: "Create your business first", status: 400 };
 
   const account = await getMerchantAccount();
-  if (!account) return { error: "Account not found" as const, status: 400 as const };
+  if (!account) return { ok: false as const, error: "Account not found", status: 400 };
 
   if (opts.requireMultiGate) {
     if (isAccountLive(account) && isMultiBusinessAccount(account)) {
-      return { error: "Already subscribed" as const, status: 400 as const };
+      return { ok: false as const, error: "Already subscribed", status: 400 };
     }
   } else if (isAccountLive(account)) {
-    return { error: "Already subscribed" as const, status: 400 as const };
+    return { ok: false as const, error: "Already subscribed", status: 400 };
   }
 
-  return { user, merchant, account };
+  return { ok: true as const, user, merchant, account };
 }
 
 async function prepareSetupIntent(
@@ -55,7 +55,7 @@ async function prepareSetupIntent(
   requireMultiGate: boolean,
 ): Promise<CheckoutPrepareResult> {
   const ctx = await loadSubscribeContext(supabase, { requireMultiGate });
-  if ("error" in ctx) return { ok: false, error: ctx.error, status: ctx.status };
+  if (!ctx.ok) return { ok: false, error: ctx.error, status: ctx.status };
 
   try {
     const stripe = getStripe();
@@ -107,7 +107,7 @@ async function confirmSetupAndCreateSubscription(
   }
 
   const ctx = await loadSubscribeContext(supabase, { requireMultiGate });
-  if ("error" in ctx) return { ok: false, error: ctx.error, status: ctx.status };
+  if (!ctx.ok) return { ok: false, error: ctx.error, status: ctx.status };
 
   try {
     const stripe = getStripe();
