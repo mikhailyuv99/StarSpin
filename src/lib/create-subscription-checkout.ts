@@ -9,20 +9,24 @@ import { getCurrentMerchant } from "@/lib/merchant";
 import type { PricingMarket } from "@/lib/pricing-market";
 import { getStripe } from "@/lib/stripe";
 import {
+  createSubscriptionWithPaymentMethod,
   ensureAccountStripeCustomerForSubscribe,
-  getOrCreateSubscriptionPaymentSecret,
 } from "@/lib/stripe-billing";
-import { getOrCreateMultiBusinessPaymentSecret } from "@/lib/stripe-multi-business";
 
 export type CheckoutSetupResult =
-  | { ok: true; clientSecret: string; plan: BillingPlan }
+  | { ok: true; subscriptionId: string; clientSecret: string | null; plan: BillingPlan }
   | { ok: false; error: string; status: number };
 
 export async function setupStarspinCheckout(
   supabase: SupabaseClient,
   plan: BillingPlan,
   market: PricingMarket,
+  paymentMethodId: string,
 ): Promise<CheckoutSetupResult> {
+  if (!paymentMethodId) {
+    return { ok: false, error: "Missing payment method", status: 400 };
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -46,15 +50,21 @@ export async function setupStarspinCheckout(
       stripe_customer_id: account.stripe_customer_id ?? null,
       stripe_subscription_id: account.stripe_subscription_id ?? null,
     });
-    const { clientSecret } = await getOrCreateSubscriptionPaymentSecret(
+    const created = await createSubscriptionWithPaymentMethod(
       stripe,
       customerId,
+      paymentMethodId,
       plan,
       account.id,
       market,
       "starspin",
     );
-    return { ok: true, clientSecret, plan };
+    return {
+      ok: true,
+      subscriptionId: created.subscriptionId,
+      clientSecret: created.clientSecret,
+      plan,
+    };
   } catch (err) {
     console.error("[setupStarspinCheckout]", err);
     const message = err instanceof Error ? err.message : "Subscription setup failed";
@@ -66,7 +76,12 @@ export async function setupMultiBusinessCheckout(
   supabase: SupabaseClient,
   plan: BillingPlan,
   market: PricingMarket,
+  paymentMethodId: string,
 ): Promise<CheckoutSetupResult> {
+  if (!paymentMethodId) {
+    return { ok: false, error: "Missing payment method", status: 400 };
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -92,14 +107,21 @@ export async function setupMultiBusinessCheckout(
       stripe_customer_id: account.stripe_customer_id ?? null,
       stripe_subscription_id: account.stripe_subscription_id ?? null,
     });
-    const { clientSecret } = await getOrCreateMultiBusinessPaymentSecret(
+    const created = await createSubscriptionWithPaymentMethod(
       stripe,
       customerId,
+      paymentMethodId,
       plan,
       account.id,
       market,
+      "starspin_multi_business",
     );
-    return { ok: true, clientSecret, plan };
+    return {
+      ok: true,
+      subscriptionId: created.subscriptionId,
+      clientSecret: created.clientSecret,
+      plan,
+    };
   } catch (err) {
     console.error("[setupMultiBusinessCheckout]", err);
     const message = err instanceof Error ? err.message : "Subscription setup failed";

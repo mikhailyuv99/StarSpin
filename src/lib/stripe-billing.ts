@@ -5,7 +5,7 @@ import type { BillingPlan } from "@/lib/billing";
 import { SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
 import type { PricingMarket } from "@/lib/pricing-market";
 import type { SubscriptionProduct } from "@/lib/types";
-import { priceIdForPlan } from "@/lib/stripe";
+import { priceIdForPlan, multiBusinessPriceIdForPlan } from "@/lib/stripe";
 
 const RESIDUAL_SUBSCRIPTION_STATUSES: Stripe.SubscriptionListParams.Status[] = [
   "incomplete",
@@ -327,4 +327,87 @@ export async function createSubscriptionPaymentSecret(
   }
 
   return { clientSecret, subscriptionId: subscription.id };
+}
+
+/**
+ * Create the real subscription only after the customer submitted card details.
+ * Attaches the PaymentMethod, then starts the trial with that card on file.
+ */
+export async function createSubscriptionWithPaymentMethod(
+  stripe: Stripe,
+  customerId: string,
+  paymentMethodId: string,
+  plan: BillingPlan,
+  accountId: string,
+  market: PricingMarket,
+  product: SubscriptionProduct = "starspin",
+): Promise<{ subscriptionId: string; clientSecret: string | null }> {
+  try {
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+  } catch (err) {
+    const message = err instanceof Error ? err.message.toLowerCase() : "";
+    // Already attached to this customer is fine; anything else is a hard fail.
+    if (!message.includes("already been attached")) throw err;
+  }
+
+  await stripe.customers.update(customerId, {
+    invoice_settings: { default_payment_method: paymentMethodId },
+  });
+
+  const baseParams: Stripe.SubscriptionCreateParams = {
+    customer: customerId,
+    items: [
+      {
+        price:
+          product === "starspin_multi_business"
+            ? multiBusinessPriceIdForPlan(plan, market)
+            : priceIdForPlan(plan, market),
+      },
+    ],
+    default_payment_method: paymentMethodId,
+    payment_settings: {
+      save_default_payment_method: "on_subscription",
+      payment_method_types: ["card"],
+    },
+    metadata: {
+      account_id: accountId,
+      plan,
+      product,
+      pricing_market: market,
+    },
+    description:
+      product === "starspin_multi_business"
+        ? "STARSPIN Multi-business subscription"
+        : "STARSPIN Pro subscription",
+    expand: ["pending_setup_intent"],
+  };
+
+  let subscription: Stripe.Subscription;
+  try {
+    subscription = await stripe.subscriptions.create({
+      ...baseParams,
+      trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
+      trial_settings: {
+        end_behavior: { missing_payment_method: "cancel" },
+      },
+    });
+  } catch (err) {
+    if (!isTrialNotAllowedError(err)) throw err;
+    subscription = await stripe.subscriptions.create(baseParams);
+  }
+
+  const pending = subscription.pending_setup_intent;
+  let clientSecret: string | null = null;
+  if (pending) {
+    if (typeof pending === "string") {
+      const setupIntent = await stripe.setupIntents.retrieve(pending);
+      if (setupIntent.status === "requires_action" && setupIntent.client_secret) {
+        clientSecret = setupIntent.client_secret;
+      }
+    } else if (pending.status === "requires_action" && pending.client_secret) {
+      clientSecret = pending.client_secret;
+    }
+  }
+
+  return { subscriptionId: subscription.id, clientSecret };
 }

@@ -2,10 +2,11 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getStripe, subscriptionStatusFromStripe } from "@/lib/stripe";
+import { getStripe, isConfirmedStripeSubscription, subscriptionStatusFromStripe } from "@/lib/stripe";
 import { isBillingPlan } from "@/lib/billing";
 import type { SubscriptionProduct } from "@/lib/types";
 import { sendMerchantBillingEmail } from "@/lib/merchant-email";
+import { subscriptionHasDefaultPaymentMethod } from "@/lib/stripe-billing";
 
 export const runtime = "nodejs";
 
@@ -44,10 +45,16 @@ async function updateAccountFromSubscription(
   const accountId = await resolveAccountId(admin, subscription);
   if (!accountId) return;
 
+  const canceled = subscription.status === "canceled";
+
+  // Abandoned checkout stubs must never activate (or mark past_due) accounts.
+  if (!canceled && !isConfirmedStripeSubscription(subscription)) {
+    return;
+  }
+
   const plan = subscription.metadata?.plan;
   const product = (subscription.metadata?.product ?? "starspin") as SubscriptionProduct;
   const status = subscriptionStatusFromStripe(subscription.status);
-  const canceled = subscription.status === "canceled";
   const canceledCustomerId =
     typeof subscription.customer === "string"
       ? subscription.customer
@@ -98,6 +105,14 @@ async function updateAccountFromSubscription(
         billing_plan: null,
       })
       .eq("account_id", accountId);
+    return;
+  }
+
+  // Extra guard: never flip live from a trialing stub without a card on file.
+  if (
+    subscription.status === "trialing" &&
+    !subscriptionHasDefaultPaymentMethod(subscription)
+  ) {
     return;
   }
 

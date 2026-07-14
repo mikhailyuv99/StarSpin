@@ -113,6 +113,24 @@ export function subscriptionStatusFromStripe(
   status: Stripe.Subscription.Status,
 ): "active" | "trial" | "past_due" | "cancelled" {
   if (status === "active" || status === "trialing") return "active";
-  if (status === "past_due" || status === "unpaid" || status === "incomplete") return "past_due";
+  if (status === "past_due" || status === "unpaid") return "past_due";
+  // incomplete / incomplete_expired = abandoned checkout stubs, not a live sub
   return "cancelled";
+}
+
+/** True once the customer actually committed (card on file / paid). */
+export function isConfirmedStripeSubscription(subscription: Stripe.Subscription): boolean {
+  if (subscription.status === "incomplete" || subscription.status === "incomplete_expired") {
+    return false;
+  }
+  if (subscription.status === "canceled") return false;
+  if (subscription.status === "trialing") {
+    return Boolean(subscription.default_payment_method || subscription.default_source);
+  }
+  return (
+    subscription.status === "active" ||
+    subscription.status === "past_due" ||
+    subscription.status === "unpaid" ||
+    subscription.status === "paused"
+  );
 }
