@@ -39,6 +39,7 @@ function CheckoutPaymentForm({
 
     const returnUrl = `${window.location.origin}/dashboard?billing=success`;
 
+    // 1) Validate Payment Element fields (no Stripe subscription yet).
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setError(submitError.message ?? t("billing.checkoutError"));
@@ -46,40 +47,47 @@ function CheckoutPaymentForm({
       return;
     }
 
-    const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({ elements });
-    if (pmError || !paymentMethod) {
-      setError(pmError?.message ?? t("billing.checkoutError"));
-      setSubmitting(false);
-      return;
-    }
-
-    const res = await fetch("/api/stripe/subscription-setup", {
+    // 2) Create SetupIntent only (still no trial).
+    const prepRes = await fetch("/api/stripe/subscription-setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan, paymentMethodId: paymentMethod.id }),
+      body: JSON.stringify({ plan }),
     });
-    const data = (await res.json()) as {
+    const prep = (await prepRes.json()) as {
       error?: string;
-      clientSecret?: string | null;
+      clientSecret?: string;
+      setupIntentId?: string;
     };
-
-    if (!res.ok) {
-      setError(data.error ?? t("billing.checkoutError"));
+    if (!prepRes.ok || !prep.clientSecret || !prep.setupIntentId) {
+      setError(prep.error ?? t("billing.checkoutError"));
       setSubmitting(false);
       return;
     }
 
-    if (data.clientSecret) {
-      const { error: confirmError } = await stripe.confirmSetup({
-        clientSecret: data.clientSecret,
-        confirmParams: { return_url: returnUrl },
-        redirect: "if_required",
-      });
-      if (confirmError) {
-        setError(confirmError.message ?? t("billing.checkoutError"));
-        setSubmitting(false);
-        return;
-      }
+    // 3) Apple Pay / Google Pay / 3DS / bank verification happens here.
+    const { error: confirmError } = await stripe.confirmSetup({
+      elements,
+      clientSecret: prep.clientSecret,
+      confirmParams: { return_url: returnUrl },
+      redirect: "if_required",
+    });
+    if (confirmError) {
+      setError(confirmError.message ?? t("billing.checkoutError"));
+      setSubmitting(false);
+      return;
+    }
+
+    // 4) Only now create the trial — SetupIntent must be succeeded.
+    const confirmRes = await fetch("/api/stripe/subscription-setup/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, setupIntentId: prep.setupIntentId }),
+    });
+    const confirmed = (await confirmRes.json()) as { error?: string };
+    if (!confirmRes.ok) {
+      setError(confirmed.error ?? t("billing.checkoutError"));
+      setSubmitting(false);
+      return;
     }
 
     window.location.assign(returnUrl);
@@ -125,7 +133,6 @@ export function StarspinCheckout({
     () => ({
       mode: "setup" as const,
       currency: currencyForMarket(market),
-      paymentMethodCreation: "manual" as const,
       appearance: {
         theme: "stripe" as const,
         variables: {

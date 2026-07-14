@@ -1,32 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
-import { setupMultiBusinessCheckout } from "@/lib/create-subscription-checkout";
-import { pricingMarketFromRequest } from "@/lib/pricing-market";
+import { prepareMultiBusinessCheckout } from "@/lib/create-subscription-checkout";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
-  const body = (await request.json()) as { plan?: string; paymentMethodId?: string };
+  const body = (await request.json()) as { plan?: string };
   if (!body.plan || !isBillingPlan(body.plan)) {
     return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
   }
-  if (!body.paymentMethodId) {
-    return NextResponse.json({ error: "Missing payment method" }, { status: 400 });
-  }
 
-  const result = await setupMultiBusinessCheckout(
-    supabase,
-    body.plan,
-    pricingMarketFromRequest(request),
-    body.paymentMethodId,
-  );
-
+  const result = await prepareMultiBusinessCheckout(supabase, body.plan);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
   return NextResponse.json({
-    subscriptionId: result.subscriptionId,
+    setupIntentId: result.setupIntentId,
     clientSecret: result.clientSecret,
     plan: result.plan,
   });

@@ -45,40 +45,44 @@ function MultiBusinessPaymentForm({
       return;
     }
 
-    const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({ elements });
-    if (pmError || !paymentMethod) {
-      setError(pmError?.message ?? t("billing.checkoutError"));
-      setSubmitting(false);
-      return;
-    }
-
-    const res = await fetch("/api/stripe/multi-business-setup", {
+    const prepRes = await fetch("/api/stripe/multi-business-setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan, paymentMethodId: paymentMethod.id }),
+      body: JSON.stringify({ plan }),
     });
-    const data = (await res.json()) as {
+    const prep = (await prepRes.json()) as {
       error?: string;
-      clientSecret?: string | null;
+      clientSecret?: string;
+      setupIntentId?: string;
     };
-
-    if (!res.ok) {
-      setError(data.error ?? t("billing.checkoutError"));
+    if (!prepRes.ok || !prep.clientSecret || !prep.setupIntentId) {
+      setError(prep.error ?? t("billing.checkoutError"));
       setSubmitting(false);
       return;
     }
 
-    if (data.clientSecret) {
-      const { error: confirmError } = await stripe.confirmSetup({
-        clientSecret: data.clientSecret,
-        confirmParams: { return_url: returnUrl },
-        redirect: "if_required",
-      });
-      if (confirmError) {
-        setError(confirmError.message ?? t("billing.checkoutError"));
-        setSubmitting(false);
-        return;
-      }
+    const { error: confirmError } = await stripe.confirmSetup({
+      elements,
+      clientSecret: prep.clientSecret,
+      confirmParams: { return_url: returnUrl },
+      redirect: "if_required",
+    });
+    if (confirmError) {
+      setError(confirmError.message ?? t("billing.checkoutError"));
+      setSubmitting(false);
+      return;
+    }
+
+    const confirmRes = await fetch("/api/stripe/multi-business-setup/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, setupIntentId: prep.setupIntentId }),
+    });
+    const confirmed = (await confirmRes.json()) as { error?: string };
+    if (!confirmRes.ok) {
+      setError(confirmed.error ?? t("billing.checkoutError"));
+      setSubmitting(false);
+      return;
     }
 
     window.location.assign(returnUrl);
@@ -121,7 +125,6 @@ export function MultiBusinessCheckout({
     () => ({
       mode: "setup" as const,
       currency: currencyForMarket(market),
-      paymentMethodCreation: "manual" as const,
       appearance: {
         theme: "stripe" as const,
         variables: {

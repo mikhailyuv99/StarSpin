@@ -330,8 +330,8 @@ export async function createSubscriptionPaymentSecret(
 }
 
 /**
- * Create the real subscription only after the customer submitted card details.
- * Attaches the PaymentMethod, then starts the trial with that card on file.
+ * Create the trial subscription only after SetupIntent succeeded
+ * (Apple Pay / Google Pay / 3DS / bank verification already done).
  */
 export async function createSubscriptionWithPaymentMethod(
   stripe: Stripe,
@@ -341,12 +341,11 @@ export async function createSubscriptionWithPaymentMethod(
   accountId: string,
   market: PricingMarket,
   product: SubscriptionProduct = "starspin",
-): Promise<{ subscriptionId: string; clientSecret: string | null }> {
+): Promise<{ subscriptionId: string }> {
   try {
     await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
   } catch (err) {
     const message = err instanceof Error ? err.message.toLowerCase() : "";
-    // Already attached to this customer is fine; anything else is a hard fail.
     if (!message.includes("already been attached")) throw err;
   }
 
@@ -379,7 +378,6 @@ export async function createSubscriptionWithPaymentMethod(
       product === "starspin_multi_business"
         ? "STARSPIN Multi-business subscription"
         : "STARSPIN Pro subscription",
-    expand: ["pending_setup_intent"],
   };
 
   let subscription: Stripe.Subscription;
@@ -396,18 +394,5 @@ export async function createSubscriptionWithPaymentMethod(
     subscription = await stripe.subscriptions.create(baseParams);
   }
 
-  const pending = subscription.pending_setup_intent;
-  let clientSecret: string | null = null;
-  if (pending) {
-    if (typeof pending === "string") {
-      const setupIntent = await stripe.setupIntents.retrieve(pending);
-      if (setupIntent.status === "requires_action" && setupIntent.client_secret) {
-        clientSecret = setupIntent.client_secret;
-      }
-    } else if (pending.status === "requires_action" && pending.client_secret) {
-      clientSecret = pending.client_secret;
-    }
-  }
-
-  return { subscriptionId: subscription.id, clientSecret };
+  return { subscriptionId: subscription.id };
 }
