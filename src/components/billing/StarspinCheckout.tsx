@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { loadStripe } from "@stripe/stripe-js";
+import { useMemo, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useI18n } from "@/i18n/client";
 import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
@@ -10,13 +8,33 @@ import { SubscribeNav } from "@/components/billing/SubscribeNav";
 import { PlanPriceDisplay } from "@/components/billing/PlanPriceDisplay";
 import type { BillingPlan } from "@/lib/billing";
 import { checkoutPayForPlan } from "@/lib/billing-display";
+import { getStripeBrowser } from "@/lib/stripe-browser";
 import "@/components/marketing/cadeo-styles.css";
 
 function isSetupIntentSecret(clientSecret: string) {
   return clientSecret.startsWith("seti_");
 }
 
-function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; clientSecret: string }) {
+function CheckoutSkeleton() {
+  return (
+    <div className="cadeo-checkout-skeleton" aria-hidden>
+      <div className="cadeo-checkout-skeleton-line cadeo-checkout-skeleton-line--lg" />
+      <div className="cadeo-checkout-skeleton-line" />
+      <div className="cadeo-checkout-skeleton-line cadeo-checkout-skeleton-line--md" />
+      <div className="cadeo-checkout-skeleton-btn" />
+    </div>
+  );
+}
+
+function CheckoutPaymentForm({
+  plan,
+  clientSecret,
+  onReady,
+}: {
+  plan: BillingPlan;
+  clientSecret: string;
+  onReady: () => void;
+}) {
   const { t } = useI18n();
   const market = usePricingMarket();
   const stripe = useStripe();
@@ -32,7 +50,6 @@ function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; client
     setError(null);
 
     const returnUrl = `${window.location.origin}/dashboard?billing=success`;
-    // Free trials use a SetupIntent (seti_…); immediate charges use a PaymentIntent (pi_…).
     const result = isSetupIntentSecret(clientSecret)
       ? await stripe.confirmSetup({
           elements,
@@ -57,6 +74,7 @@ function CheckoutPaymentForm({ plan, clientSecret }: { plan: BillingPlan; client
   return (
     <form onSubmit={handleSubmit} className="cadeo-checkout-form">
       <PaymentElement
+        onReady={onReady}
         options={{
           layout: "tabs",
           paymentMethodOrder: ["apple_pay", "google_pay", "card"],
@@ -79,41 +97,20 @@ export function StarspinCheckout({
   merchantName,
   plan,
   publishableKey,
+  initialClientSecret = null,
+  initialError = null,
 }: {
   merchantName: string;
   plan: BillingPlan;
   publishableKey: string;
+  initialClientSecret?: string | null;
+  initialError?: string | null;
 }) {
   const { t } = useI18n();
-  const stripePromise = useMemo(() => loadStripe(publishableKey), [publishableKey]);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      const res = await fetch("/api/stripe/subscription-setup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-
-      const data = (await res.json()) as { clientSecret?: string; error?: string };
-      if (cancelled) return;
-
-      if (!res.ok || !data.clientSecret) {
-        setError(data.error ?? t("billing.checkoutError"));
-        return;
-      }
-
-      setClientSecret(data.clientSecret);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [plan, t]);
+  const stripePromise = useMemo(() => getStripeBrowser(publishableKey), [publishableKey]);
+  const [formReady, setFormReady] = useState(false);
+  const clientSecret = initialClientSecret;
+  const error = initialError;
 
   return (
     <div className="cadeo-page cadeo-page--subscribe cadeo-page--checkout">
@@ -144,35 +141,58 @@ export function StarspinCheckout({
             <p className="cadeo-pricing-wallets">{t("marketing.pricingWallets")}</p>
           </div>
 
+          <ul className="cadeo-checkout-trust">
+            <li>{t("billing.secureStripe")}</li>
+            <li>{t("marketing.pricingTrialNote")}</li>
+          </ul>
+
           {error && <p className="cadeo-subscribe-btn-error">{error}</p>}
 
-          {!clientSecret && !error && (
-            <p className="cadeo-checkout-loading">{t("billing.checkoutPreparing")}</p>
+          {clientSecret && (
+            <div className="cadeo-checkout-elements">
+              {!formReady && (
+                <div className="cadeo-checkout-loading-panel">
+                  <CheckoutSkeleton />
+                  <p className="cadeo-checkout-loading">{t("billing.checkoutPreparing")}</p>
+                </div>
+              )}
+              <div className={formReady ? "cadeo-checkout-elements-ready" : "cadeo-checkout-elements-pending"}>
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: "stripe",
+                      variables: {
+                        colorPrimary: "#9b7fe8",
+                        colorBackground: "#ffffff",
+                        colorText: "#0a0a0a",
+                        colorDanger: "#df1b41",
+                        borderRadius: "14px",
+                        fontFamily: "system-ui, sans-serif",
+                      },
+                      rules: {
+                        ".Label": { fontWeight: "700" },
+                      },
+                    },
+                    loader: "auto",
+                  }}
+                >
+                  <CheckoutPaymentForm
+                    plan={plan}
+                    clientSecret={clientSecret}
+                    onReady={() => setFormReady(true)}
+                  />
+                </Elements>
+              </div>
+            </div>
           )}
 
-          {clientSecret && (
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    colorPrimary: "#9b7fe8",
-                    colorBackground: "#ffffff",
-                    colorText: "#0a0a0a",
-                    colorDanger: "#df1b41",
-                    borderRadius: "14px",
-                    fontFamily: "system-ui, sans-serif",
-                  },
-                  rules: {
-                    ".Label": { fontWeight: "700" },
-                  },
-                },
-              }}
-            >
-              <CheckoutPaymentForm plan={plan} clientSecret={clientSecret} />
-            </Elements>
+          {!clientSecret && !error && (
+            <div className="cadeo-checkout-loading-panel">
+              <CheckoutSkeleton />
+              <p className="cadeo-checkout-loading">{t("billing.checkoutPreparing")}</p>
+            </div>
           )}
         </div>
       </main>

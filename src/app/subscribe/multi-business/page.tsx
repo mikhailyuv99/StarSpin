@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   getMerchantAccount,
@@ -8,6 +9,8 @@ import { MultiBusinessCheckout } from "@/components/billing/MultiBusinessCheckou
 import { getCurrentMerchant } from "@/lib/merchant";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan, type BillingPlan } from "@/lib/billing";
+import { setupMultiBusinessCheckout } from "@/lib/create-subscription-checkout";
+import { pricingMarketFromHeaders } from "@/lib/pricing-market";
 import { getStripePublishableKey } from "@/lib/stripe-client";
 
 export default async function MultiBusinessCheckoutPage({
@@ -44,5 +47,19 @@ export default async function MultiBusinessCheckoutPage({
     redirect("/dashboard/establishments?checkout=error");
   }
 
-  return <MultiBusinessCheckout plan={plan} publishableKey={publishableKey} />;
+  const headerStore = await headers();
+  const setup = await setupMultiBusinessCheckout(
+    supabase,
+    plan,
+    pricingMarketFromHeaders(headerStore),
+  );
+
+  return (
+    <MultiBusinessCheckout
+      plan={plan}
+      publishableKey={publishableKey}
+      initialClientSecret={setup.ok ? setup.clientSecret : null}
+      initialError={setup.ok ? null : setup.error}
+    />
+  );
 }

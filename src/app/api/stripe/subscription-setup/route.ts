@@ -1,66 +1,25 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isBillingPlan } from "@/lib/billing";
-import { accountBillingAccount, getMerchantAccount, isAccountLive } from "@/lib/merchant-account";
-import { getCurrentMerchant } from "@/lib/merchant";
+import { setupStarspinCheckout } from "@/lib/create-subscription-checkout";
 import { pricingMarketFromRequest } from "@/lib/pricing-market";
-import { getStripe } from "@/lib/stripe";
-import { ensureAccountStripeCustomer, getOrCreateSubscriptionPaymentSecret } from "@/lib/stripe-billing";
 
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = (await request.json()) as { plan?: string };
-    if (!body.plan || !isBillingPlan(body.plan)) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
-    }
-
-    const merchant = await getCurrentMerchant();
-    if (!merchant) {
-      return NextResponse.json({ error: "Create your business first" }, { status: 400 });
-    }
-
-    const account = await getMerchantAccount();
-    if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 400 });
-    }
-
-    if (isAccountLive(account)) {
-      return NextResponse.json({ error: "Already subscribed" }, { status: 400 });
-    }
-
-    const stripe = getStripe();
-    const market = pricingMarketFromRequest(request);
-    const customerId = await ensureAccountStripeCustomer(supabase, stripe, user, {
-      id: account.id,
-      stripe_customer_id: account.stripe_customer_id ?? null,
-    });
-    const { clientSecret } = await getOrCreateSubscriptionPaymentSecret(
-      stripe,
-      customerId,
-      body.plan,
-      account.id,
-      market,
-      "starspin",
-    );
-
-    return NextResponse.json({ clientSecret, plan: body.plan });
-  } catch (err) {
-    console.error("[stripe/subscription-setup]", err);
-    const message =
-      err instanceof Error && err.message.includes("STRIPE")
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : "Subscription setup failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+  const supabase = await createClient();
+  const body = (await request.json()) as { plan?: string };
+  if (!body.plan || !isBillingPlan(body.plan)) {
+    return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
   }
+
+  const result = await setupStarspinCheckout(
+    supabase,
+    body.plan,
+    pricingMarketFromRequest(request),
+  );
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json({ clientSecret: result.clientSecret, plan: result.plan });
 }

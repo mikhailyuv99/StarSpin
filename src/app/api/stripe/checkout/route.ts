@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { pricingMarketFromRequest } from "@/lib/pricing-market";
 import { getStripe, priceIdForPlan } from "@/lib/stripe";
 import { isBillingPlan, SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
-import { ensureAccountStripeCustomer } from "@/lib/stripe-billing";
+import { ensureAccountStripeCustomerForSubscribe } from "@/lib/stripe-billing";
 
 export async function POST(request: Request) {
   try {
@@ -32,9 +32,11 @@ export async function POST(request: Request) {
     }
 
     const stripe = getStripe();
-    const customerId = await ensureAccountStripeCustomer(supabase, stripe, user, {
+    const customerId = await ensureAccountStripeCustomerForSubscribe(supabase, stripe, user, {
       id: account.id,
+      subscription_status: account.subscription_status,
       stripe_customer_id: account.stripe_customer_id ?? null,
+      stripe_subscription_id: account.stripe_subscription_id ?? null,
     });
 
     const appUrl = getAppUrl();

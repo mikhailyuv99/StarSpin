@@ -47,10 +47,63 @@ async function updateAccountFromSubscription(
   const plan = subscription.metadata?.plan;
   const product = (subscription.metadata?.product ?? "starspin") as SubscriptionProduct;
   const status = subscriptionStatusFromStripe(subscription.status);
+  const canceled = subscription.status === "canceled";
+  const canceledCustomerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id ?? null;
+
+  if (canceled) {
+    const { data: current } = await admin
+      .from("merchant_accounts")
+      .select("stripe_subscription_id, stripe_customer_id")
+      .eq("id", accountId)
+      .maybeSingle();
+
+    // Ignore stale cancels from an old customer/subscription after resubscribe.
+    if (
+      current?.stripe_subscription_id &&
+      current.stripe_subscription_id !== subscription.id
+    ) {
+      return;
+    }
+    if (
+      current?.stripe_customer_id &&
+      canceledCustomerId &&
+      current.stripe_customer_id !== canceledCustomerId
+    ) {
+      return;
+    }
+
+    await admin
+      .from("merchant_accounts")
+      .update({
+        subscription_status: status,
+        subscription_product: "starspin",
+        stripe_subscription_id: null,
+        stripe_customer_id: null,
+        billing_plan: null,
+        multi_business_status: "cancelled",
+        multi_business_stripe_subscription_id: null,
+        multi_business_billing_plan: null,
+      })
+      .eq("id", accountId);
+
+    await admin
+      .from("merchants")
+      .update({
+        subscription_status: status,
+        stripe_customer_id: null,
+        stripe_subscription_id: null,
+        billing_plan: null,
+      })
+      .eq("account_id", accountId);
+    return;
+  }
 
   const updates: Record<string, unknown> = {
     subscription_status: status,
-    stripe_subscription_id: subscription.status === "canceled" ? null : subscription.id,
+    stripe_subscription_id: subscription.id,
     subscription_product: product,
   };
 
@@ -60,8 +113,7 @@ async function updateAccountFromSubscription(
 
   if (product === "starspin_multi_business") {
     updates.multi_business_status = status;
-    updates.multi_business_stripe_subscription_id =
-      subscription.status === "canceled" ? null : subscription.id;
+    updates.multi_business_stripe_subscription_id = subscription.id;
     if (plan && isBillingPlan(plan)) {
       updates.multi_business_billing_plan = plan;
     }

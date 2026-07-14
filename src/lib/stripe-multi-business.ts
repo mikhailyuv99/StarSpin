@@ -48,6 +48,16 @@ export async function getOrCreateMultiBusinessPaymentSecret(
   return createMultiBusinessPaymentSecret(stripe, customerId, plan, accountId, market);
 }
 
+function isTrialNotAllowedError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const message = "message" in err && typeof err.message === "string" ? err.message.toLowerCase() : "";
+  return (
+    message.includes("trial") ||
+    message.includes("free trial") ||
+    ("code" in err && err.code === "customer_max_subscriptions")
+  );
+}
+
 export async function createMultiBusinessPaymentSecret(
   stripe: Stripe,
   customerId: string,
@@ -55,17 +65,13 @@ export async function createMultiBusinessPaymentSecret(
   accountId: string,
   market: PricingMarket,
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
-  const subscription = await stripe.subscriptions.create({
+  const baseParams: Stripe.SubscriptionCreateParams = {
     customer: customerId,
     items: [{ price: multiBusinessPriceIdForPlan(plan, market) }],
-    trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
     payment_behavior: "default_incomplete",
     payment_settings: {
       save_default_payment_method: "on_subscription",
       payment_method_types: ["card"],
-    },
-    trial_settings: {
-      end_behavior: { missing_payment_method: "cancel" },
     },
     metadata: {
       account_id: accountId,
@@ -75,7 +81,21 @@ export async function createMultiBusinessPaymentSecret(
     },
     description: "STARSPIN Multi-business subscription",
     expand: ["pending_setup_intent", "latest_invoice.confirmation_secret"],
-  });
+  };
+
+  let subscription: Stripe.Subscription;
+  try {
+    subscription = await stripe.subscriptions.create({
+      ...baseParams,
+      trial_period_days: SUBSCRIPTION_TRIAL_DAYS,
+      trial_settings: {
+        end_behavior: { missing_payment_method: "cancel" },
+      },
+    });
+  } catch (err) {
+    if (!isTrialNotAllowedError(err)) throw err;
+    subscription = await stripe.subscriptions.create(baseParams);
+  }
 
   const clientSecret = await clientSecretFromSubscription(stripe, subscription);
 
