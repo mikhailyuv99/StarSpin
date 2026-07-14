@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { PricingMarketProvider } from "@/components/providers/PricingMarketProvider";
 import { I18nProvider } from "@/i18n/client";
-import { getMessages, getPublicJourneyMessages } from "@/i18n/get-messages";
+import { getMessages } from "@/i18n/get-messages";
 import { getLocale, getTranslations } from "@/i18n/server";
 import { OFFICIAL_SITE_URL } from "@/lib/brand";
 import { pricingMarketFromHeaders } from "@/lib/pricing-market";
@@ -55,8 +55,10 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const headerStore = await headers();
+  // Always ship the full catalog. Partial journey dictionaries broke soft-nav
+  // from /[slug] → / because the root I18nProvider stays mounted.
+  const messages = getMessages(locale);
   const isPublicJourney = headerStore.get("x-starspin-public-journey") === "1";
-  const messages = isPublicJourney ? getPublicJourneyMessages(locale) : getMessages(locale);
   const pricingMarket = pricingMarketFromHeaders(headerStore);
 
   return (
