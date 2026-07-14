@@ -14,7 +14,8 @@ export default async function PrizesPage() {
     .from("prizes")
     .select("*")
     .eq("merchant_id", merchant.id)
-    .order("created_at");
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
 
   return (
     <div className="min-w-0 space-y-8 overflow-x-clip">

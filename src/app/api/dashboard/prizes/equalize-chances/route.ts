@@ -44,6 +44,7 @@ export async function POST() {
     .select("*")
     .eq("merchant_id", merchant.id)
     .eq("active", true)
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
   if (fetchError) {

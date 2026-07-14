@@ -99,12 +99,30 @@ export async function insertMerchantPrize(
 ) {
   await ensurePrizeRedemptionSchema(admin);
 
+  const { data: last } = await admin
+    .from("prizes")
+    .select("sort_order")
+    .eq("merchant_id", merchantId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sort_order =
+    typeof last?.sort_order === "number" && Number.isFinite(last.sort_order)
+      ? last.sort_order + 1
+      : 0;
+
   const fullRow = {
     merchant_id: merchantId,
     ...payload,
     prize_mechanic: payload.prize_mechanic ?? "standard",
+    sort_order,
   };
   let result = await admin.from("prizes").insert(fullRow).select().single();
+
+  if (result.error && /sort_order/i.test(result.error.message)) {
+    const { sort_order: _s, ...withoutSort } = fullRow;
+    result = await admin.from("prizes").insert(withoutSort).select().single();
+  }
 
   if (result.error && isMissingMechanicSchemaError(result.error.message)) {
     const { prize_mechanic: _m, social_unlock_platform: _p, ...withoutMechanic } = fullRow;

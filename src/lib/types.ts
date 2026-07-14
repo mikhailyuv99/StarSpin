@@ -80,6 +80,8 @@ export interface Prize {
   social_unlock_platform?: "instagram" | "facebook" | "tiktok" | string | null;
   stock_remaining: number | null;
   active: boolean;
+  /** Display / wheel slice order (lower first). */
+  sort_order?: number;
   redeem_next_visit?: boolean;
   redeem_min_spend_cents?: number | null;
   redeem_valid_days?: number | null;

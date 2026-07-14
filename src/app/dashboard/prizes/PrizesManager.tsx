@@ -262,6 +262,7 @@ export function PrizesManager({
  const [savingPrizeId, setSavingPrizeId] = useState<string | null>(null);
  const [togglingPrizeId, setTogglingPrizeId] = useState<string | null>(null);
  const [deletingPrizeId, setDeletingPrizeId] = useState<string | null>(null);
+ const [reordering, setReordering] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [spinning, setSpinning] = useState(false);
  const [previewWonLabel, setPreviewWonLabel] = useState<string | null>(null);
@@ -472,6 +473,42 @@ export function PrizesManager({
 
  const cancelEdit = () => {
  setEditingId(null);
+ };
+
+ const movePrize = async (prizeId: string, direction: -1 | 1) => {
+ if (reordering) return;
+ const index = prizes.findIndex((p) => p.id === prizeId);
+ const target = index + direction;
+ if (index < 0 || target < 0 || target >= prizes.length) return;
+
+ const snapshot = prizes;
+ const next = [...prizes];
+ [next[index], next[target]] = [next[target], next[index]];
+ setPrizes(next);
+ setReordering(true);
+ setError(null);
+
+ try {
+ const res = await fetch("/api/dashboard/prizes/reorder", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ orderedIds: next.map((p) => p.id) }),
+ });
+ const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
+ if (!res.ok) {
+ setPrizes(snapshot);
+ setError(mapPrizeApiError(data.error, t));
+ return;
+ }
+ if (data.prizes?.length) {
+ setPrizes(data.prizes);
+ }
+ } catch {
+ setPrizes(snapshot);
+ setError(t("dashboard.prizeReorderFailed"));
+ } finally {
+ setReordering(false);
+ }
  };
 
  const applyPrizesList = (data: { prize?: Prize; prizes?: Prize[] }) => {
@@ -1007,6 +1044,28 @@ export function PrizesManager({
  </div>
  </div>
  <div className="flex min-w-0 flex-wrap items-center gap-2 lg:justify-end">
+ <div className="flex shrink-0 flex-col gap-1">
+ <button
+ type="button"
+ onClick={() => void movePrize(prize.id, -1)}
+ disabled={reordering || index === 0}
+ aria-label={t("dashboard.prizeMoveUp")}
+ title={t("dashboard.prizeMoveUp")}
+ className={`${ui.btnOutline} !h-8 !w-9 !shrink-0 !px-0 !py-0 text-sm font-black leading-none`}
+ >
+ ↑
+ </button>
+ <button
+ type="button"
+ onClick={() => void movePrize(prize.id, 1)}
+ disabled={reordering || index >= prizes.length - 1}
+ aria-label={t("dashboard.prizeMoveDown")}
+ title={t("dashboard.prizeMoveDown")}
+ className={`${ui.btnOutline} !h-8 !w-9 !shrink-0 !px-0 !py-0 text-sm font-black leading-none`}
+ >
+ ↓
+ </button>
+ </div>
  <button
  type="button"
  onClick={() => startEdit(prize)}
