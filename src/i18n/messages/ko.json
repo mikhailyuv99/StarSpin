@@ -937,6 +937,28 @@
     "rateLimited": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
     "unauthorized": "권한 없음"
   },
+  "email": {
+    "prizeSubject": "STARSPIN - 경품 코드: {code}",
+    "prizeTitle": "당첨되었습니다!",
+    "prizeHi": "{name}님, 안녕하세요.",
+    "prizeCongrats": "축하합니다! {merchant}에서 {prize}에 당첨되었습니다.",
+    "prizeCodeLabel": "경품 코드",
+    "prizeRulesTitle": "교환 조건",
+    "prizeShowCode": "카운터에서 이 코드를 제시해 경품을 받으세요. 이 이메일을 보관하세요 — 코드가 필요합니다.",
+    "poweredBy": "Powered by STARSPIN · {host}",
+    "journeySubject": "STARSPIN — 새 당첨자: {code} ({merchant})",
+    "journeyTitle": "새 고객이 룰렛을 완료했습니다",
+    "journeyIntro": "고객이 {merchant}에서 여정을 마치고 경품을 수령했습니다.",
+    "journeyCustomer": "고객",
+    "journeyPhone": "전화",
+    "journeyPrize": "경품",
+    "journeyCode": "쿠폰 코드",
+    "journeyScreenshot": "Google 리뷰 스크린샷",
+    "journeyVerify": "코드를 인정하기 전에 이 증빙을 확인하세요.",
+    "journeyOpenCrm": "CRM 열기",
+    "journeyReviews": "리뷰 스크린샷",
+    "journeyTextIntro": "{merchant}에서 새 고객이 룰렛을 완료했습니다."
+  },
   "menuStudio": {
     "edit": "편집",
     "preview": "미리보기",

@@ -939,6 +939,28 @@
     "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi một chút rồi thử lại.",
     "unauthorized": "Không được phép"
   },
+  "email": {
+    "prizeSubject": "STARSPIN - Mã phần thưởng của bạn: {code}",
+    "prizeTitle": "Bạn đã thắng!",
+    "prizeHi": "Xin chào {name},",
+    "prizeCongrats": "Chúc mừng! Bạn đã thắng {prize} tại {merchant}.",
+    "prizeCodeLabel": "Mã phần thưởng của bạn",
+    "prizeRulesTitle": "Điều kiện đổi thưởng",
+    "prizeShowCode": "Xuất trình mã này tại quầy để nhận thưởng. Giữ email này — bạn sẽ cần mã.",
+    "poweredBy": "Powered by STARSPIN · {host}",
+    "journeySubject": "STARSPIN — Người thắng mới: {code} ({merchant})",
+    "journeyTitle": "Khách hàng mới đã hoàn thành vòng quay",
+    "journeyIntro": "Một khách vừa hoàn thành hành trình tại {merchant} và đã nhận thưởng.",
+    "journeyCustomer": "Khách hàng",
+    "journeyPhone": "Điện thoại",
+    "journeyPrize": "Phần thưởng",
+    "journeyCode": "Mã coupon",
+    "journeyScreenshot": "Ảnh chụp đánh giá Google",
+    "journeyVerify": "Xác minh bằng chứng này trước khi chấp nhận mã.",
+    "journeyOpenCrm": "Mở CRM",
+    "journeyReviews": "Ảnh đánh giá",
+    "journeyTextIntro": "Khách hàng mới đã hoàn thành vòng quay tại {merchant}."
+  },
   "menuStudio": {
     "edit": "Sửa",
     "preview": "Xem trước",

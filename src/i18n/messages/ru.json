@@ -939,6 +939,28 @@
     "rateLimited": "Слишком много запросов. Подождите немного и попробуйте снова.",
     "unauthorized": "Нет доступа"
   },
+  "email": {
+    "prizeSubject": "STARSPIN — Ваш код приза: {code}",
+    "prizeTitle": "Вы выиграли!",
+    "prizeHi": "Здравствуйте, {name}!",
+    "prizeCongrats": "Поздравляем! Вы выиграли {prize} в {merchant}.",
+    "prizeCodeLabel": "Ваш код приза",
+    "prizeRulesTitle": "Условия получения",
+    "prizeShowCode": "Покажите этот код на кассе, чтобы получить приз. Сохраните это письмо — код понадобится.",
+    "poweredBy": "Powered by STARSPIN · {host}",
+    "journeySubject": "STARSPIN — Новый победитель: {code} ({merchant})",
+    "journeyTitle": "Новый клиент завершил вашу рулетку",
+    "journeyIntro": "Клиент только что завершил путь в {merchant} и получил приз.",
+    "journeyCustomer": "Клиент",
+    "journeyPhone": "Телефон",
+    "journeyPrize": "Приз",
+    "journeyCode": "Код купона",
+    "journeyScreenshot": "Скриншот отзыва Google",
+    "journeyVerify": "Проверьте это подтверждение перед выдачей приза.",
+    "journeyOpenCrm": "Открыть CRM",
+    "journeyReviews": "Скриншоты отзывов",
+    "journeyTextIntro": "Новый клиент завершил вашу рулетку в {merchant}."
+  },
   "menuStudio": {
     "edit": "Правка",
     "preview": "Просмотр",

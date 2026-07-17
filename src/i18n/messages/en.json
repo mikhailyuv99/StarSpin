@@ -937,6 +937,28 @@
     "rateLimited": "Too many requests. Please wait a moment and try again.",
     "unauthorized": "Unauthorized"
   },
+  "email": {
+    "prizeSubject": "STARSPIN - Your prize code: {code}",
+    "prizeTitle": "You won!",
+    "prizeHi": "Hi {name},",
+    "prizeCongrats": "Congratulations! You won {prize} at {merchant}.",
+    "prizeCodeLabel": "Your prize code",
+    "prizeRulesTitle": "Redemption conditions",
+    "prizeShowCode": "Show this code at the counter to redeem your prize. Keep this email — you'll need the code.",
+    "poweredBy": "Powered by STARSPIN · {host}",
+    "journeySubject": "STARSPIN — New winner: {code} ({merchant})",
+    "journeyTitle": "New customer completed your wheel",
+    "journeyIntro": "A customer just finished the journey at {merchant} and claimed their prize.",
+    "journeyCustomer": "Customer",
+    "journeyPhone": "Phone",
+    "journeyPrize": "Prize",
+    "journeyCode": "Coupon code",
+    "journeyScreenshot": "Google review screenshot",
+    "journeyVerify": "Verify this proof before honoring the code.",
+    "journeyOpenCrm": "Open CRM",
+    "journeyReviews": "Review screenshots",
+    "journeyTextIntro": "New customer completed your wheel at {merchant}."
+  },
   "menuStudio": {
     "edit": "Edit",
     "preview": "Preview",

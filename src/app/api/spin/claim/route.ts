@@ -17,6 +17,7 @@ import { decrementPrizeStock } from "@/lib/prize-stock";
 import type { Prize } from "@/lib/types";
 import {
   getMerchantOwnerEmail,
+  resolveMerchantNotifyLocale,
   sendMerchantJourneyCompleteEmail,
   signedReviewScreenshotForEmail,
 } from "@/lib/merchant-journey-email";
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
 
     const { data: merchant } = await supabase
       .from("merchants")
-      .select("name, owner_id")
+      .select("name, owner_id, account_id, stripe_subscription_id")
       .eq("id", spin.merchant_id)
       .maybeSingle();
 
@@ -279,6 +280,13 @@ export async function POST(request: Request) {
           const screenshotSignedUrl = await signedReviewScreenshotForEmail(
             spin.review_screenshot_url,
           );
+          const merchantLocale = await resolveMerchantNotifyLocale({
+            supabase,
+            merchantId: spin.merchant_id,
+            accountId: merchant.account_id,
+            stripeSubscriptionId: merchant.stripe_subscription_id,
+            redeemCurrency: redemptionRules.redeem_min_spend_currency,
+          });
           await sendMerchantJourneyCompleteEmail({
             merchantEmail: ownerEmail,
             merchantName: merchant.name ?? "STARSPIN",
@@ -290,6 +298,7 @@ export async function POST(request: Request) {
             prizeLabel,
             prizeCode,
             reviewScreenshotSignedUrl: screenshotSignedUrl,
+            locale: merchantLocale,
           });
         }
       } catch (notifyErr) {
