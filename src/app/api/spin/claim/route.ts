@@ -6,6 +6,7 @@ import { sendPrizeEmail } from "@/lib/email";
 import { sendSmsMessage } from "@/lib/sms";
 import {
   formatRedemptionRuleLines,
+  normalizeRedeemCurrency,
   snapshotFromPrize,
   type RedemptionRulesSnapshot,
 } from "@/lib/redemption-rules";
@@ -23,11 +24,13 @@ import {
 function snapshotFromSpin(spin: {
   redeem_next_visit?: boolean | null;
   redeem_min_spend_cents?: number | null;
+  redeem_min_spend_currency?: string | null;
   redeem_expires_at?: string | null;
 }): RedemptionRulesSnapshot {
   return {
     redeem_next_visit: Boolean(spin.redeem_next_visit),
     redeem_min_spend_cents: spin.redeem_min_spend_cents ?? null,
+    redeem_min_spend_currency: normalizeRedeemCurrency(spin.redeem_min_spend_currency, "VND"),
     redeem_expires_at: spin.redeem_expires_at ?? null,
   };
 }
@@ -89,7 +92,8 @@ async function persistClaim(
   fullPayload: ClaimFields,
   minimalPayload: ClaimFields,
 ): Promise<{ prizeCode: string } | { error: string }> {
-  const payloads = [fullPayload, minimalPayload];
+  const { redeem_min_spend_currency: _currency, ...fullWithoutCurrency } = fullPayload;
+  const payloads = [fullPayload, fullWithoutCurrency, minimalPayload];
 
   for (const payload of payloads) {
     for (let attempt = 0; attempt < 6; attempt++) {
@@ -204,6 +208,7 @@ export async function POST(request: Request) {
       ...minimalPayload,
       redeem_next_visit: redemptionRules.redeem_next_visit,
       redeem_min_spend_cents: redemptionRules.redeem_min_spend_cents,
+      redeem_min_spend_currency: redemptionRules.redeem_min_spend_currency ?? null,
       redeem_expires_at: redemptionRules.redeem_expires_at,
     };
 

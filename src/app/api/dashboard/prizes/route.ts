@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMerchant } from "@/lib/merchant";
-import { parseMinSpendInput } from "@/lib/redemption-rules";
+import { normalizeRedeemCurrency, parseMinSpendInput } from "@/lib/redemption-rules";
 import {
   deleteMerchantPrize,
   insertMerchantPrize,
@@ -48,6 +48,7 @@ type PrizeBody = {
   stock_remaining?: number | null;
   redeem_next_visit?: boolean;
   redeem_min_spend?: string;
+  redeem_min_spend_currency?: string | null;
   redeem_valid_days?: number | null;
 };
 
@@ -92,6 +93,11 @@ function buildPayload(body: PrizeBody): { error: string } | { payload: PrizeWrit
       stock_remaining: stock ?? null,
       redeem_next_visit: Boolean(body.redeem_next_visit),
       redeem_min_spend_cents: parseMinSpendInput(body.redeem_min_spend ?? ""),
+      redeem_min_spend_currency: (() => {
+        const amount = parseMinSpendInput(body.redeem_min_spend ?? "");
+        if (amount == null) return null;
+        return normalizeRedeemCurrency(body.redeem_min_spend_currency, "VND");
+      })(),
       redeem_valid_days: validDays && validDays > 0 ? validDays : null,
     },
   };

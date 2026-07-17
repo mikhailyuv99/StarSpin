@@ -84,6 +84,7 @@ export interface Prize {
   sort_order?: number;
   redeem_next_visit?: boolean;
   redeem_min_spend_cents?: number | null;
+  redeem_min_spend_currency?: string | null;
   redeem_valid_days?: number | null;
   created_at: string;
 }
@@ -105,6 +106,7 @@ export interface Spin {
   claim_notified_at?: string | null;
   redeem_next_visit?: boolean | null;
   redeem_min_spend_cents?: number | null;
+  redeem_min_spend_currency?: string | null;
   redeem_expires_at?: string | null;
   completed_flow_steps?: import("@/lib/flow-steps").FlowActionStep[];
   client_locale?: string | null;

@@ -14,8 +14,20 @@ export type PrizeWritePayload = {
   stock_remaining: number | null;
   redeem_next_visit?: boolean;
   redeem_min_spend_cents?: number | null;
+  redeem_min_spend_currency?: string | null;
   redeem_valid_days?: number | null;
 };
+
+export function isMissingCurrencySchemaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("redeem_min_spend_currency") &&
+    (lower.includes("schema cache") ||
+      lower.includes("does not exist") ||
+      lower.includes("could not find") ||
+      lower.includes("column"))
+  );
+}
 
 export function isMissingRedemptionSchemaError(message: string): boolean {
   const lower = message.toLowerCase();
@@ -134,6 +146,11 @@ export async function insertMerchantPrize(
     result = await admin.from("prizes").insert(withoutPlatform).select().single();
   }
 
+  if (result.error && isMissingCurrencySchemaError(result.error.message)) {
+    const { redeem_min_spend_currency: _c, ...withoutCurrency } = fullRow;
+    result = await admin.from("prizes").insert(withoutCurrency).select().single();
+  }
+
   if (result.error && isMissingIconSchemaError(result.error.message)) {
     result = await admin
       .from("prizes")
@@ -182,6 +199,17 @@ export async function updateMerchantPrize(
     .eq("merchant_id", merchantId)
     .select()
     .single();
+
+  if (result.error && isMissingCurrencySchemaError(result.error.message)) {
+    const { redeem_min_spend_currency: _c, ...withoutCurrency } = payload;
+    result = await admin
+      .from("prizes")
+      .update({ ...withoutCurrency, prize_mechanic: withoutCurrency.prize_mechanic ?? "standard" })
+      .eq("id", prizeId)
+      .eq("merchant_id", merchantId)
+      .select()
+      .single();
+  }
 
   if (result.error && isMissingMechanicSchemaError(result.error.message)) {
     const { prize_mechanic: _m, social_unlock_platform: _p, ...withoutMechanic } = payload;
@@ -257,11 +285,14 @@ export function prizeMutationResult(
   const redemptionRulesSkipped =
     Boolean(payload.redeem_next_visit) ||
     payload.redeem_min_spend_cents != null ||
+    payload.redeem_min_spend_currency != null ||
     payload.redeem_valid_days != null
       ? !data ||
         (payload.redeem_next_visit && !data.redeem_next_visit) ||
         (payload.redeem_min_spend_cents != null &&
           data.redeem_min_spend_cents !== payload.redeem_min_spend_cents) ||
+        (payload.redeem_min_spend_currency != null &&
+          data.redeem_min_spend_currency !== payload.redeem_min_spend_currency) ||
         (payload.redeem_valid_days != null && data.redeem_valid_days !== payload.redeem_valid_days)
       : false;
 

@@ -515,8 +515,8 @@
     "redeemRulesTitle": "Quy tắc đổi thưởng",
     "redeemRulesHint": "Hiển thị trên phiếu thưởng và email xác nhận của khách.",
     "redeemNextVisit": "Chỉ đổi ở lần ghé tiếp theo",
-    "redeemMinSpend": "Chi tiêu tối thiểu (VND)",
-    "redeemMinSpendHint": "Số tiền VND nguyên (vd. 500.000). Để trống nếu không có mức tối thiểu.",
+    "redeemMinSpend": "Chi tiêu tối thiểu",
+    "redeemMinSpendHint": "Số tiền nguyên bằng {currency} (vd. 500.000). Để trống nếu không có mức tối thiểu.",
     "redeemValidDays": "Có hiệu lực (ngày)",
     "redeemNextVisitShort": "Lần sau",
     "redeemMinSpendShort": "Tối thiểu {amount}",
@@ -890,7 +890,11 @@
     "crmColProof": "Screenshot",
     "crmColStatus": "Status",
     "crmStatusClaimed": "Claimed",
-    "crmStatusOpen": "Open"
+    "crmStatusOpen": "Open",
+    "redeemCurrency": "Tiền tệ",
+    "redeemCurrencyEur": "Euro (€)",
+    "redeemCurrencyUsd": "Đô la Mỹ ($)",
+    "redeemCurrencyVnd": "Đồng Việt Nam (₫)"
   },
   "admin": {
     "title": "Quản trị",

@@ -12,7 +12,7 @@ const MERCHANT_COLUMNS =
   "id, slug, name, logo_url, primary_color, secondary_color, google_review_link, google_place_id, social_links, subscription_status, flow_steps, customer_page_headline, customer_page_subtitle, spin_button_label, journey_theme, menu_enabled, menu_entry_mode";
 
 const PRIZE_COLUMNS =
-  "id, merchant_id, label, icon, probability_weight, rarity_tier, prize_mechanic, social_unlock_platform, stock_remaining, active, sort_order, redeem_next_visit, redeem_min_spend_cents, redeem_valid_days, created_at";
+  "id, merchant_id, label, icon, probability_weight, rarity_tier, prize_mechanic, social_unlock_platform, stock_remaining, active, sort_order, redeem_next_visit, redeem_min_spend_cents, redeem_min_spend_currency, redeem_valid_days, created_at";
 
 export type PublicMerchantPayload = {
   merchant: Merchant | null;

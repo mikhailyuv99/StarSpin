@@ -515,8 +515,8 @@
     "redeemRulesTitle": "Reglas de canje",
     "redeemRulesHint": "Se muestran en el cupón del cliente y en el email de confirmación.",
     "redeemNextVisit": "Canjear solo en la próxima visita",
-    "redeemMinSpend": "Gasto mínimo (VND)",
-    "redeemMinSpendHint": "Importe entero en VND (ej. 500.000). Déjalo vacío si no hay mínimo.",
+    "redeemMinSpend": "Gasto mínimo",
+    "redeemMinSpendHint": "Importe entero en {currency} (ej. 15). Déjalo vacío si no hay mínimo.",
     "redeemValidDays": "Válido durante (días)",
     "redeemNextVisitShort": "Próxima visita",
     "redeemMinSpendShort": "Mín. {amount}",
@@ -890,7 +890,11 @@
     "crmColProof": "Screenshot",
     "crmColStatus": "Status",
     "crmStatusClaimed": "Claimed",
-    "crmStatusOpen": "Open"
+    "crmStatusOpen": "Open",
+    "redeemCurrency": "Moneda",
+    "redeemCurrencyEur": "Euro (€)",
+    "redeemCurrencyUsd": "Dólar estadounidense ($)",
+    "redeemCurrencyVnd": "Dong vietnamita (₫)"
   },
   "admin": {
     "title": "Administración",

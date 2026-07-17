@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Prize, SocialLinks } from "@/lib/types";
 import { ui } from "@/components/ui/styles";
 import { useI18n } from "@/i18n/client";
-import { formatMinSpendVnd, parseMinSpendInput } from "@/lib/redemption-rules";
+import { formatMinSpendAmount, parseMinSpendInput, defaultRedeemCurrency, normalizeRedeemCurrency, type RedeemCurrency } from "@/lib/redemption-rules";
+import { usePricingMarket } from "@/components/providers/PricingMarketProvider";
 import {
  emptyRedemptionForm,
  redemptionFormFromPrize,
@@ -142,15 +143,17 @@ function buildRedemptionPayload(redemption: RedemptionFormState) {
  const validDays = redemption.redeem_valid_days.trim()
  ? parseInt(redemption.redeem_valid_days, 10)
  : null;
+ const minSpend = parseMinSpendInput(redemption.redeem_min_spend);
 
  return {
  redeem_next_visit: redemption.redeem_next_visit,
- redeem_min_spend_cents: parseMinSpendInput(redemption.redeem_min_spend),
+ redeem_min_spend_cents: minSpend,
+ redeem_min_spend_currency: minSpend != null ? redemption.redeem_min_spend_currency : null,
  redeem_valid_days: validDays && validDays > 0 ? validDays : null,
  };
 }
 
-function emptyPrizeForm(prizes: Prize[] = []): PrizeForm {
+function emptyPrizeForm(prizes: Prize[] = [], currency: RedeemCurrency = "VND"): PrizeForm {
  return {
  label: "",
  icon: DEFAULT_PRIZE_ICON,
@@ -159,11 +162,11 @@ function emptyPrizeForm(prizes: Prize[] = []): PrizeForm {
  rarity_tier: "common",
  probability_weight: defaultChanceForNewPrize(prizes),
  stock_remaining: "",
- redemption: emptyRedemptionForm(),
+ redemption: emptyRedemptionForm(currency),
  };
 }
 
-function prizeFormFromPrize(prize: Prize): PrizeForm {
+function prizeFormFromPrize(prize: Prize, fallbackCurrency: RedeemCurrency = "VND"): PrizeForm {
  return {
  label: prize.label,
  icon: normalizePrizeIcon(prize.icon),
@@ -172,7 +175,7 @@ function prizeFormFromPrize(prize: Prize): PrizeForm {
  rarity_tier: normalizeRarityTier(prize.rarity_tier),
  probability_weight: String(prize.probability_weight),
  stock_remaining: prize.stock_remaining !== null ? String(prize.stock_remaining) : "",
- redemption: redemptionFormFromPrize(prize),
+ redemption: redemptionFormFromPrize(prize, fallbackCurrency),
  };
 }
 
@@ -187,6 +190,7 @@ function mapPrizeApiError(code: string | undefined, t: (key: string) => string):
  if (code === "social_unlock_platform_required") return t("dashboard.socialUnlockPlatformRequired");
  if (code === "social_unlock_url_missing") return t("dashboard.socialUnlockUrlMissingSave");
  if (code === "min_wheel_prizes") return t("dashboard.minWheelPrizes");
+ if (code === "invalid_order") return t("dashboard.prizeReorderFailed");
  if (code === "empty_label" || code === "invalid_valid_days" || code === "invalid_stock") {
  if (code === "invalid_valid_days") return t("dashboard.redeemValidDaysInvalid");
  if (code === "invalid_stock") return t("dashboard.prizeStockInvalid");
@@ -231,6 +235,7 @@ function buildOptimisticPrize(prize: Prize, payload: ReturnType<typeof buildPriz
  stock_remaining: payload.stock_remaining,
  redeem_next_visit: payload.redeem_next_visit,
  redeem_min_spend_cents: payload.redeem_min_spend_cents,
+ redeem_min_spend_currency: payload.redeem_min_spend_currency,
  redeem_valid_days: payload.redeem_valid_days,
  };
 }
@@ -253,19 +258,23 @@ export function PrizesManager({
  socialLinks: SocialLinks;
 }) {
  const { t, locale } = useI18n();
+ const market = usePricingMarket();
+ const defaultCurrency = defaultRedeemCurrency(market);
  const [prizes, setPrizes] = useState(initialPrizes);
  const [oddsMode, setOddsMode] = useState<PrizeOddsMode>(normalizePrizeOddsMode(initialOddsMode));
  const [editingId, setEditingId] = useState<string | null>(null);
- const [editForm, setEditForm] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
- const [newPrize, setNewPrize] = useState<PrizeForm>(emptyPrizeForm(initialPrizes));
+ const [editForm, setEditForm] = useState<PrizeForm>(() => emptyPrizeForm(initialPrizes, defaultCurrency));
+ const [newPrize, setNewPrize] = useState<PrizeForm>(() => emptyPrizeForm(initialPrizes, defaultCurrency));
  const [saving, setSaving] = useState(false);
  const [savingPrizeId, setSavingPrizeId] = useState<string | null>(null);
  const [togglingPrizeId, setTogglingPrizeId] = useState<string | null>(null);
  const [deletingPrizeId, setDeletingPrizeId] = useState<string | null>(null);
- const [reordering, setReordering] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [spinning, setSpinning] = useState(false);
  const [previewWonLabel, setPreviewWonLabel] = useState<string | null>(null);
+ const reorderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+ const pendingOrderRef = useRef<string[] | null>(null);
+ const reorderInFlightRef = useRef(false);
 
  const theme = useMemo(
  () =>
@@ -468,47 +477,70 @@ export function PrizesManager({
  return;
  }
  setEditingId(prize.id);
- setEditForm(prizeFormFromPrize(prize));
+ setEditForm(prizeFormFromPrize(prize, defaultCurrency));
  };
 
  const cancelEdit = () => {
  setEditingId(null);
  };
 
- const movePrize = async (prizeId: string, direction: -1 | 1) => {
- if (reordering) return;
- const index = prizes.findIndex((p) => p.id === prizeId);
- const target = index + direction;
- if (index < 0 || target < 0 || target >= prizes.length) return;
+ const flushReorder = async () => {
+ if (reorderInFlightRef.current) return;
+ const orderedIds = pendingOrderRef.current?.filter((id) => !id.startsWith("__pending_")) ?? null;
+ pendingOrderRef.current = null;
+ if (!orderedIds?.length) return;
 
- const snapshot = prizes;
- const next = [...prizes];
- [next[index], next[target]] = [next[target], next[index]];
- setPrizes(next);
- setReordering(true);
- setError(null);
-
+ reorderInFlightRef.current = true;
  try {
  const res = await fetch("/api/dashboard/prizes/reorder", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ orderedIds: next.map((p) => p.id) }),
+ body: JSON.stringify({ orderedIds }),
  });
- const data = (await res.json().catch(() => ({}))) as { prizes?: Prize[]; error?: string };
+ const data = (await res.json().catch(() => ({}))) as { error?: string };
  if (!res.ok) {
- setPrizes(snapshot);
+ // Keep the optimistic UI order; only surface the sync error.
  setError(mapPrizeApiError(data.error, t));
- return;
+ if (pendingOrderRef.current && !reorderTimerRef.current) {
+ reorderTimerRef.current = setTimeout(() => {
+ reorderTimerRef.current = null;
+ void flushReorder();
+ }, 120);
  }
- if (data.prizes?.length) {
- setPrizes(data.prizes);
  }
  } catch {
- setPrizes(snapshot);
  setError(t("dashboard.prizeReorderFailed"));
  } finally {
- setReordering(false);
+ reorderInFlightRef.current = false;
+ if (pendingOrderRef.current) {
+ if (reorderTimerRef.current) clearTimeout(reorderTimerRef.current);
+ reorderTimerRef.current = setTimeout(() => {
+ reorderTimerRef.current = null;
+ void flushReorder();
+ }, 0);
  }
+ }
+ };
+
+ const movePrize = (prizeId: string, direction: -1 | 1) => {
+ setPrizes((current) => {
+ const index = current.findIndex((p) => p.id === prizeId);
+ const target = index + direction;
+ if (index < 0 || target < 0 || target >= current.length) return current;
+
+ const next = [...current];
+ [next[index], next[target]] = [next[target], next[index]];
+ pendingOrderRef.current = next.map((p) => p.id);
+ setError(null);
+
+ if (reorderTimerRef.current) clearTimeout(reorderTimerRef.current);
+ reorderTimerRef.current = setTimeout(() => {
+ reorderTimerRef.current = null;
+ void flushReorder();
+ }, 180);
+
+ return next;
+ });
  };
 
  const applyPrizesList = (data: { prize?: Prize; prizes?: Prize[] }) => {
@@ -539,6 +571,7 @@ export function PrizesManager({
  stock_remaining: prize.stock_remaining,
  redeem_next_visit: prize.redeem_next_visit,
  redeem_min_spend: redemption.redeem_min_spend,
+ redeem_min_spend_currency: redemption.redeem_min_spend_currency,
  redeem_valid_days: prize.redeem_valid_days,
  }),
  });
@@ -603,6 +636,7 @@ export function PrizesManager({
  stock_remaining: payload.stock_remaining,
  redeem_next_visit: payload.redeem_next_visit,
  redeem_min_spend: editForm.redemption.redeem_min_spend,
+ redeem_min_spend_currency: editForm.redemption.redeem_min_spend_currency,
  redeem_valid_days: payload.redeem_valid_days,
  }),
  });
@@ -613,7 +647,7 @@ export function PrizesManager({
  const errBody = (await apiRes.json().catch(() => ({}))) as { error?: string };
  setPrizes(snapshot);
  setEditingId(id);
- setEditForm(prizeFormFromPrize(prize));
+ setEditForm(prizeFormFromPrize(prize, defaultCurrency));
  setError(mapPrizeApiError(errBody.error, t));
  return;
  }
@@ -655,6 +689,7 @@ export function PrizesManager({
  stock_remaining: payload.stock_remaining,
  redeem_next_visit: payload.redeem_next_visit,
  redeem_min_spend_cents: payload.redeem_min_spend_cents,
+ redeem_min_spend_currency: payload.redeem_min_spend_currency,
  redeem_valid_days: payload.redeem_valid_days,
  active: true,
  created_at: new Date().toISOString(),
@@ -666,7 +701,7 @@ export function PrizesManager({
  }
 
  setPrizes(optimisticList);
- setNewPrize(emptyPrizeForm(optimisticList));
+ setNewPrize(emptyPrizeForm(optimisticList, defaultCurrency));
 
  const apiRes = await fetch("/api/dashboard/prizes", {
  method: "POST",
@@ -681,6 +716,7 @@ export function PrizesManager({
  stock_remaining: payload.stock_remaining,
  redeem_next_visit: payload.redeem_next_visit,
  redeem_min_spend: newPrize.redemption.redeem_min_spend,
+ redeem_min_spend_currency: newPrize.redemption.redeem_min_spend_currency,
  redeem_valid_days: payload.redeem_valid_days,
  }),
  });
@@ -706,7 +742,7 @@ export function PrizesManager({
  nextList = applyTierWinChances(nextList);
  }
  setPrizes(nextList);
- setNewPrize(emptyPrizeForm(nextList));
+ setNewPrize(emptyPrizeForm(nextList, defaultCurrency));
  };
 
  const toggleActive = async (prize: Prize) => {
@@ -778,7 +814,7 @@ export function PrizesManager({
  if (wasEditing) {
  setEditingId(id);
  const restored = snapshot.find((p) => p.id === id);
- if (restored) setEditForm(prizeFormFromPrize(restored));
+ if (restored) setEditForm(prizeFormFromPrize(restored, defaultCurrency));
  }
  setError(mapPrizeApiError(errBody.error, t));
  return;
@@ -796,7 +832,7 @@ export function PrizesManager({
  if (prize.redeem_min_spend_cents && prize.redeem_min_spend_cents > 0) {
  parts.push(
  t("dashboard.redeemMinSpendShort", {
- amount: formatMinSpendVnd(prize.redeem_min_spend_cents, locale),
+ amount: formatMinSpendAmount(prize.redeem_min_spend_cents, locale, normalizeRedeemCurrency(prize.redeem_min_spend_currency, defaultCurrency)),
  }),
  );
  }
@@ -1047,8 +1083,8 @@ export function PrizesManager({
  <div className="flex shrink-0 flex-col gap-1">
  <button
  type="button"
- onClick={() => void movePrize(prize.id, -1)}
- disabled={reordering || index === 0}
+ onClick={() => movePrize(prize.id, -1)}
+ disabled={index === 0}
  aria-label={t("dashboard.prizeMoveUp")}
  title={t("dashboard.prizeMoveUp")}
  className={`${ui.btnOutline} !h-8 !w-9 !shrink-0 !px-0 !py-0 text-sm font-black leading-none`}
@@ -1057,8 +1093,8 @@ export function PrizesManager({
  </button>
  <button
  type="button"
- onClick={() => void movePrize(prize.id, 1)}
- disabled={reordering || index >= prizes.length - 1}
+ onClick={() => movePrize(prize.id, 1)}
+ disabled={index >= prizes.length - 1}
  aria-label={t("dashboard.prizeMoveDown")}
  title={t("dashboard.prizeMoveDown")}
  className={`${ui.btnOutline} !h-8 !w-9 !shrink-0 !px-0 !py-0 text-sm font-black leading-none`}

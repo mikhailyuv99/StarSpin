@@ -515,8 +515,8 @@
     "redeemRulesTitle": "Правила получения приза",
     "redeemRulesHint": "Отображаются на купоне клиента и в письме с кодом.",
     "redeemNextVisit": "Только при следующем визите",
-    "redeemMinSpend": "Минимальная сумма (VND)",
-    "redeemMinSpendHint": "Целая сумма в VND (напр. 500.000). Оставьте пустым, если минимума нет.",
+    "redeemMinSpend": "Минимальная сумма",
+    "redeemMinSpendHint": "Целая сумма в {currency} (напр. 15). Оставьте пустым, если минимума нет.",
     "redeemValidDays": "Срок действия (дней)",
     "redeemNextVisitShort": "След. визит",
     "redeemMinSpendShort": "Мин. {amount}",
@@ -890,7 +890,11 @@
     "crmColProof": "Screenshot",
     "crmColStatus": "Status",
     "crmStatusClaimed": "Claimed",
-    "crmStatusOpen": "Open"
+    "crmStatusOpen": "Open",
+    "redeemCurrency": "Валюта",
+    "redeemCurrencyEur": "Евро (€)",
+    "redeemCurrencyUsd": "Доллар США ($)",
+    "redeemCurrencyVnd": "Вьетнамский донг (₫)"
   },
   "admin": {
     "title": "Администрирование",

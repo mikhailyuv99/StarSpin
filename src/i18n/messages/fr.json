@@ -563,8 +563,8 @@
     "redeemRulesTitle": "Conditions d'utilisation",
     "redeemRulesHint": "Affichées sur le bon lot du client et dans l'e-mail de confirmation.",
     "redeemNextVisit": "Utilisable uniquement à la prochaine visite",
-    "redeemMinSpend": "Montant minimum (VND)",
-    "redeemMinSpendHint": "Montant entier en VND (ex. 500.000). Laissez vide pour aucun minimum.",
+    "redeemMinSpend": "Montant minimum",
+    "redeemMinSpendHint": "Montant entier en {currency} (ex. 15 pour 15 €). Laissez vide pour aucun minimum.",
     "redeemValidDays": "Valable pendant (jours)",
     "redeemNextVisitShort": "Prochaine visite",
     "redeemMinSpendShort": "Min. {amount}",
@@ -936,7 +936,11 @@
     "crmColProof": "Capture",
     "crmColStatus": "Statut",
     "crmStatusClaimed": "Reclame",
-    "crmStatusOpen": "Ouvert"
+    "crmStatusOpen": "Ouvert",
+    "redeemCurrency": "Devise",
+    "redeemCurrencyEur": "Euro (€)",
+    "redeemCurrencyUsd": "Dollar US ($)",
+    "redeemCurrencyVnd": "Dong vietnamien (₫)"
   },
   "admin": {
     "title": "Administration",
