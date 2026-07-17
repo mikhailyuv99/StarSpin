@@ -218,10 +218,26 @@ export function buildGoogleReviewUrl(
   return null;
 }
 
-/** Best customer-facing review URL. Never returns share.google links. */
+/**
+ * Best customer-facing review URL for an instant client-side open.
+ * Never returns share.google links.
+ *
+ * Short/share Maps links are NOT opened from a cached Place ID alone —
+ * those IDs often came from fuzzy HTML/name resolution and can point at the
+ * wrong venue. The customer journey must go through /api/google/review so the
+ * server re-resolves from the pasted Maps link (cid/ftid + strict geo).
+ */
 export function pickGoogleReviewOpenUrl(
   reviewLink: string | null | undefined,
   placeId: string | null | undefined,
 ): string | null {
+  const link = reviewLink?.trim();
+  if (link) {
+    const fromLink = extractGooglePlaceId(link);
+    if (fromLink) return buildGoogleWriteReviewUrl(fromLink);
+
+    if (isUnsafeReviewLink(link)) return null;
+  }
+
   return buildGoogleReviewUrl(reviewLink, placeId);
 }

@@ -33,7 +33,9 @@ export default async function PublicMerchantPage({
     return <MerchantInactiveNotice businessName={merchant.name} />;
   }
 
-  if (merchant.google_review_link && !merchant.google_place_id) {
+  // Always re-resolve short/share Maps links so a stale wrong Place ID
+  // (fuzzy name / nearby HTML scrape) gets corrected before customers click.
+  if (merchant.google_review_link) {
     void import("@/lib/google-place-id.server")
       .then(async ({ resolveAndPersistMerchantPlaceId }) => {
         try {

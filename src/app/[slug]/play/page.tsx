@@ -30,7 +30,7 @@ export default async function PublicMerchantPlayPage({
     return <MerchantInactiveNotice businessName={merchant.name} />;
   }
 
-  if (merchant.google_review_link && !merchant.google_place_id) {
+  if (merchant.google_review_link) {
     void import("@/lib/google-place-id.server")
       .then(async ({ resolveAndPersistMerchantPlaceId }) => {
         try {

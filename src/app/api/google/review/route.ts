@@ -3,10 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isMerchantLive } from "@/lib/merchant-access";
 import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 import {
-  buildGoogleWriteReviewUrl,
-  sanitizeGooglePlaceId,
-} from "@/lib/google-place-id";
-import {
   buildReviewOpenUrl,
   resolveAndPersistMerchantPlaceId,
 } from "@/lib/google-place-id.server";
@@ -65,15 +61,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No review link configured" }, { status: 404 });
   }
 
-  // Instant path: never re-fetch Maps / Places when we already have a Place ID.
-  const knownPlaceId = sanitizeGooglePlaceId(
-    merchant.google_place_id,
-    merchant.google_review_link,
-  );
-  if (knownPlaceId) {
-    return reviewResponse(buildGoogleWriteReviewUrl(knownPlaceId), wantsJson);
-  }
-
+  // Always re-resolve from the pasted Maps link. A previously cached Place ID
+  // from fuzzy name/HTML matching must not win over the merchant's actual link.
   const resolution = await resolveAndPersistMerchantPlaceId(supabase, merchant);
   const userAgent = request.headers.get("user-agent") ?? "";
   const destination = buildReviewOpenUrl(
