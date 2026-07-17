@@ -47,6 +47,14 @@ export function isSafeMapsDestination(url: string): boolean {
     const host = u.hostname.toLowerCase();
     if (!(host === "google.com" || host.endsWith(".google.com"))) return false;
     if (host === "search.google.com") return u.pathname.includes("/local/writereview");
+    // Feature-id write-review deep link: /search?...#lrd=0x…:0x…,3
+    if (
+      (host === "google.com" || host === "www.google.com") &&
+      u.pathname === "/search" &&
+      (/^#lrd=0x[a-f0-9]+:0x[a-f0-9]+,3$/i.test(u.hash) || u.searchParams.has("ludocid"))
+    ) {
+      return true;
+    }
     return (
       host === "maps.google.com" ||
       host.startsWith("maps.") ||
@@ -123,16 +131,43 @@ export function extractMapsCoordinatesFromUrl(
   }
 }
 
-/** Stable Maps listing URL from an ftid pair. */
-export function buildMapsCidUrl(ftid: string): string | null {
+/** Decimal CID from Maps feature id (`0x…:0x…`). */
+export function ftidToCid(ftid: string): string | null {
   const hex = ftid.split(":")[1];
   if (!hex) return null;
   try {
-    const cid = BigInt(hex).toString(10);
-    return `https://maps.google.com/maps?cid=${cid}`;
+    return BigInt(hex).toString(10);
   } catch {
     return null;
   }
+}
+
+/** Stable Maps listing URL from an ftid pair. */
+export function buildMapsCidUrl(ftid: string): string | null {
+  const cid = ftidToCid(ftid);
+  if (!cid) return null;
+  return `https://maps.google.com/maps?cid=${cid}`;
+}
+
+/**
+ * Direct "write a review" deep link from the Maps feature id (ftid).
+ * This is the reliable conversion when Google never exposes a Place ID in the
+ * short link: `#lrd=<ftid>,3` opens the review composer for THAT exact listing.
+ */
+export function buildGoogleFeatureWriteReviewUrl(opts: {
+  ftid: string;
+  name?: string | null;
+}): string | null {
+  const ftid = opts.ftid.trim().toLowerCase();
+  if (!/^0x[a-f0-9]+:0x[a-f0-9]+$/i.test(ftid)) return null;
+
+  const params = new URLSearchParams();
+  const name = opts.name?.trim();
+  if (name) params.set("q", name);
+  const cid = ftidToCid(ftid);
+  if (cid) params.set("ludocid", cid);
+
+  return `https://www.google.com/search?${params.toString()}#lrd=${ftid},3`;
 }
 
 /** Extract a Google Place ID from common Maps / review URLs. */
@@ -194,7 +229,7 @@ export function sanitizeGooglePlaceId(
   return null;
 }
 
-/** writereview URL — only when a valid Place ID exists. */
+/** Official writereview URL — only when a valid Place ID exists. */
 export function buildGoogleWriteReviewUrl(placeId: string): string {
   return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
 }

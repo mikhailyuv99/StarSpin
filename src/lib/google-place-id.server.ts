@@ -1,11 +1,13 @@
 import "server-only";
 import {
   buildMapsCidUrl,
+  buildGoogleFeatureWriteReviewUrl,
   buildGoogleWriteReviewUrl,
   extractFtidFromUrl,
   extractGooglePlaceId,
   extractMapsCoordinatesFromUrl,
   extractMapsQueryFromUrl,
+  ftidToCid,
   isSafeMapsDestination,
   isValidGooglePlaceId,
   normalizeGoogleReviewLink,
@@ -31,6 +33,8 @@ type PlacesSearchOptions = {
   query: string;
   location?: { lat: number; lng: number } | null;
   radiusMeters?: number;
+  /** When set, prefer an exact cid/ftid match from googleMapsUri over name fuzzy matching. */
+  ftid?: string | null;
 };
 
 function emptyResolution(): GoogleLinkResolution {
@@ -126,21 +130,13 @@ function haversineMeters(
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Exact Place ID from Maps feature id (cid) — never a fuzzy name guess. */
-async function findPlaceIdByCid(ftid: string): Promise<string | null> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+/** Exact Place ID from Maps feature id (cid) via Legacy Details — may be disabled. */
+async function findPlaceIdByCidLegacy(ftid: string): Promise<string | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
   if (!apiKey) return null;
 
-  const hex = ftid.split(":")[1];
-  if (!hex) return null;
-
-  let cid: string;
-  try {
-    // ftid feature half is already `0x…` — do not prefix another 0x.
-    cid = BigInt(hex).toString(10);
-  } catch {
-    return null;
-  }
+  const cid = ftidToCid(ftid);
+  if (!cid) return null;
 
   try {
     const url = new URL("https://maps.googleapis.com/maps/api/place/details/json");
@@ -150,84 +146,150 @@ async function findPlaceIdByCid(ftid: string): Promise<string | null> {
 
     const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) {
-      console.error("Place Details by cid failed:", res.status);
+      console.error("Place Details by cid (legacy) failed:", res.status);
       return null;
     }
 
     const data = (await res.json()) as {
       status?: string;
+      error_message?: string;
       result?: { place_id?: string };
     };
-    if (data.status && data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-      console.error("Place Details by cid status:", data.status);
+    if (data.status && data.status !== "OK") {
+      console.warn("Place Details by cid (legacy) status:", data.status, data.error_message ?? "");
+      return null;
     }
     return normalizePlacesId(data.result?.place_id) ?? null;
   } catch (err) {
-    console.error("findPlaceIdByCid:", err);
+    console.error("findPlaceIdByCidLegacy:", err);
     return null;
   }
 }
 
-async function findPlaceIdByTextSearch(opts: PlacesSearchOptions): Promise<string | null> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  const query = opts.query.trim();
-  if (!apiKey || !query) return null;
+type PlacesHit = {
+  id?: string;
+  googleMapsUri?: string;
+  location?: { latitude?: number; longitude?: number };
+  displayName?: { text?: string };
+};
 
-  // Without a pin, text search is worldwide fuzzy matching — refuse it.
+/** True when a Places (New) hit is the same Maps listing as the merchant's ftid/cid. */
+function placeMatchesListing(place: PlacesHit, ftid: string): boolean {
+  const uri = place.googleMapsUri?.trim();
+  if (!uri) return false;
+
+  const uriFtid = extractFtidFromUrl(uri);
+  if (uriFtid && uriFtid === ftid.toLowerCase()) return true;
+
+  const expectedCid = ftidToCid(ftid);
+  if (!expectedCid) return false;
+
+  try {
+    const u = new URL(uri);
+    if (u.searchParams.get("cid") === expectedCid) return true;
+  } catch {
+    // fall through
+  }
+  return uri.includes(`cid=${expectedCid}`);
+}
+
+function placeIdFromHit(place: PlacesHit): string | null {
+  return (
+    normalizePlacesId(place.id) ??
+    (place.googleMapsUri ? extractGooglePlaceId(place.googleMapsUri) : null)
+  );
+}
+
+async function searchTextPlaces(opts: {
+  query: string;
+  location: { lat: number; lng: number };
+  radiusMeters: number;
+  restrict: boolean;
+}): Promise<PlacesHit[]> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
+  if (!apiKey) return [];
+
+  const circle = {
+    center: {
+      latitude: opts.location.lat,
+      longitude: opts.location.lng,
+    },
+    radius: opts.radiusMeters,
+  };
+
+  const body: Record<string, unknown> = {
+    textQuery: opts.query,
+    maxResultCount: 10,
+  };
+  if (opts.restrict) {
+    body.locationRestriction = { circle };
+  } else {
+    body.locationBias = { circle };
+  }
+
+  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "places.id,places.googleMapsUri,places.location,places.displayName",
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error("Places searchText failed:", res.status, errBody.slice(0, 300));
+    return [];
+  }
+
+  const data = (await res.json()) as { places?: PlacesHit[] };
+  return data.places ?? [];
+}
+
+/**
+ * Resolve Place ID with Places API (New).
+ * When ftid is known, match the listing by cid/ftid in googleMapsUri — 100% exact.
+ */
+async function findPlaceIdByTextSearch(opts: PlacesSearchOptions): Promise<string | null> {
+  const query = opts.query.trim();
+  if (!process.env.GOOGLE_PLACES_API_KEY?.trim() || !query) return null;
   if (!opts.location) return null;
 
   const radiusMeters = opts.radiusMeters ?? 500;
+  const ftid = opts.ftid?.trim().toLowerCase() || null;
 
   try {
-    const body: Record<string, unknown> = {
-      textQuery: query,
-      maxResultCount: 5,
-      // Hard circle — results outside are excluded (unlike locationBias).
-      locationRestriction: {
-        circle: {
-          center: {
-            latitude: opts.location.lat,
-            longitude: opts.location.lng,
-          },
-          radius: radiusMeters,
-        },
-      },
-    };
-
-    const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.googleMapsUri,places.location,places.displayName",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
+    // Prefer hard restriction; if empty (or API rejects), retry with bias.
+    let places = await searchTextPlaces({
+      query,
+      location: opts.location,
+      radiusMeters,
+      restrict: true,
     });
-
-    if (!res.ok) {
-      const errBody = await res.text();
-      console.error("Places searchText failed:", res.status, errBody.slice(0, 300));
-      return null;
+    if (places.length === 0) {
+      places = await searchTextPlaces({
+        query,
+        location: opts.location,
+        radiusMeters,
+        restrict: false,
+      });
     }
-
-    const data = (await res.json()) as {
-      places?: {
-        id?: string;
-        googleMapsUri?: string;
-        location?: { latitude?: number; longitude?: number };
-        displayName?: { text?: string };
-      }[];
-    };
-
-    const places = data.places ?? [];
     if (places.length === 0) return null;
+
+    // Exact listing match via ftid/cid — never a similarly named venue.
+    if (ftid) {
+      for (const place of places) {
+        if (!placeMatchesListing(place, ftid)) continue;
+        const id = placeIdFromHit(place);
+        if (id) return id;
+      }
+    }
 
     let best: { id: string; dist: number } | null = null;
     for (const place of places) {
-      const id =
-        normalizePlacesId(place.id) ??
-        (place.googleMapsUri ? extractGooglePlaceId(place.googleMapsUri) : null);
+      const id = placeIdFromHit(place);
       if (!id) continue;
 
       const displayName = place.displayName?.text?.trim() ?? "";
@@ -306,28 +368,36 @@ export async function resolveGooglePlaceIdFromLink(url: string): Promise<GoogleL
     const fromUrl = extractGooglePlaceId(finalUrl);
     if (fromUrl) return resolution(fromUrl, buildGoogleWriteReviewUrl(fromUrl));
 
-    // 1) Exact listing identity from ftid/cid — never a nearby business.
+    const query = extractMapsQueryFromUrl(finalUrl);
+
+    // 1) Legacy Place Details ?cid= (often disabled on Places API New–only keys).
     if (ftid) {
-      const fromCid = await findPlaceIdByCid(ftid);
+      const fromCid = await findPlaceIdByCidLegacy(ftid);
       if (fromCid) return resolution(fromCid, buildGoogleWriteReviewUrl(fromCid));
     }
 
-    // 2) Strict geo + name text search only (no HTML place_id scrape — Maps
-    // pages embed dozens of nearby ChI ids, e.g. Cannes next to Valbonne).
-    const query = extractMapsQueryFromUrl(finalUrl);
+    // 2) Places API (New) text search — match the exact ftid/cid from the Maps link.
     if (query && location) {
-      for (const radiusMeters of [500, 2000]) {
+      const radii = ftid ? [100, 500, 2000, 5000] : [500, 2000];
+      for (const radiusMeters of radii) {
         const fromQuery = await findPlaceIdByTextSearch({
           query,
           location,
           radiusMeters,
+          ftid,
         });
         if (fromQuery) return resolution(fromQuery, buildGoogleWriteReviewUrl(fromQuery));
       }
     }
 
-    // 3) Exact Maps listing via cid/ftid beats any uncertain Place ID.
-    // Customers land on the correct place page (reviews) instead of a wrong writereview.
+    // 3) Direct write-review deep link from the Maps feature id.
+    // `#lrd=<ftid>,3` opens the review composer for THIS exact listing.
+    if (ftid) {
+      const featureWrite = buildGoogleFeatureWriteReviewUrl({ ftid, name: query });
+      if (featureWrite) return resolution(null, featureWrite);
+    }
+
+    // 4) Exact Maps listing via cid as last resort.
     if (resolvedUrl) return resolution(null, resolvedUrl);
 
     return emptyResolution();
