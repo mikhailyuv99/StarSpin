@@ -290,19 +290,16 @@ body {
 .journey-home-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.7rem;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
   color: var(--pj-ink, var(--c-black, #0a0a0a));
   background: var(--pj-outline-bg, var(--pj-input-bg, #fff));
   border: var(--pj-input-border, var(--brutal-border, 2px solid #0a0a0a));
   border-radius: var(--pj-input-radius, 12px);
   box-shadow: var(--pj-btn-shadow, 3px 3px 0 0 var(--c-black, #0a0a0a));
-  font-family: var(--pj-font-body, var(--font-body), system-ui, sans-serif);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
   text-decoration: none;
-  text-transform: uppercase;
   line-height: 1;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
@@ -315,13 +312,6 @@ body {
 .journey-home-btn:active {
   transform: translate(1px, 1px);
   box-shadow: 1px 1px 0 0 var(--c-black, #0a0a0a);
-}
-
-.journey-home-btn__label {
-  max-width: 7.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .public-flow .locale-switcher-trigger--journey {

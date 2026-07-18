@@ -31,7 +31,6 @@ export function JourneyHomeButton({
         <path d="M3 10.5 12 3l9 7.5" />
         <path d="M5.5 9.5V21h13V9.5" />
       </svg>
-      <span className="journey-home-btn__label">{t("common.brand")}</span>
     </a>
   );
 }
