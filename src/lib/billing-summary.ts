@@ -158,7 +158,7 @@ export async function createPaymentSetupSecret(
 ): Promise<string> {
   const intent = await stripe.setupIntents.create({
     customer: customerId,
-    payment_method_types: ["card"],
+    automatic_payment_methods: { enabled: true },
     metadata: { product: "starspin" },
   });
   if (!intent.client_secret) throw new Error("Setup secret missing");

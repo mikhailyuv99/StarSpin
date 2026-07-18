@@ -282,7 +282,6 @@ export async function createSubscriptionPaymentSecret(
     payment_behavior: "default_incomplete",
     payment_settings: {
       save_default_payment_method: "on_subscription",
-      payment_method_types: ["card"],
     },
     metadata: {
       account_id: accountId,
@@ -366,7 +365,6 @@ export async function createSubscriptionWithPaymentMethod(
     default_payment_method: paymentMethodId,
     payment_settings: {
       save_default_payment_method: "on_subscription",
-      payment_method_types: ["card"],
     },
     metadata: {
       account_id: accountId,

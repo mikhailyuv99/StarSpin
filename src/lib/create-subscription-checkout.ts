@@ -66,10 +66,12 @@ async function prepareSetupIntent(
       stripe_subscription_id: ctx.account.stripe_subscription_id ?? null,
     });
 
+    // Must use automatic_payment_methods — Payment Element collects in deferred
+    // setup mode with automatic methods; payment_method_types: ["card"] breaks confirmSetup.
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       usage: "off_session",
-      payment_method_types: ["card"],
+      automatic_payment_methods: { enabled: true },
       metadata: {
         account_id: ctx.account.id,
         plan,
