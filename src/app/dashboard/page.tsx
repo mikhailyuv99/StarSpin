@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { needsSubscription } from "@/lib/merchant-access";
-import { getMerchantAccount, isAccountLive } from "@/lib/merchant-account";
+import { getMerchantAccount } from "@/lib/merchant-account";
 import { Suspense } from "react";
 import { getCurrentMerchant } from "@/lib/merchant";
 import { redirect } from "next/navigation";
@@ -12,6 +12,9 @@ import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { computeSetupSteps, setupProgress } from "@/lib/merchant-setup";
 import { publicMerchantUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
+import { reconcileAccountSubscriptionFromStripe } from "@/lib/stripe-billing";
+import type { SubscriptionStatus } from "@/lib/types";
 
 export default async function DashboardPage() {
   const merchant = await getCurrentMerchant();
@@ -20,13 +23,36 @@ export default async function DashboardPage() {
   const t = await getTranslations();
   const supabase = await createClient();
 
+  let subscriptionStatus: SubscriptionStatus = account?.subscription_status ?? "cancelled";
+
+  // If checkout succeeded in Stripe but DB stayed cancelled (missed webhook), heal now.
+  if (account && subscriptionStatus !== "active") {
+    try {
+      const stripe = getStripe();
+      const result = await reconcileAccountSubscriptionFromStripe(stripe, {
+        id: account.id,
+        subscription_status: account.subscription_status,
+        stripe_customer_id: account.stripe_customer_id,
+        stripe_subscription_id: account.stripe_subscription_id,
+      });
+      if (result.healed && result.status) {
+        subscriptionStatus = result.status;
+      }
+    } catch (err) {
+      console.warn("[dashboard] subscription reconcile failed", err);
+    }
+  }
+
   const { count: activePrizeCount } = await supabase
     .from("prizes")
     .select("*", { count: "exact", head: true })
     .eq("merchant_id", merchant.id)
     .eq("active", true);
 
-  const setupSteps = computeSetupSteps(merchant, activePrizeCount ?? 0);
+  const setupSteps = computeSetupSteps(
+    { ...merchant, subscription_status: subscriptionStatus as typeof merchant.subscription_status },
+    activePrizeCount ?? 0,
+  );
   const progress = setupProgress(setupSteps);
 
   const quickLinks = [
@@ -37,8 +63,8 @@ export default async function DashboardPage() {
     { href: "/dashboard/crm", title: t("dashboard.crmCard"), desc: t("dashboard.crmCardDesc") },
   ];
 
-  const needsSubscribe = needsSubscription(account?.subscription_status ?? "cancelled");
-  const isActive = isAccountLive(account);
+  const needsSubscribe = needsSubscription(subscriptionStatus);
+  const isActive = subscriptionStatus === "active";
 
   let totalSpins = 0;
   if (isActive) {

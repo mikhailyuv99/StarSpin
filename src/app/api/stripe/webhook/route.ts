@@ -6,7 +6,10 @@ import { getStripe, isConfirmedStripeSubscription, subscriptionStatusFromStripe 
 import { isBillingPlan } from "@/lib/billing";
 import type { SubscriptionProduct } from "@/lib/types";
 import { sendMerchantBillingEmail } from "@/lib/merchant-email";
-import { subscriptionHasDefaultPaymentMethod } from "@/lib/stripe-billing";
+import {
+  persistAccountFromStripeSubscription,
+  subscriptionHasDefaultPaymentMethod,
+} from "@/lib/stripe-billing";
 
 export const runtime = "nodejs";
 
@@ -41,6 +44,7 @@ async function resolveAccountId(
 async function updateAccountFromSubscription(
   subscription: Stripe.Subscription,
   admin: ReturnType<typeof createAdminClient>,
+  stripe: Stripe,
 ) {
   const accountId = await resolveAccountId(admin, subscription);
   if (!accountId) return;
@@ -52,8 +56,6 @@ async function updateAccountFromSubscription(
     return;
   }
 
-  const plan = subscription.metadata?.plan;
-  const product = (subscription.metadata?.product ?? "starspin") as SubscriptionProduct;
   const status = subscriptionStatusFromStripe(subscription.status);
   const canceledCustomerId =
     typeof subscription.customer === "string"
@@ -108,34 +110,25 @@ async function updateAccountFromSubscription(
     return;
   }
 
-  // Extra guard: never flip live from a trialing stub without a card on file.
+  // Webhook payloads sometimes omit default_payment_method on trialing —
+  // re-fetch before skipping, otherwise paid checkouts stay cancelled in DB.
+  let liveSub = subscription;
   if (
     subscription.status === "trialing" &&
     !subscriptionHasDefaultPaymentMethod(subscription)
   ) {
-    return;
-  }
-
-  const updates: Record<string, unknown> = {
-    subscription_status: status,
-    stripe_subscription_id: subscription.id,
-    subscription_product: product,
-  };
-
-  if (plan && isBillingPlan(plan)) {
-    updates.billing_plan = plan;
-  }
-
-  if (product === "starspin_multi_business") {
-    updates.multi_business_status = status;
-    updates.multi_business_stripe_subscription_id = subscription.id;
-    if (plan && isBillingPlan(plan)) {
-      updates.multi_business_billing_plan = plan;
+    try {
+      liveSub = await stripe.subscriptions.retrieve(subscription.id);
+    } catch (err) {
+      console.warn("[stripe/webhook] retrieve subscription failed", err);
+      return;
+    }
+    if (!subscriptionHasDefaultPaymentMethod(liveSub)) {
+      return;
     }
   }
 
-  await admin.from("merchant_accounts").update(updates).eq("id", accountId);
-  await syncMerchantsSubscriptionStatus(admin, accountId, status);
+  await persistAccountFromStripeSubscription(accountId, liveSub, canceledCustomerId);
 }
 
 async function accountOwnerEmail(
@@ -211,7 +204,7 @@ export async function POST(request: Request) {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        await updateAccountFromSubscription(subscription, admin);
+        await updateAccountFromSubscription(subscription, admin, stripe);
         break;
       }
       case "invoice.payment_failed": {
@@ -223,7 +216,7 @@ export async function POST(request: Request) {
         if (!subscriptionId) break;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        await updateAccountFromSubscription(subscription, admin);
+        await updateAccountFromSubscription(subscription, admin, stripe);
 
         const accountId = await resolveAccountId(admin, subscription);
         if (accountId) {

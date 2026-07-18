@@ -2,10 +2,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 import type { User } from "@supabase/supabase-js";
 import type { BillingPlan } from "@/lib/billing";
-import { SUBSCRIPTION_TRIAL_DAYS } from "@/lib/billing";
+import { SUBSCRIPTION_TRIAL_DAYS, isBillingPlan } from "@/lib/billing";
 import type { PricingMarket } from "@/lib/pricing-market";
-import type { SubscriptionProduct } from "@/lib/types";
-import { priceIdForPlan, multiBusinessPriceIdForPlan } from "@/lib/stripe";
+import type { SubscriptionProduct, SubscriptionStatus } from "@/lib/types";
+import {
+  priceIdForPlan,
+  multiBusinessPriceIdForPlan,
+  subscriptionStatusFromStripe,
+  isConfirmedStripeSubscription,
+} from "@/lib/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const RESIDUAL_SUBSCRIPTION_STATUSES: Stripe.SubscriptionListParams.Status[] = [
   "incomplete",
@@ -149,6 +155,120 @@ export async function ensureStripeCustomer(
 
 export function subscriptionHasDefaultPaymentMethod(subscription: Stripe.Subscription): boolean {
   return Boolean(subscription.default_payment_method || subscription.default_source);
+}
+
+/**
+ * Write Stripe subscription state into merchant_accounts (+ merchants via trigger).
+ * Used after checkout confirm so activation does not depend on webhooks alone.
+ */
+export async function persistAccountFromStripeSubscription(
+  accountId: string,
+  subscription: Stripe.Subscription,
+  customerId?: string | null,
+): Promise<void> {
+  if (!isConfirmedStripeSubscription(subscription)) {
+    return;
+  }
+  if (
+    subscription.status === "trialing" &&
+    !subscriptionHasDefaultPaymentMethod(subscription)
+  ) {
+    return;
+  }
+
+  const plan = subscription.metadata?.plan;
+  const product = (subscription.metadata?.product ?? "starspin") as SubscriptionProduct;
+  const status = subscriptionStatusFromStripe(subscription.status);
+  const resolvedCustomerId =
+    customerId ??
+    (typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id ?? null);
+
+  const updates: Record<string, unknown> = {
+    subscription_status: status,
+    stripe_subscription_id: subscription.id,
+    subscription_product: product,
+  };
+
+  if (resolvedCustomerId) {
+    updates.stripe_customer_id = resolvedCustomerId;
+  }
+  if (plan && isBillingPlan(plan)) {
+    updates.billing_plan = plan;
+  }
+  if (product === "starspin_multi_business") {
+    updates.multi_business_status = status;
+    updates.multi_business_stripe_subscription_id = subscription.id;
+    if (plan && isBillingPlan(plan)) {
+      updates.multi_business_billing_plan = plan;
+    }
+  }
+
+  const admin = createAdminClient();
+  await admin.from("merchant_accounts").update(updates).eq("id", accountId);
+
+  // Trigger syncs subscription_status; also keep merchant Stripe ids in sync.
+  const merchantUpdates: Record<string, unknown> = {
+    subscription_status: status,
+  };
+  if (resolvedCustomerId) merchantUpdates.stripe_customer_id = resolvedCustomerId;
+  merchantUpdates.stripe_subscription_id = subscription.id;
+  if (plan && isBillingPlan(plan)) merchantUpdates.billing_plan = plan;
+
+  await admin.from("merchants").update(merchantUpdates).eq("account_id", accountId);
+}
+
+/** Heal cancelled/local-desynced accounts that already have a live Stripe subscription. */
+export async function reconcileAccountSubscriptionFromStripe(
+  stripe: Stripe,
+  account: {
+    id: string;
+    subscription_status: string;
+    stripe_customer_id?: string | null;
+    stripe_subscription_id?: string | null;
+  },
+): Promise<{ healed: boolean; status?: SubscriptionStatus }> {
+  if (account.subscription_status === "active" && account.stripe_subscription_id) {
+    return { healed: false };
+  }
+
+  let subscription: Stripe.Subscription | null = null;
+
+  if (account.stripe_subscription_id) {
+    try {
+      subscription = await stripe.subscriptions.retrieve(account.stripe_subscription_id);
+    } catch {
+      subscription = null;
+    }
+  }
+
+  if (!subscription && account.stripe_customer_id) {
+    const listed = await stripe.subscriptions.list({
+      customer: account.stripe_customer_id,
+      status: "all",
+      limit: 20,
+    });
+    subscription =
+      listed.data.find(
+        (sub) =>
+          isConfirmedStripeSubscription(sub) &&
+          (sub.status === "active" || sub.status === "trialing") &&
+          (sub.status !== "trialing" || subscriptionHasDefaultPaymentMethod(sub)),
+      ) ?? null;
+  }
+
+  if (!subscription) return { healed: false };
+
+  await persistAccountFromStripeSubscription(
+    account.id,
+    subscription,
+    account.stripe_customer_id,
+  );
+  return {
+    healed: true,
+    status: subscriptionStatusFromStripe(subscription.status),
+  };
 }
 
 export async function clientSecretFromSubscription(
@@ -391,6 +511,9 @@ export async function createSubscriptionWithPaymentMethod(
     if (!isTrialNotAllowedError(err)) throw err;
     subscription = await stripe.subscriptions.create(baseParams);
   }
+
+  // Never rely on webhooks alone — activate immediately after Stripe accepts the sub.
+  await persistAccountFromStripeSubscription(accountId, subscription, customerId);
 
   return { subscriptionId: subscription.id };
 }
