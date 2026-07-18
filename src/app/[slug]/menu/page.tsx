@@ -5,6 +5,7 @@ import { isMerchantLive } from "@/lib/merchant-access";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "@/i18n/server";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { JourneyHomeButton } from "@/components/JourneyHomeButton";
 import { MenuPublicView } from "@/components/menu/MenuPublicView";
 import type { Merchant } from "@/lib/types";
 import type { MenuNode } from "@/lib/menu";
@@ -60,7 +61,8 @@ export default async function PublicMerchantMenuPage({
 
   return (
     <div className="min-h-dvh overflow-x-hidden overflow-y-auto [-webkit-overflow-scrolling:touch]">
-      <div className="mx-auto flex max-w-[430px] justify-end px-4 pt-3">
+      <div className="mx-auto flex max-w-[430px] items-center justify-between gap-2 px-4 pt-3">
+        <JourneyHomeButton />
         <LocaleSwitcher variant="journey" />
       </div>
       <MenuPublicView

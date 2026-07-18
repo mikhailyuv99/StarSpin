@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { JourneyHomeButton } from "@/components/JourneyHomeButton";
 import { useTranslations } from "@/i18n/client";
 import { publicMerchantMenuPath, publicMerchantPlayPath } from "@/lib/app-url";
 
@@ -23,7 +24,8 @@ export function MerchantHub({ slug, name, logoUrl, primaryColor, secondaryColor 
         background: `linear-gradient(165deg, ${secondaryColor}22 0%, #fff8f1 42%, ${primaryColor}18 100%)`,
       }}
     >
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex items-center justify-between gap-2">
+        <JourneyHomeButton />
         <LocaleSwitcher variant="journey" />
       </div>
 

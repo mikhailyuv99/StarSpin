@@ -35,6 +35,7 @@ import {
   type PublicStep,
 } from "@/lib/flow-steps";
 import { pickGoogleReviewOpenUrl } from "@/lib/google-place-id";
+import { JourneyHomeButton } from "@/components/JourneyHomeButton";
 
 const Wheel = dynamic(
   () => import("@/components/Wheel").then((m) => ({ default: m.Wheel })),
@@ -796,7 +797,8 @@ export function PublicFlow({ merchant, prizes, preview = false }: PublicFlowProp
     >
       {/* Ambient decor deferred — was competing with LCP on mobile. */}
       <div className="mx-auto flex w-full max-w-lg flex-col">
-        <div className="mb-2 flex justify-end px-1">
+        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          {preview ? <span /> : <JourneyHomeButton />}
           <LocaleSwitcher variant="journey" />
         </div>
         <MerchantHeader merchant={merchant} forceMobileLayout={preview} />

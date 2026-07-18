@@ -82,7 +82,9 @@ body {
 .public-flow .public-input:focus,
 .public-flow .locale-switcher-trigger--journey,
 .public-flow .locale-switcher-trigger--journey:hover,
-.public-flow .locale-switcher-menu--journey {
+.public-flow .locale-switcher-menu--journey,
+.public-flow .journey-home-btn,
+.public-flow .journey-home-btn:hover {
   box-shadow: none !important;
 }
 
@@ -285,6 +287,43 @@ body {
 }
 
 /* Locale switcher ? inherits each journey template's tokens */
+.journey-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  color: var(--pj-ink, var(--c-black, #0a0a0a));
+  background: var(--pj-outline-bg, var(--pj-input-bg, #fff));
+  border: var(--pj-input-border, var(--brutal-border, 2px solid #0a0a0a));
+  border-radius: var(--pj-input-radius, 12px);
+  box-shadow: var(--pj-btn-shadow, 3px 3px 0 0 var(--c-black, #0a0a0a));
+  font-family: var(--pj-font-body, var(--font-body), system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.journey-home-btn:hover {
+  transform: translate(var(--pj-btn-hover-x, -1px), var(--pj-btn-hover-y, -1px));
+  box-shadow: var(--pj-btn-hover-shadow, 4px 4px 0 0 var(--c-black, #0a0a0a));
+}
+
+.journey-home-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 var(--c-black, #0a0a0a);
+}
+
+.journey-home-btn__label {
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .public-flow .locale-switcher-trigger--journey {
   color: var(--pj-ink, var(--c-black));
   background: var(--pj-outline-bg, var(--pj-input-bg, #fff));
